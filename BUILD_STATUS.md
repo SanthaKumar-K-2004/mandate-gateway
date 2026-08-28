@@ -458,6 +458,13 @@
 - [x] **Phase 14 — Security Hardening & Fail-Closed Audit (S03.3)** — **COMPLETE / FROZEN**
 - [x] **Phase 15 — Project Freeze & Submission (S03.4)** — **COMPLETE / FROZEN**
 - [x] **M04 — Deep System Hardening & Whole-System Audit** — **COMPLETE / FROZEN**
+- [x] **M05 / S05.1 — Real Persistence Infrastructure Foundation** — **COMPLETE / FROZEN**
+  - **PostgreSQL Session Layer**: Built [`db/session.py`](file:///home/santhakumar/Desktop/Raserpay/db/session.py) providing SQLAlchemy 2.0 Async engine connection pool, 독립 async session factory (`get_db_session`), explicit settings binding without password leakage, `connect_timeout` handling, and `check_database_health()` returning `CONNECTED` / `UNAVAILABLE`.
+  - **Redis Connection Layer**: Built [`db/redis.py`](file:///home/santhakumar/Desktop/Raserpay/db/redis.py) providing official `redis.asyncio` client, connection pool lifecycle, `aclose()` cleanup, and `check_redis_health()` executing live `ping()`.
+  - **Fail-Closed & Redaction Security**: Enforced zero silent in-memory fallback in production mode when PostgreSQL or Redis is unavailable; verified passwords redacted from health output and logs.
+  - **Dedicated Test Suite**: Built [`tests/unit/test_m05_1_infrastructure.py`](file:///home/santhakumar/Desktop/Raserpay/tests/unit/test_m05_1_infrastructure.py), [`tests/security/test_m05_1_infrastructure_security.py`](file:///home/santhakumar/Desktop/Raserpay/tests/security/test_m05_1_infrastructure_security.py), and [`tests/integration/test_m05_1_infrastructure_integration.py`](file:///home/santhakumar/Desktop/Raserpay/tests/integration/test_m05_1_infrastructure_integration.py). Executed failure-injection mutations (Mutation A & Mutation B) proving test suite catches false-positive health reports. **417 total automated tests PASS 100%**.
+  - **Quality Gates (`make check`)**: 100% PASS (Black clean 190 files, Flake8 0 errors, Secret Scanner clean 361 files, Architecture Guard clean 172 files).
+  - **`PROJECT_CONTEXT.md` SHA-256**: `2b62d52aa707bc9bb5df60d93b04f60933562e69af8068c46cc3b6cdc2eb670a` — INTACT.
 - [x] **M04 / S04.2 — Security & Trust-Boundary Forensic Audit** — **COMPLETE / FROZEN**
 - [x] **M04 / S04.3 — State Consistency, Atomicity & Concurrency Forensic Audit** — **COMPLETE / FROZEN**
 - [x] **M04 / S04.4 — Crash Consistency, Recovery & Reconciliation Forensic Audit** — **COMPLETE / FROZEN**
