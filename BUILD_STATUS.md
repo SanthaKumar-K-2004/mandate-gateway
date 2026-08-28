@@ -421,6 +421,14 @@
   - **Quality Gates (`make check`)**: 100% PASS (Black formatting clean 173 files, Flake8 0 errors, Secret Scanner clean 338 files, Architecture Guard clean 159 files).
   - **`PROJECT_CONTEXT.md` SHA-256**: `2b62d52aa707bc9bb5df60d93b04f60933562e69af8068c46cc3b6cdc2eb670a` — INTACT.
 
+- [x] **M04 — Deep System Hardening & Whole-System Audit** — **COMPLETE / FROZEN**
+  - **M04 System Hardening Engine**: Implemented `SystemHardeningEngine` in [`apps/api/domain/system_hardening.py`](file:///home/santhakumar/Desktop/Raserpay/apps/api/domain/system_hardening.py) and `M04HardeningManager` in [`agent/hardening/engine.py`](file:///home/santhakumar/Desktop/Raserpay/agent/hardening/engine.py).
+  - **Whole-System Audit Capabilities**: State machine lifecycle audit (`StepUpStatus`, `MandateStatus`, `TransactionState`), 100-worker thread concurrency stress testing, 36 adversarial attack scenario evaluations, and controlled defect injection proofs.
+  - **REST API Router**: Created [`apps/api/routers/hardening.py`](file:///home/santhakumar/Desktop/Raserpay/apps/api/routers/hardening.py) (`GET /api/hardening/audit`, `GET /api/hardening/concurrency-stress`) registered in [`apps/api/app/factory.py`](file:///home/santhakumar/Desktop/Raserpay/apps/api/app/factory.py).
+  - **Automated Test Suite**: Created test suites covering unit, security, 100-worker concurrency, and REST integration (`test_m04_hardening_unit.py`, `test_m04_hardening_security.py`, `test_m04_hardening_concurrency.py`, `test_m04_hardening_integration.py`). **362 total tests PASS 100%**.
+  - **Quality Gates (`make check`)**: 100% PASS (Black formatting clean 179 files, Flake8 0 errors, Secret Scanner clean 348 files, Architecture Guard clean 159 files).
+  - **`PROJECT_CONTEXT.md` SHA-256**: `2b62d52aa707bc9bb5df60d93b04f60933562e69af8068c46cc3b6cdc2eb670a` — INTACT.
+
 ---
 
 ## Future Engineering Phases
@@ -432,4 +440,5 @@
 - [x] **Phase 13 — End-to-End System Integration (S03.2)** — **COMPLETE / FROZEN**
 - [x] **Phase 14 — Security Hardening & Fail-Closed Audit (S03.3)** — **COMPLETE / FROZEN**
 - [x] **Phase 15 — Project Freeze & Submission (S03.4)** — **COMPLETE / FROZEN**
+- [x] **M04 — Deep System Hardening & Whole-System Audit** — **COMPLETE / FROZEN**
 

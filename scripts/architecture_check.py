@@ -155,6 +155,16 @@ def check_architecture(root_dir: str = ".") -> bool:
                 "tests/security/test_submission_security.py",
                 "tests/concurrency/test_submission_concurrency.py",
                 "tests/integration/test_submission_integration.py",
+                "agent/hardening/__init__.py",
+                "agent/hardening/engine.py",
+                "agent/hardening/errors.py",
+                "agent/hardening/types.py",
+                "apps/api/domain/system_hardening.py",
+                "apps/api/routers/hardening.py",
+                "tests/unit/test_m04_hardening_unit.py",
+                "tests/security/test_m04_hardening_security.py",
+                "tests/concurrency/test_m04_hardening_concurrency.py",
+                "tests/integration/test_m04_hardening_integration.py",
             ):
                 continue
 

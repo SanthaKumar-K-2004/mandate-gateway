@@ -184,6 +184,7 @@ def create_fastapi_app(settings: Optional[Settings] = None) -> Any:
 
         from apps.api.routers.audit import audit_router
         from apps.api.routers.explainability import explainability_router
+        from apps.api.routers.hardening import router as hardening_router
         from apps.api.routers.mandates import mandates_router
         from apps.api.routers.merchants import merchants_router
         from apps.api.routers.orchestrator import orchestrator_router
@@ -211,6 +212,7 @@ def create_fastapi_app(settings: Optional[Settings] = None) -> Any:
         api_app.include_router(orchestrator_router)
         api_app.include_router(security_router)
         api_app.include_router(submission_router)
+        api_app.include_router(hardening_router)
 
         return api_app
     except ImportError:  # pragma: no cover
