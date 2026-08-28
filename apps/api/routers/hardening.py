@@ -61,3 +61,34 @@ def get_concurrency_stress_report() -> Dict[str, Any]:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Concurrency stress test failed: {exc}",
         )
+
+
+@router.get("/security-audit")
+def get_security_trust_boundary_audit() -> Dict[str, Any]:
+    """Return S04.2 Security & Trust-Boundary Forensic Audit report."""
+    try:
+        rep = _manager.run_security_audit()
+        return {
+            "project_context_hash": rep.project_context_hash,
+            "trust_boundaries_audited": rep.trust_boundaries_audited,
+            "authority_spoofing_scenarios_passed": rep.authority_spoofing_scenarios_passed,
+            "prompt_injection_scenarios_passed": rep.prompt_injection_scenarios_passed,
+            "identity_spoofing_scenarios_passed": rep.identity_spoofing_scenarios_passed,
+            "context_confusion_scenarios_passed": rep.context_confusion_scenarios_passed,
+            "cart_manipulation_scenarios_passed": rep.cart_manipulation_scenarios_passed,
+            "policy_mandate_scenarios_passed": rep.policy_mandate_scenarios_passed,
+            "budget_concurrency_workers_tested": rep.budget_concurrency_workers_tested,
+            "replay_nonce_scenarios_passed": rep.replay_nonce_scenarios_passed,
+            "stepup_bypass_scenarios_passed": rep.stepup_bypass_scenarios_passed,
+            "tool_capability_scenarios_passed": rep.tool_capability_scenarios_passed,
+            "ssrf_injection_scenarios_passed": rep.ssrf_injection_scenarios_passed,
+            "secret_redaction_passed": rep.secret_redaction_passed,
+            "fail_closed_verified": rep.fail_closed_verified,
+            "mutations_tested": rep.mutations_tested,
+            "status": rep.status,
+        }
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Security audit failed: {exc}",
+        )

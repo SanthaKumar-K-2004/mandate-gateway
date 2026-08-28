@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from agent.hardening.types import HardeningAuditReport
+from agent.hardening.types import HardeningAuditReport, SecurityAuditReport
 from apps.api.domain.system_hardening import SystemHardeningEngine
 
 
@@ -22,6 +22,10 @@ class M04HardeningManager:
     def run_audit(self) -> HardeningAuditReport:
         """Run full whole-system hardening audit."""
         return self.engine.run_full_system_hardening_audit()
+
+    def run_security_audit(self) -> SecurityAuditReport:
+        """Run S04.2 Security & Trust-Boundary Forensic Audit."""
+        return self.engine.run_security_trust_boundary_audit()
 
     def run_100_worker_stress(self) -> Dict[str, Any]:
         """Run 100-worker thread concurrency stress test."""

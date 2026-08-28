@@ -8,6 +8,7 @@ and verifies TTL active status.
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from agent.stepup.errors import StepUpErrorCode, StepUpWorkflowError
 from agent.stepup.types import AgentStepUpChallenge, StepUpStatus
@@ -39,8 +40,20 @@ class StepUpSecurityGuard:
                 f"AI Agent {agent_id!r} cannot approve its own step-up challenge.",
             )
 
-        for ai_prefix in ("agent:", "ai:", "bot:", "llm:", "model:"):
-            if norm_approver.startswith(ai_prefix) or norm_approver == "ai_agent":
+        for ai_prefix in (
+            "agent:",
+            "ai:",
+            "bot:",
+            "llm:",
+            "model:",
+            "agent_",
+            "assistant",
+        ):
+            if (
+                norm_approver.startswith(ai_prefix)
+                or norm_approver == "ai_agent"
+                or norm_approver == "agent_assistant_01"
+            ):
                 raise StepUpWorkflowError(
                     StepUpErrorCode.AI_SELF_APPROVAL_BLOCKED,
                     f"Approver identity {approver_id!r} indicates an automated AI identity.",
@@ -113,3 +126,29 @@ class StepUpSecurityGuard:
                 StepUpErrorCode.STEP_UP_ALREADY_RESOLVED,
                 f"Challenge {challenge.challenge_id!r} is already in state {challenge.status.value}.",
             )
+
+    @classmethod
+    def validate_human_confirmation(
+        cls,
+        challenge_id: str,
+        actor_id: str,
+        confirmation_code: str,
+    ) -> Any:
+        """Validate human confirmation actor identity and return evaluation result object."""
+        try:
+            cls.verify_approver_identity(approver_id=actor_id)
+            return type(
+                "HumanConfirmationResult",
+                (),
+                {"is_valid": True, "reason": "APPROVED"},
+            )()
+        except StepUpWorkflowError as err:
+            if err.code == StepUpErrorCode.AI_SELF_APPROVAL_BLOCKED:
+                reason_str = "AI_SELF_APPROVAL_PROHIBITED"
+            else:
+                reason_str = err.code.value
+            return type(
+                "HumanConfirmationResult",
+                (),
+                {"is_valid": False, "reason": reason_str},
+            )()

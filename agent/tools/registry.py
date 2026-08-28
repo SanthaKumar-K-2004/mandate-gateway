@@ -296,3 +296,15 @@ class ToolRegistry:
         """Reset invocation counters for testing."""
         with self._lock:
             self._invocation_counts.clear()
+
+    @staticmethod
+    def validate_target_url(url: str) -> bool:
+        """Validate target URL against SSRF and prohibited patterns."""
+        try:
+            ToolRequestValidator.validate_argument_safety(
+                "security_test_tool", {"url": url}
+            )
+            return True
+        except Exception:
+            return False
+
