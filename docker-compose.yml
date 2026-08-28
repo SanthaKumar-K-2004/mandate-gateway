@@ -1,0 +1,58 @@
+# Mandate Gateway — Local Development Orchestration Foundation
+# Section S00.2.1 — Docker & Compose Foundation
+
+name: mandate-gateway
+
+services:
+  # Database Infrastructure (PostgreSQL 16)
+  postgres:
+    image: postgres:16-alpine
+    container_name: mandate_gateway_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be defined in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-mandate_gateway}
+    # Bound to localhost (127.0.0.1) for secure local host developer inspection
+    ports:
+      - "127.0.0.1:5432:5432"
+    networks:
+      - mandate-gateway-net
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-mandate_gateway}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  # Ephemeral Cache / Rate Limiting (Redis 7)
+  redis:
+    image: redis:7-alpine
+    container_name: mandate_gateway_redis
+    restart: unless-stopped
+    # Bound to localhost (127.0.0.1) for secure local host developer inspection
+    ports:
+      - "127.0.0.1:6379:6379"
+    networks:
+      - mandate-gateway-net
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 3s
+
+networks:
+  mandate-gateway-net:
+    name: mandate-gateway-net
+    driver: bridge
+
+volumes:
+  postgres_data:
+    name: mandate-gateway-postgres-data
+  redis_data:
+    name: mandate-gateway-redis-data

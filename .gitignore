@@ -1,0 +1,74 @@
+# Environment and Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+*credentials*.json
+*secret*.json
+
+# Virtual Environments & Python
+.venv/
+venv/
+env/
+ENV/
+pyvenv.cfg
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Node & Frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.next/
+out/
+.nuxt/
+.vuepress/
+.cache/
+
+# Docker Local State
+.docker/
+*.log
+
+# IDE & Editor Metadata
+.agents/
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# OS Metadata
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary & Local Data
+tmp/
+temp/
+*.tmp
+*.bak
+*.tar.gz

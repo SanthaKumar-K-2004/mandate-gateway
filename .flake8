@@ -1,0 +1,30 @@
+[flake8]
+# Match black's max line length
+max-line-length = 120
+
+# Suppress warnings that conflict with black formatting:
+# E203: whitespace before ':' (black formats slices differently)
+# W503: line break before binary operator (black prefers W504)
+extend-ignore = E203, W503
+
+# Source paths to lint
+per-file-ignores =
+    # Allow star imports and re-exports in __init__.py modules
+    apps/api/app/__init__.py: F401
+    apps/api/config/__init__.py: F401
+
+# Directories to exclude
+exclude =
+    .git,
+    .venv,
+    venv,
+    __pycache__,
+    .agents,
+    node_modules,
+    .pytest_cache,
+    .mypy_cache,
+    .ruff_cache,
+    *.egg-info
+
+# Maximum complexity — McCabe
+max-complexity = 20
