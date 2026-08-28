@@ -427,11 +427,9 @@
   - **REST API Router**: Created [`apps/api/routers/hardening.py`](file:///home/santhakumar/Desktop/Raserpay/apps/api/routers/hardening.py) (`GET /api/hardening/audit`, `GET /api/hardening/concurrency-stress`) registered in [`apps/api/app/factory.py`](file:///home/santhakumar/Desktop/Raserpay/apps/api/app/factory.py).
   - **Automated Test Suite**: Created test suites covering unit, security, 100-worker concurrency, and REST integration (`test_m04_hardening_unit.py`, `test_m04_hardening_security.py`, `test_m04_hardening_concurrency.py`, `test_m04_hardening_integration.py`). **362 total tests PASS 100%**.
   - **Quality Gates (`make check`)**: 100% PASS (Black formatting clean 179 files, Flake8 0 errors, Secret Scanner clean 348 files, Architecture Guard clean 159 files).
-- [x] **M04 / S04.2 — Security & Trust-Boundary Forensic Audit** — **COMPLETE / FROZEN**
-  - **Trust Boundary Audit Engine**: Extended `SystemHardeningEngine` and `M04HardeningManager` with `run_security_trust_boundary_audit()` returning `SecurityAuditReport`.
-  - **Adversarial Test Suite**: Built [`tests/security/test_s04_2_trust_boundary_audit.py`](file:///home/santhakumar/Desktop/Raserpay/tests/security/test_s04_2_trust_boundary_audit.py) covering 20 trust boundaries, authority spoofing, prompt injection, identity spoofing, context binding, cart integrity, budget invariants, replay protection, step-up bypass, tool capability escalation, SSRF, secret redaction, API security, and security mutation testing. **376 total automated tests PASS 100%**.
-  - **REST API Endpoint**: Added `GET /api/hardening/security-audit` to [`apps/api/routers/hardening.py`](file:///home/santhakumar/Desktop/Raserpay/apps/api/routers/hardening.py).
-  - **Quality Gates (`make check`)**: 100% PASS (Black formatting clean 180 files, Flake8 0 errors, Secret Scanner clean 349 files, Architecture Guard clean 160 files).
+- [x] **M04 / S04.3 — State Consistency, Atomicity & Concurrency Forensic Audit** — **COMPLETE / FROZEN**
+  - **Concurrency & Atomicity Test Suite**: Built [`tests/security/test_s04_3_concurrency_atomicity.py`](file:///home/santhakumar/Desktop/Raserpay/tests/security/test_s04_3_concurrency_atomicity.py) covering 100-worker budget races (0 double spend), 50-worker replay protection races (exact-once ALLOW), 50-worker nonce races (exact-once CONSUMED), 50-worker step-up races (exact-once resolution), 50-worker audit ledger append races (chain verification PASS), 50-worker Ed25519 receipt signing races, 50-worker rate limiter races, and controlled concurrency mutation proofs. **384 total automated tests PASS 100%**.
+  - **Quality Gates (`make check`)**: 100% PASS (Black formatting clean 181 files, Flake8 0 errors, Secret Scanner clean 350 files, Architecture Guard clean 161 files).
   - **`PROJECT_CONTEXT.md` SHA-256**: `2b62d52aa707bc9bb5df60d93b04f60933562e69af8068c46cc3b6cdc2eb670a` — INTACT.
 
 ---
@@ -447,4 +445,5 @@
 - [x] **Phase 15 — Project Freeze & Submission (S03.4)** — **COMPLETE / FROZEN**
 - [x] **M04 — Deep System Hardening & Whole-System Audit** — **COMPLETE / FROZEN**
 - [x] **M04 / S04.2 — Security & Trust-Boundary Forensic Audit** — **COMPLETE / FROZEN**
+- [x] **M04 / S04.3 — State Consistency, Atomicity & Concurrency Forensic Audit** — **COMPLETE / FROZEN**
 
