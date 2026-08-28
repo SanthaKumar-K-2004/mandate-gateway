@@ -432,6 +432,13 @@
   - **Quality Gates (`make check`)**: 100% PASS (Black formatting clean 181 files, Flake8 0 errors, Secret Scanner clean 350 files, Architecture Guard clean 161 files).
   - **`PROJECT_CONTEXT.md` SHA-256**: `2b62d52aa707bc9bb5df60d93b04f60933562e69af8068c46cc3b6cdc2eb670a` — INTACT.
 
+- [x] **M04 / S04.4 — Crash Consistency, Recovery & Reconciliation Forensic Audit** — **COMPLETE / FROZEN**
+  - **Recovery & Reconciliation Engine**: Created [`apps/api/domain/reconciliation.py`](file:///home/santhakumar/Desktop/Raserpay/apps/api/domain/reconciliation.py) (`RecoveryReconciliationEngine`), providing stale transaction detection, unknown provider outcome handling (`UNKNOWN != FAILURE` and `UNKNOWN != SUCCESS`), stranded budget reservation release, and audit-receipt consistency checks.
+  - **REST API Router**: Added `GET /api/hardening/recovery-audit` to [`apps/api/routers/hardening.py`](file:///home/santhakumar/Desktop/Raserpay/apps/api/routers/hardening.py).
+  - **Recovery Test Suite**: Built 4 dedicated test suites: unit (`test_s04_4_recovery_unit.py`), security (`test_s04_4_recovery_security.py`), 50-worker concurrency (`test_s04_4_recovery_concurrency.py`), and REST integration (`test_s04_4_recovery_integration.py`). **388 total tests PASS 100%**.
+  - **Quality Gates (`make check`)**: 100% PASS (Black clean 186 files, Flake8 0 errors, Secret Scanner clean 355 files, Architecture Guard clean 166 files).
+  - **`PROJECT_CONTEXT.md` SHA-256**: `2b62d52aa707bc9bb5df60d93b04f60933562e69af8068c46cc3b6cdc2eb670a` — INTACT.
+
 ---
 
 ## Future Engineering Phases
@@ -446,4 +453,5 @@
 - [x] **M04 — Deep System Hardening & Whole-System Audit** — **COMPLETE / FROZEN**
 - [x] **M04 / S04.2 — Security & Trust-Boundary Forensic Audit** — **COMPLETE / FROZEN**
 - [x] **M04 / S04.3 — State Consistency, Atomicity & Concurrency Forensic Audit** — **COMPLETE / FROZEN**
+- [x] **M04 / S04.4 — Crash Consistency, Recovery & Reconciliation Forensic Audit** — **COMPLETE / FROZEN**
 

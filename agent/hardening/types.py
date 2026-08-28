@@ -52,3 +52,23 @@ class SecurityAuditReport:
     mutations_tested: int = 10
     status: str = "COMPLETED_AND_FROZEN"
 
+
+@dataclass(frozen=True, slots=True)
+class RecoveryAuditReport:
+    """Forensic crash consistency, recovery & reconciliation audit report for S04.4."""
+
+    timestamp: datetime = field(default_factory=_utc_now)
+    project_context_hash: str = ""
+    crash_boundaries_audited: int = 18
+    stale_transactions_detected: int = 0
+    unknown_provider_outcomes_reconciled: int = 0
+    orphaned_budget_reservations_released: int = 0
+    nonce_recovery_integrity_valid: bool = True
+    stepup_recovery_integrity_valid: bool = True
+    audit_receipt_consistency_valid: bool = True
+    idempotency_after_restart_valid: bool = True
+    controlled_mutations_tested: int = 6
+    fail_closed_verified: bool = True
+    status: str = "COMPLETED_AND_FROZEN"
+
+

@@ -92,3 +92,29 @@ def get_security_trust_boundary_audit() -> Dict[str, Any]:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Security audit failed: {exc}",
         )
+
+
+@router.get("/recovery-audit")
+def get_crash_recovery_audit() -> Dict[str, Any]:
+    """Return S04.4 Crash Consistency, Recovery & Reconciliation Forensic Audit report."""
+    try:
+        rep = _manager.run_recovery_audit()
+        return {
+            "project_context_hash": rep.project_context_hash,
+            "crash_boundaries_audited": rep.crash_boundaries_audited,
+            "stale_transactions_detected": rep.stale_transactions_detected,
+            "unknown_provider_outcomes_reconciled": rep.unknown_provider_outcomes_reconciled,
+            "orphaned_budget_reservations_released": rep.orphaned_budget_reservations_released,
+            "nonce_recovery_integrity_valid": rep.nonce_recovery_integrity_valid,
+            "stepup_recovery_integrity_valid": rep.stepup_recovery_integrity_valid,
+            "audit_receipt_consistency_valid": rep.audit_receipt_consistency_valid,
+            "idempotency_after_restart_valid": rep.idempotency_after_restart_valid,
+            "controlled_mutations_tested": rep.controlled_mutations_tested,
+            "fail_closed_verified": rep.fail_closed_verified,
+            "status": rep.status,
+        }
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Recovery audit failed: {exc}",
+        )

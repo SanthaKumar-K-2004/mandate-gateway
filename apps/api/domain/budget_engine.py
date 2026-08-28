@@ -179,6 +179,11 @@ class BudgetEngine:
         with lock:
             return self._budgets.get(mandate_id)
 
+    def list_budgets(self) -> dict[str, DailyBudget]:
+        """Return shallow copy of registered budgets dictionary."""
+        with self._global_lock:
+            return dict(self._budgets)
+
     def get_reservation(self, reservation_id: str) -> BudgetReservation | None:
         """Return BudgetReservation by ID, or None if not found."""
         with self._global_lock:
