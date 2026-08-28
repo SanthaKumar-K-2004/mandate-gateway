@@ -19,15 +19,15 @@ try:
     HAS_FASTAPI = True
 except ImportError:  # pragma: no cover
     HAS_FASTAPI = False
-    APIRouter = Any
-    Depends = Any
+    APIRouter = Any  # type: ignore[misc,assignment]
+    Depends = Any  # type: ignore[assignment]
 
     class status:  # type: ignore[no-redef]
         HTTP_200_OK = 200
 
 
 if HAS_FASTAPI:
-    redteam_router = APIRouter(prefix="/api/redteam", tags=["Red Team Chaos Lab"])
+    redteam_router: Any = APIRouter(prefix="/api/redteam", tags=["Red Team Chaos Lab"])
 else:
 
     class DummyRouter:
@@ -37,7 +37,7 @@ else:
 
             return decorator
 
-    redteam_router = DummyRouter()
+    redteam_router: Any = DummyRouter()  # type: ignore[no-redef]
 
 
 def get_redteam_engine() -> RedTeamChaosEngine:

@@ -18,7 +18,7 @@ try:
     HAS_FASTAPI = True
 except ImportError:  # pragma: no cover
     HAS_FASTAPI = False
-    APIRouter = Any
+    APIRouter = Any  # type: ignore[misc,assignment]
 
     class status:  # type: ignore[no-redef]
         HTTP_200_OK = 200
@@ -30,7 +30,7 @@ _ORCHESTRATOR = CommerceOrchestrator()
 
 
 if HAS_FASTAPI:
-    orchestrator_router = APIRouter(
+    orchestrator_router: Any = APIRouter(
         prefix="/api/orchestrator", tags=["End-to-End Commerce Orchestrator"]
     )
 else:
@@ -42,7 +42,7 @@ else:
 
             return decorator
 
-    orchestrator_router = DummyRouter()
+    orchestrator_router: Any = DummyRouter()  # type: ignore[no-redef]
 
 
 @orchestrator_router.post(

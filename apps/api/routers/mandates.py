@@ -23,7 +23,7 @@ try:
     HAS_FASTAPI = True
 except ImportError:  # pragma: no cover
     HAS_FASTAPI = False
-    APIRouter = Any
+    APIRouter = Any  # type: ignore[misc,assignment]
 
     class status:  # type: ignore[no-redef]
         HTTP_200_OK = 200
@@ -42,7 +42,7 @@ _MANDATES: dict[str, MandateResponse] = {}
 
 
 if HAS_FASTAPI:
-    mandates_router = APIRouter(prefix="/api", tags=["Buyer Mandate Management"])
+    mandates_router: Any = APIRouter(prefix="/api", tags=["Buyer Mandate Management"])
 else:
 
     class DummyRouter:
@@ -58,7 +58,7 @@ else:
 
             return decorator
 
-    mandates_router = DummyRouter()
+    mandates_router: Any = DummyRouter()  # type: ignore[no-redef]
 
 
 @mandates_router.post(

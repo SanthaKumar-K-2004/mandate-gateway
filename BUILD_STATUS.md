@@ -439,6 +439,13 @@
   - **Quality Gates (`make check`)**: 100% PASS (Black clean 186 files, Flake8 0 errors, Secret Scanner clean 355 files, Architecture Guard clean 166 files).
   - **`PROJECT_CONTEXT.md` SHA-256**: `2b62d52aa707bc9bb5df60d93b04f60933562e69af8068c46cc3b6cdc2eb670a` — INTACT.
 
+- [x] **M04 / S04.5 — Final Whole-System Penetration, Red-Team Chaos Lab & Submission-Readiness Forensic Audit** — **COMPLETE / FROZEN**
+  - **Penetration Audit DTO & Runner**: Created `PenetrationAuditReport` in [`agent/hardening/types.py`](file:///home/santhakumar/Desktop/Raserpay/agent/hardening/types.py) and added `run_full_system_penetration_audit()` to [`apps/api/domain/system_hardening.py`](file:///home/santhakumar/Desktop/Raserpay/apps/api/domain/system_hardening.py) and `run_penetration_audit()` to [`agent/hardening/engine.py`](file:///home/santhakumar/Desktop/Raserpay/agent/hardening/engine.py).
+  - **REST API Router**: Added `GET /api/hardening/penetration-audit` to [`apps/api/routers/hardening.py`](file:///home/santhakumar/Desktop/Raserpay/apps/api/routers/hardening.py).
+  - **Whole-System Audit Test Suite**: Built [`tests/security/test_s04_5_penetration_audit.py`](file:///home/santhakumar/Desktop/Raserpay/tests/security/test_s04_5_penetration_audit.py) evaluating 20 trust boundaries, 8 Red-Team Chaos Lab scenarios, 24 Definition-of-Done criteria (23 PASS, 1 BLOCKED due to Docker CLI limitation), and 8 explicit controlled security mutations. **406 total automated tests PASS 100%**.
+  - **Quality Gates (`make check`)**: 100% PASS (Black clean 187 files, Flake8 0 errors, Secret Scanner clean 356 files, Architecture Guard clean 167 files).
+  - **`PROJECT_CONTEXT.md` SHA-256**: `2b62d52aa707bc9bb5df60d93b04f60933562e69af8068c46cc3b6cdc2eb670a` — INTACT.
+
 ---
 
 ## Future Engineering Phases
@@ -454,4 +461,5 @@
 - [x] **M04 / S04.2 — Security & Trust-Boundary Forensic Audit** — **COMPLETE / FROZEN**
 - [x] **M04 / S04.3 — State Consistency, Atomicity & Concurrency Forensic Audit** — **COMPLETE / FROZEN**
 - [x] **M04 / S04.4 — Crash Consistency, Recovery & Reconciliation Forensic Audit** — **COMPLETE / FROZEN**
+- [x] **M04 / S04.5 — Final Whole-System Penetration, Red-Team Chaos Lab & Submission-Readiness Forensic Audit** — **COMPLETE / FROZEN**
 

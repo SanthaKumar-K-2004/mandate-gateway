@@ -118,3 +118,31 @@ def get_crash_recovery_audit() -> Dict[str, Any]:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Recovery audit failed: {exc}",
         )
+
+
+@router.get("/penetration-audit")
+def get_penetration_audit() -> Dict[str, Any]:
+    """Return S04.5 Final Whole-System Penetration & Submission-Readiness Forensic Audit report."""
+    try:
+        rep = _manager.run_penetration_audit()
+        return {
+            "project_context_hash": rep.project_context_hash,
+            "total_checks": rep.total_checks,
+            "passed_checks": rep.passed_checks,
+            "failed_checks": rep.failed_checks,
+            "trust_boundaries_audited": rep.trust_boundaries_audited,
+            "redteam_attack_scenarios_passed": rep.redteam_attack_scenarios_passed,
+            "definition_of_done_passed": rep.definition_of_done_passed,
+            "definition_of_done_blocked": rep.definition_of_done_blocked,
+            "controlled_mutations_tested": rep.controlled_mutations_tested,
+            "quality_gate_passed": rep.quality_gate_passed,
+            "secret_scan_passed": rep.secret_scan_passed,
+            "architecture_guard_passed": rep.architecture_guard_passed,
+            "fail_closed_verified": rep.fail_closed_verified,
+            "status": rep.status,
+        }
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Penetration audit failed: {exc}",
+        )

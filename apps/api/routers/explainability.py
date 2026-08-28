@@ -25,8 +25,8 @@ try:
     HAS_FASTAPI = True
 except ImportError:  # pragma: no cover
     HAS_FASTAPI = False
-    APIRouter = Any
-    Depends = Any
+    APIRouter = Any  # type: ignore[misc,assignment]
+    Depends = Any  # type: ignore[assignment]
 
     class status:  # type: ignore[no-redef]
         HTTP_200_OK = 200
@@ -40,7 +40,7 @@ except ImportError:  # pragma: no cover
 
 
 if HAS_FASTAPI:
-    explainability_router = APIRouter(prefix="/api", tags=["Explainability & Decision Trace"])
+    explainability_router: Any = APIRouter(prefix="/api", tags=["Explainability & Decision Trace"])
 else:
 
     class DummyRouter:
@@ -50,7 +50,7 @@ else:
 
             return decorator
 
-    explainability_router = DummyRouter()
+    explainability_router: Any = DummyRouter()  # type: ignore[no-redef]
 
 
 def get_explainability_engine() -> ExplainabilityEngine:

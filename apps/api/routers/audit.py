@@ -24,7 +24,7 @@ try:
     HAS_FASTAPI = True
 except ImportError:  # pragma: no cover
     HAS_FASTAPI = False
-    APIRouter = Any
+    APIRouter = Any  # type: ignore[misc,assignment]
 
     class status:  # type: ignore[no-redef]
         HTTP_200_OK = 200
@@ -35,6 +35,7 @@ except ImportError:  # pragma: no cover
         def __init__(self, status_code: int, detail: str) -> None:
             self.status_code = status_code
             self.detail = detail
+            super().__init__(detail)
 
 
 # In-memory store for audit events & receipts
@@ -43,7 +44,7 @@ _RECEIPTS: dict[str, ReceiptResponse] = {}
 
 
 if HAS_FASTAPI:
-    audit_router = APIRouter(prefix="/api", tags=["Audit Trail & Receipt Verification"])
+    audit_router: Any = APIRouter(prefix="/api", tags=["Audit Trail & Receipt Verification"])
 else:
 
     class DummyRouter:

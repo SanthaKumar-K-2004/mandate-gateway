@@ -22,7 +22,7 @@ try:
     HAS_FASTAPI = True
 except ImportError:  # pragma: no cover
     HAS_FASTAPI = False
-    APIRouter = Any
+    APIRouter = Any  # type: ignore[misc,assignment]
 
     class status:  # type: ignore[no-redef]
         HTTP_200_OK = 200
@@ -41,7 +41,7 @@ _PRODUCTS: dict[str, ProductResponse] = {}
 
 
 if HAS_FASTAPI:
-    products_router = APIRouter(prefix="/api", tags=["Catalog Product Management"])
+    products_router: Any = APIRouter(prefix="/api", tags=["Catalog Product Management"])
 else:
 
     class DummyRouter:
@@ -57,7 +57,7 @@ else:
 
             return decorator
 
-    products_router = DummyRouter()
+    products_router: Any = DummyRouter()  # type: ignore[no-redef]
 
 
 @products_router.post(

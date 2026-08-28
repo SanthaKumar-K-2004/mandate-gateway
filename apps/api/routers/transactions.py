@@ -31,7 +31,7 @@ try:
     HAS_FASTAPI = True
 except ImportError:  # pragma: no cover
     HAS_FASTAPI = False
-    APIRouter = Any
+    APIRouter = Any  # type: ignore[misc,assignment]
 
     class status:  # type: ignore[no-redef]
         HTTP_200_OK = 200
@@ -50,7 +50,7 @@ _TRANSACTIONS: dict[str, TransactionResponse] = {}
 
 
 if HAS_FASTAPI:
-    transactions_router = APIRouter(prefix="/api", tags=["Transactions & Purchase Proposals"])
+    transactions_router: Any = APIRouter(prefix="/api", tags=["Transactions & Purchase Proposals"])
 else:
 
     class DummyRouter:
@@ -66,7 +66,7 @@ else:
 
             return decorator
 
-    transactions_router = DummyRouter()
+    transactions_router: Any = DummyRouter()  # type: ignore[no-redef]
 
 
 @transactions_router.post(

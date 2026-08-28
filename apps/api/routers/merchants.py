@@ -24,7 +24,7 @@ try:
     HAS_FASTAPI = True
 except ImportError:  # pragma: no cover
     HAS_FASTAPI = False
-    APIRouter = Any
+    APIRouter = Any  # type: ignore[misc,assignment]
 
     class status:  # type: ignore[no-redef]
         HTTP_200_OK = 200
@@ -44,7 +44,7 @@ _MERCHANT_POLICIES: dict[str, PolicyResponse] = {}
 
 
 if HAS_FASTAPI:
-    merchants_router = APIRouter(prefix="/api", tags=["Merchant & Policy Management"])
+    merchants_router: Any = APIRouter(prefix="/api", tags=["Merchant & Policy Management"])
 else:
 
     class DummyRouter:
@@ -66,7 +66,7 @@ else:
 
             return decorator
 
-    merchants_router = DummyRouter()
+    merchants_router: Any = DummyRouter()  # type: ignore[no-redef]
 
 
 @merchants_router.post(

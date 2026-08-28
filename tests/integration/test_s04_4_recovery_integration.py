@@ -12,7 +12,7 @@ import unittest
 from fastapi.testclient import TestClient
 
 from agent.hardening.engine import M04HardeningManager
-from apps.api.app.factory import create_app
+from apps.api.app.factory import create_fastapi_app
 from apps.api.domain.system_hardening import SystemHardeningEngine
 
 
@@ -20,7 +20,7 @@ class TestS044RecoveryIntegration(unittest.TestCase):
     """Integration tests for S04.4 Recovery & Reconciliation REST API and Engine."""
 
     def setUp(self) -> None:
-        self.app = create_app()
+        self.app = create_fastapi_app()
         self.client = TestClient(self.app)
         self.manager = M04HardeningManager()
         self.engine = SystemHardeningEngine()
