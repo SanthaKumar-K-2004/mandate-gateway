@@ -6,7 +6,7 @@ Section S00.5 — Observability Foundation
 import threading
 from typing import Dict, List, Optional, Tuple
 
-# Bounded metric label safety allowlist
+# Bounded metric label safety allowlist (strict cardinality protection)
 ALLOWED_LABEL_KEYS = {
     "method",
     "route",
@@ -18,6 +18,10 @@ ALLOWED_LABEL_KEYS = {
     "operation",
     "provider_status",
     "failure_category",
+    "reason",
+    "environment",
+    "service",
+    "decision",
 }
 
 

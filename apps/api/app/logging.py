@@ -40,6 +40,8 @@ SENSITIVE_KEY_PATTERNS = {
     "private_key",
     "signature",
     "cvv",
+    "nonce",
+    "credential",
 }
 
 
@@ -85,7 +87,8 @@ class StructuredJsonFormatter(logging.Formatter):
     """
     Structured JSON log formatter for Mandate Gateway.
     Includes timestamp, level, service, environment, event, request_id, correlation_id, trace_id,
-    transaction_id, merchant_id, buyer_id, mandate_id, attempt_id, outbox_event_id, and duration_ms.
+    span_id, merchant_id, buyer_id, transaction_id, mandate_id, idempotency_key, execution_attempt_id,
+    outbox_event_id, provider_reference, operation, status, error_code, latency_ms.
     Guarantees log injection protection and secret redaction.
     """
 
@@ -104,6 +107,7 @@ class StructuredJsonFormatter(logging.Formatter):
         req_id = getattr(record, "request_id", None) or ctx.get("request_id")
         corr_id = getattr(record, "correlation_id", None) or ctx.get("correlation_id")
         trace_id = getattr(record, "trace_id", None) or ctx.get("trace_id")
+        span_id = getattr(record, "span_id", None) or ctx.get("span_id")
 
         raw_event = record.getMessage()
         sanitized_event = sanitize_log_string(raw_event)
@@ -119,20 +123,29 @@ class StructuredJsonFormatter(logging.Formatter):
             "request_id": req_id,
             "correlation_id": corr_id,
             "trace_id": trace_id,
+            "span_id": span_id,
         }
 
-        # Context-derived domain identity fields
+        # Context-derived domain identity & operational fields
         for ctx_key in (
             "transaction_id",
             "merchant_id",
             "buyer_id",
             "mandate_id",
+            "idempotency_key",
             "execution_attempt_id",
             "outbox_event_id",
+            "provider_reference",
+            "operation",
+            "status",
+            "error_code",
+            "latency_ms",
         ):
-            val = getattr(record, ctx_key, None) or ctx.get(ctx_key)
+            val = getattr(record, ctx_key, None)
+            if val is None:
+                val = ctx.get(ctx_key)
             if val is not None:
-                log_entry[ctx_key] = sanitize_log_string(str(val))
+                log_entry[ctx_key] = sanitize_log_string(str(val)) if isinstance(val, str) else val
 
         # Optional operational observability fields
         for field in (
@@ -141,8 +154,6 @@ class StructuredJsonFormatter(logging.Formatter):
             "path",
             "status_code",
             "error_type",
-            "error_code",
-            "provider_reference",
             "operation_name",
             "error_category",
         ):

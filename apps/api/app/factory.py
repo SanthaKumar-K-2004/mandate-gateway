@@ -27,6 +27,19 @@ from apps.api.config.helpers import get_settings
 from apps.api.config.settings import Settings
 
 
+def validate_preflight_config(settings: Settings) -> bool:
+    """
+    Deployment preflight validation.
+    Validates required environment settings, cryptographic keys, DB and provider settings.
+    """
+    from apps.api.config.settings import validate_production_config
+
+    validate_production_config(settings)
+    if not settings.app_name:
+        raise ValueError("Deployment preflight error: app_name must be set.")
+    return True
+
+
 class MandateGatewayApp:
     """
     Standard ASGI-compliant Mandate Gateway Application.
@@ -44,10 +57,8 @@ class MandateGatewayApp:
 
     def startup(self) -> None:
         """Triggers application startup sequence."""
-        from apps.api.config.settings import validate_production_config
-
         try:
-            validate_production_config(self.settings)
+            validate_preflight_config(self.settings)
             self.lifecycle.startup()
             self.logger.info(
                 "Application runtime started successfully.",
