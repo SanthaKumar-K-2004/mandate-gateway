@@ -5,8 +5,6 @@ Verifies end-to-end API-to-database flows, session restart durability, rollback 
 3-step payment crash recovery, idempotency, and API fail-closed error contracts.
 """
 
-import asyncio
-import json
 import unittest
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -16,17 +14,14 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from apps.api.adapters.razorpay_adapter import MockRazorpayAdapter
 from apps.api.contracts.authorization import AuthorizationResult, SecurityControlOutcome
 from apps.api.contracts.execution import PaymentExecuteProposalRequest
-from apps.api.contracts.merchant import McpOperation, PolicyCreate
-from apps.api.domain.audit_ledger import AuditEventType
+from apps.api.contracts.merchant import McpOperation
 from apps.api.domain.budget_engine import BudgetEngine
 from apps.api.domain.execution_engine import PaymentExecutionService
 from apps.api.domain.intent import CommerceIntent
 from apps.api.domain.merchant_policy_engine import MerchantPolicyEngine
 from apps.api.domain.transaction import Transaction
-from apps.api.domain.types import Currency, MandateStatus, PolicyDecision, Region, TransactionState
+from apps.api.domain.types import Currency, MandateStatus, PolicyDecision, TransactionState
 from db.models.base import Base
-from db.models.merchant import MerchantModel
-from db.models.policy import MerchantPolicyModel
 from db.unit_of_work import AsyncUnitOfWork
 
 
@@ -150,7 +145,11 @@ class TestM056ProductionHardening(unittest.IsolatedAsyncioTestCase):
                 idempotency_key=f"idem_{tx_id}",
             )
             res_eval = await BudgetEngine().async_reserve(
-                uow, mandate_id=man_id, transaction_id=tx_id, amount_paise=1500000, currency=Currency.INR
+                uow,
+                mandate_id=man_id,
+                transaction_id=tx_id,
+                amount_paise=1500000,
+                currency=Currency.INR,
             )
             self.assertTrue(res_eval.valid)
             await uow.commit()
@@ -192,7 +191,6 @@ class TestM056ProductionHardening(unittest.IsolatedAsyncioTestCase):
             decision_trace={"authorization_reference": "auth_e2e"},
         )
         proposal = PaymentExecuteProposalRequest(
-            proposal_id=f"prop_{uuid.uuid4().hex[:8]}",
             transaction_id=tx_id,
             mandate_id=man_id,
             merchant_id=m_id,
@@ -200,7 +198,6 @@ class TestM056ProductionHardening(unittest.IsolatedAsyncioTestCase):
             operation=McpOperation.CREATE_ORDER,
             amount_paise=1500000,
             currency=Currency.INR,
-            cart_id="cart_e2e_1",
             cart_hash=cart_hash,
             idempotency_key=f"idem_{tx_id}",
         )
@@ -215,6 +212,7 @@ class TestM056ProductionHardening(unittest.IsolatedAsyncioTestCase):
         async with AsyncUnitOfWork(self.session_factory) as uow:
             m_reload = await uow.merchants.get_by_id(m_id)
             self.assertIsNotNone(m_reload)
+            assert m_reload is not None
             self.assertEqual(m_reload.name, "E2E Hardening Store")
 
             pol_reload = await uow.merchants.get_active_policy(m_id)
@@ -222,10 +220,12 @@ class TestM056ProductionHardening(unittest.IsolatedAsyncioTestCase):
 
             man_reload = await uow.mandates.get_mandate(man_id)
             self.assertIsNotNone(man_reload)
+            assert man_reload is not None
             self.assertEqual(man_reload.status, MandateStatus.ACTIVE.value)
 
             tx_reload = await uow.transactions.get_transaction(tx_id)
             self.assertIsNotNone(tx_reload)
+            assert tx_reload is not None
             self.assertEqual(tx_reload.state, TransactionState.COMMITTED.value)
 
             b_res = await uow.budgets.get_active_reservations_for_mandate(man_id)
@@ -233,6 +233,7 @@ class TestM056ProductionHardening(unittest.IsolatedAsyncioTestCase):
 
             sup_reload = await uow.step_up.get_challenge(sup_id)
             self.assertIsNotNone(sup_reload)
+            assert sup_reload is not None
             self.assertEqual(sup_reload.status, "APPROVED")
 
             rep_reload = await uow.replay.get_replay_record(fingerprint)
@@ -240,6 +241,7 @@ class TestM056ProductionHardening(unittest.IsolatedAsyncioTestCase):
 
             nonce_reload = await uow.nonces.get_nonce(nonce.nonce)
             self.assertIsNotNone(nonce_reload)
+            assert nonce_reload is not None
             self.assertEqual(nonce_reload.status, "CONSUMED")
 
     async def test_transaction_rollback_consistency_on_failure(self) -> None:
@@ -295,6 +297,7 @@ class TestM056ProductionHardening(unittest.IsolatedAsyncioTestCase):
         async with AsyncUnitOfWork(self.session_factory) as uow:
             existing = await uow.transactions.get_transaction_by_idempotency_key(idem_key)
             self.assertIsNotNone(existing)
+            assert existing is not None
             self.assertEqual(existing.transaction_id, tx_id_1)
 
             # Conflicting context registration attempt with same idempotency key raises ValueError / IntegrityError

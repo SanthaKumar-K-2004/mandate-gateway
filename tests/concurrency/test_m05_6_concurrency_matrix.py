@@ -83,9 +83,9 @@ class TestM056ConcurrencyMatrix(unittest.IsolatedAsyncioTestCase):
                     if res is not None:
                         await uow.commit()
                         return True
-                    return False
             except Exception:
-                return False
+                pass
+            return False
 
         results = await asyncio.gather(*[_worker(i) for i in range(10)])
         success_count = sum(1 for r in results if r)
@@ -98,7 +98,6 @@ class TestM056ConcurrencyMatrix(unittest.IsolatedAsyncioTestCase):
 
     async def test_step_up_double_approval_race(self) -> None:
         """Verify multiple approval attempts on same challenge result in exactly 1 success."""
-        m_id = f"mer_{uuid.uuid4().hex[:8]}"
         tx_id = f"tx_sup_{uuid.uuid4().hex[:8]}"
         sup_id = f"sup_{uuid.uuid4().hex[:8]}"
         b_id = f"buy_{uuid.uuid4().hex[:8]}"
@@ -124,9 +123,7 @@ class TestM056ConcurrencyMatrix(unittest.IsolatedAsyncioTestCase):
         for _ in range(9):
             try:
                 async with AsyncUnitOfWork(self.session_factory) as uow:
-                    res = await uow.step_up.approve_challenge(sup_id, b_id)
-                    if res is None:
-                        failed_count += 1
+                    await uow.step_up.approve_challenge(sup_id, b_id)
             except Exception:
                 failed_count += 1
 
@@ -174,9 +171,9 @@ class TestM056ConcurrencyMatrix(unittest.IsolatedAsyncioTestCase):
                     if rec is not None:
                         await uow.commit()
                         return True
-                    return False
             except Exception:
-                return False
+                pass
+            return False
 
         results = await asyncio.gather(*[_register_worker() for _ in range(10)])
         success_count = sum(1 for r in results if r)
@@ -226,7 +223,6 @@ class TestM056ConcurrencyMatrix(unittest.IsolatedAsyncioTestCase):
             decision_trace={"authorization_reference": "auth_race"},
         )
         proposal = PaymentExecuteProposalRequest(
-            proposal_id=f"prop_{uuid.uuid4().hex[:8]}",
             transaction_id=tx_id,
             mandate_id=man_id,
             merchant_id=m_id,
@@ -234,7 +230,6 @@ class TestM056ConcurrencyMatrix(unittest.IsolatedAsyncioTestCase):
             operation=McpOperation.CREATE_ORDER,
             amount_paise=100000,
             currency=Currency.INR,
-            cart_id="cart_race_1",
             cart_hash=cart_hash,
             idempotency_key=f"idem_{tx_id}",
         )
@@ -262,9 +257,11 @@ class TestM056ConcurrencyMatrix(unittest.IsolatedAsyncioTestCase):
                     await uow.commit()
                     return res.success
             except Exception:
-                return False
+                pass
+            return False
 
         results = await asyncio.gather(*[_exec_worker() for _ in range(10)])
+        self.assertGreaterEqual(len(results), 10)
         self.assertLessEqual(len(adapter.executed_requests), 1)
 
     async def test_audit_append_race(self) -> None:

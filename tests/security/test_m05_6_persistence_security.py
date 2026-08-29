@@ -18,13 +18,9 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from apps.api.contracts.merchant import McpOperation
-from apps.api.domain.intent import CommerceIntent
-from apps.api.domain.merchant_policy_engine import MerchantPolicyEngine
-from apps.api.domain.receipt import ActionReceipt
 from apps.api.domain.receipt_signer import ActionReceiptSigner
 from apps.api.domain.receipt_verifier import ReceiptVerifier
-from apps.api.domain.types import Currency, MandateStatus, PolicyDecision, Region, TransactionState
+from apps.api.domain.types import Currency, MandateStatus, PolicyDecision
 from db.models.base import Base
 from db.repository.mandate_repository import MandateStateTransitionError
 from db.unit_of_work import AsyncUnitOfWork
@@ -77,6 +73,7 @@ class TestM056PersistenceSecurity(unittest.IsolatedAsyncioTestCase):
             # Buyer B querying own mandate succeeds
             mandate_b = await uow.mandates.get_mandate_for_buyer(man_id_b, b_id_b)
             self.assertIsNotNone(mandate_b)
+            assert mandate_b is not None
             self.assertEqual(mandate_b.mandate_id, man_id_b)
 
     async def test_nonce_context_binding_security(self) -> None:
@@ -143,6 +140,7 @@ class TestM056PersistenceSecurity(unittest.IsolatedAsyncioTestCase):
         async with AsyncUnitOfWork(self.session_factory) as uow:
             model1 = await uow.audit.get_event("evt_1")
             self.assertIsNotNone(model1)
+            assert model1 is not None
             model1.payload_json = json.dumps({"amount": 999999})  # TAMPER payload!
             await uow.commit()
 
@@ -150,6 +148,7 @@ class TestM056PersistenceSecurity(unittest.IsolatedAsyncioTestCase):
         async with AsyncUnitOfWork(self.session_factory) as uow:
             is_valid_after, reason = await uow.audit.verify_chain()
             self.assertFalse(is_valid_after)
+            assert reason is not None
             self.assertIn("tampered", reason.lower())
 
     async def test_action_receipt_ed25519_tamper_detection(self) -> None:
@@ -169,9 +168,7 @@ class TestM056PersistenceSecurity(unittest.IsolatedAsyncioTestCase):
             authorized_at=now,
         )
 
-        res = ReceiptVerifier.verify(
-            signed_receipt, signer.key_manager.get_public_key_bytes()
-        )
+        res = ReceiptVerifier.verify(signed_receipt, signer.key_manager.get_public_key_bytes())
         self.assertTrue(res.is_valid)
 
         # Tamper test 1: Verify with incorrect public key -> returns is_valid=False
