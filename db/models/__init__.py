@@ -14,6 +14,7 @@ from db.models.receipt import ActionReceiptModel
 from db.models.replay import NonceRecordModel, ReplayRecordModel
 from db.models.step_up import StepUpChallengeModel
 from db.models.transaction import TransactionModel
+from db.models.webhook import WebhookEventModel
 
 __all__ = [
     "Base",
@@ -28,4 +29,5 @@ __all__ = [
     "NonceRecordModel",
     "AuditEventModel",
     "ActionReceiptModel",
+    "WebhookEventModel",
 ]

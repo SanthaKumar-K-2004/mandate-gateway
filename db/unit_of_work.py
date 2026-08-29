@@ -21,6 +21,7 @@ from db.repository.receipt_repository import ReceiptRepository
 from db.repository.replay_repository import ReplayRepository
 from db.repository.step_up_repository import StepUpRepository
 from db.repository.transaction_repository import TransactionRepository
+from db.repository.webhook_repository import WebhookRepository
 
 logger = logging.getLogger("mandate_gateway.db.uow")
 
@@ -86,6 +87,7 @@ class AsyncUnitOfWork:
         self._nonce_repo: Optional[NonceRepository] = None
         self._audit_repo: Optional[AuditRepository] = None
         self._receipt_repo: Optional[ReceiptRepository] = None
+        self._webhook_repo: Optional[WebhookRepository] = None
 
     async def __aenter__(self) -> AsyncUnitOfWork:
         if self._is_active or self._closed:
@@ -212,6 +214,7 @@ class AsyncUnitOfWork:
         self._nonce_repo = None
         self._audit_repo = None
         self._receipt_repo = None
+        self._webhook_repo = None
 
     def _assert_active(self) -> None:
         if self._closed or not self._is_active or self._session is None:
@@ -294,3 +297,11 @@ class AsyncUnitOfWork:
         if self._receipt_repo is None:
             self._receipt_repo = ReceiptRepository(self._session)
         return self._receipt_repo
+
+    @property
+    def webhooks(self) -> WebhookRepository:
+        self._assert_active()
+        assert self._session is not None
+        if self._webhook_repo is None:
+            self._webhook_repo = WebhookRepository(self._session)
+        return self._webhook_repo

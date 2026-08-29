@@ -235,3 +235,41 @@ def reject_step_up(transaction_id: str, payload: StepUpRejectRequest) -> Transac
     )
     _TRANSACTIONS[transaction_id] = updated_tx
     return updated_tx
+
+
+@transactions_router.post(
+    "/transactions/{transaction_id}/reconcile",
+    status_code=status.HTTP_200_OK,
+)
+async def reconcile_transaction(transaction_id: str) -> dict[str, Any]:
+    """
+    Trigger provider status reconciliation for an UNKNOWN / PENDING transaction.
+    """
+    from apps.api.adapters.razorpay_adapter import MockRazorpayAdapter
+    from apps.api.domain.reconciliation_engine import ReconciliationService
+    from db.unit_of_work import AsyncUnitOfWork
+
+    adapter = MockRazorpayAdapter()
+    service = ReconciliationService(adapter)
+
+    async with AsyncUnitOfWork() as uow:
+        res = await service.async_reconcile_transaction(uow, transaction_id)
+        if res.success or res.state is not None:
+            await uow.commit()
+            return {
+                "transaction_id": res.transaction_id,
+                "state": res.state.value if res.state else "UNKNOWN",
+                "success": res.success,
+                "provider_status": res.provider_status.value if res.provider_status else "UNKNOWN",
+                "message": res.safe_message,
+            }
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=res.safe_message or "Reconciliation failed.",
+            )
+
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Reconciliation failed.",
+    )

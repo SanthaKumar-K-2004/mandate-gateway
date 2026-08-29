@@ -12,6 +12,7 @@ from db.repository.receipt_repository import ReceiptRepository
 from db.repository.replay_repository import ReplayRepository
 from db.repository.step_up_repository import StepUpRepository
 from db.repository.transaction_repository import TransactionRepository
+from db.repository.webhook_repository import WebhookRepository
 
 __all__ = [
     "BaseRepository",
@@ -24,4 +25,5 @@ __all__ = [
     "NonceRepository",
     "AuditRepository",
     "ReceiptRepository",
+    "WebhookRepository",
 ]

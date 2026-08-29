@@ -165,7 +165,14 @@ _TRANSACTION_LEGAL_TRANSITIONS: dict[TransactionState, frozenset[TransactionStat
     TransactionState.USER_APPROVED: frozenset({TransactionState.RESERVED}),
     TransactionState.RESERVED: frozenset({TransactionState.AUTHORIZED}),
     TransactionState.AUTHORIZED: frozenset({TransactionState.EXECUTING}),
-    TransactionState.EXECUTING: frozenset({TransactionState.SUCCESS, TransactionState.FAILURE}),
+    TransactionState.EXECUTING: frozenset(
+        {
+            TransactionState.SUCCESS,
+            TransactionState.FAILURE,
+            TransactionState.COMMITTED,
+            TransactionState.ROLLED_BACK,
+        }
+    ),
     TransactionState.SUCCESS: frozenset({TransactionState.COMMITTED}),
     TransactionState.FAILURE: frozenset({TransactionState.ROLLED_BACK}),
     TransactionState.COMMITTED: frozenset({TransactionState.COMPLETED}),
