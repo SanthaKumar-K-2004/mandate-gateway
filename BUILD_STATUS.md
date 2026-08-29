@@ -513,7 +513,18 @@
   - **Adversarial Security Test Suite**: Created [`tests/security/test_m07_adversarial_security.py`](file:///home/santhakumar/Desktop/Raserpay/tests/security/test_m07_adversarial_security.py) testing idempotency key context substitution, payload fingerprint tampering, webhook HMAC SHA-256 signature forgery, out-of-order state transitions, audit ledger tamper detection, and `UNKNOWN` outcome preservation.
   - **Quality Gates (`make check`)**: 100% PASS (**546 total automated tests PASS 100%**, Black clean, Flake8 0 errors, MyPy 0 errors, Secret scanner PASS, Architecture guard PASS).
   - **`PROJECT_CONTEXT.md` SHA-256**: `2b62d52aa707bc9bb5df60d93b04f60933562e69af8068c46cc3b6cdc2eb670a` — INTACT.
-- [x] **M08 — Production Observability, Operational Intelligence, Deployment Readiness & Safe Runtime Control** — **COMPLETE / FROZEN**
+- [x] **M09 — Production Infrastructure, Deployment & Runtime Verification** — **COMPLETE / FROZEN**
+  - All 11 architectural workstreams implemented and verified (579 / 579 tests PASS, quality gate 100% clean).
+  - Dockerfile multi-stage containerization with non-root security (`appuser:appgroup`).
+  - Production docker-compose.yml stack with API, separated outbox worker, and recovery worker processes.
+  - PostgreSQL database verification, transaction row-locking mechanics, and unique constraint enforcement.
+  - Redis runtime health check verification, fallback policy, and fail-closed security.
+  - Alembic database migration discipline and fresh DB bootstrap verification.
+  - Process separation for OutboxWorker and RecoveryWorker.
+  - Graceful shutdown signal handling (SIGTERM/SIGINT) and failure engineering resilience.
+  - Git commit `6ec745f` frozen on master.
+
+- [x] **M08 — Production Observability, Operational Intelligence & Deployment Readiness** — **COMPLETE / FROZEN**
   - **Structured Production Logging**: Updated `StructuredJsonFormatter` in [`apps/api/app/logging.py`](file:///home/santhakumar/Desktop/Raserpay/apps/api/app/logging.py) to format single-line structured JSON logs with rich domain context propagation. Enhanced `redact_value` to automatically redact sensitive keys (`secret`, `password`, `token`, `api_key`, `auth`, `authorization`, `private_key`, `signature`, `cvv`) in dict payloads and `SecretString` objects.
   - **Request Correlation & Transaction Traceability**: Expanded `contextvars` in [`apps/api/app/context.py`](file:///home/santhakumar/Desktop/Raserpay/apps/api/app/context.py) with `set_transaction_context(...)` and `get_full_context()`, supporting `request_id`, `correlation_id`, `trace_id`, `transaction_id`, `merchant_id`, `buyer_id`, `mandate_id`, `execution_attempt_id`, and `outbox_event_id`.
   - **Application Health & Readiness Model**: Implemented `/health` (liveness 200 OK), `/ready` (readiness checking process lifecycle and DB/Redis health), and `/diagnostics` (internal operator diagnostic surface) in [`apps/api/app/health.py`](file:///home/santhakumar/Desktop/Raserpay/apps/api/app/health.py) and [`apps/api/app/factory.py`](file:///home/santhakumar/Desktop/Raserpay/apps/api/app/factory.py).
