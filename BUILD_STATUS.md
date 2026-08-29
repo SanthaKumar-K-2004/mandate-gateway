@@ -473,6 +473,13 @@
   - **Concurrency & Controlled Mutation Proofs**: Verified 10-worker concurrent append producing an unbroken, sequential, cryptographic audit hash chain. Controlled Mutation A (sequence gap/out-of-order), Mutation B (payload hash recomputation detection), Mutation C (hash-chain link break), Mutation D (context binding mismatch), and Mutation E (signature tampering) caught by test suite.
   - **Quality Gates (`make check`)**: 100% PASS (**500 total automated tests PASS 100%**, Black clean, Flake8 0 errors, MyPy 0 errors, Secret scanner PASS, Architecture guard PASS).
   - **`PROJECT_CONTEXT.md` SHA-256**: `2b62d52aa707bc9bb5df60d93b04f60933562e69af8068c46cc3b6cdc2eb670a` — INTACT.
+- [x] **M05 / S05.4.1 — Persistence Integration Architecture & Transaction Boundary Mapping** — **COMPLETE / FROZEN**
+  - **Architecture Specification**: Authored [`docs/architecture/M05_4_1_persistence_integration_architecture.md`](file:///home/santhakumar/Desktop/Raserpay/docs/architecture/M05_4_1_persistence_integration_architecture.md) mapping all 10 in-memory state stores to durable PostgreSQL repository targets.
+  - **Transaction Boundary Design**: Defined `AsyncSession` ownership layer (Application Service / Unit of Work), strict rules prohibiting repositories from calling `commit()` / `rollback()`, atomic single-transaction boundaries for authorization & reservation, and separated transactions for external gateway HTTP execution.
+  - **Concurrency & Security Mapping**: Mapped `SELECT ... FOR UPDATE` locking strategies, primary key unique constraints, multi-tenant isolation, and audit hash-chain preservation across multi-worker environments.
+  - **Architecture Test Suite**: Created [`tests/unit/test_m05_4_1_architecture_mapping.py`](file:///home/santhakumar/Desktop/Raserpay/tests/unit/test_m05_4_1_architecture_mapping.py) verifying repository inheritance, contract compliance, and architecture specification completeness.
+  - **Quality Gates (`make check`)**: 100% PASS (**503 total automated tests PASS 100%**, Black clean, Flake8 0 errors, MyPy 0 errors, Secret scanner PASS, Architecture guard PASS).
+  - **`PROJECT_CONTEXT.md` SHA-256**: `2b62d52aa707bc9bb5df60d93b04f60933562e69af8068c46cc3b6cdc2eb670a` — INTACT.
 - [x] **M04 / S04.3 — State Consistency, Atomicity & Concurrency Forensic Audit** — **COMPLETE / FROZEN**
 - [x] **M04 / S04.4 — Crash Consistency, Recovery & Reconciliation Forensic Audit** — **COMPLETE / FROZEN**
 - [x] **M04 / S04.5 — Final Whole-System Penetration, Red-Team Chaos Lab & Submission-Readiness Forensic Audit** — **COMPLETE / FROZEN**
