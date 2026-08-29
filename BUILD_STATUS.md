@@ -469,12 +469,13 @@
 - [x] **M04 / S04.3 — State Consistency, Atomicity & Concurrency Forensic Audit** — **COMPLETE / FROZEN**
 - [x] **M04 / S04.4 — Crash Consistency, Recovery & Reconciliation Forensic Audit** — **COMPLETE / FROZEN**
 - [x] **M04 / S04.5 — Final Whole-System Penetration, Red-Team Chaos Lab & Submission-Readiness Forensic Audit** — **COMPLETE / FROZEN**
-- [x] **M05 / S05.3.6.1 — StepUpRepository & Durable Human Approval Persistence** — **COMPLETE / FROZEN**
-  - **StepUpRepository**: Created [`db/repository/step_up_repository.py`](file:///home/santhakumar/Desktop/Raserpay/db/repository/step_up_repository.py) extending `BaseRepository[StepUpChallengeModel]`.
-  - **Durable Step-Up Management**: Implemented `create_challenge`, `get_challenge`, `get_challenge_for_transaction`, `lock_challenge_for_update`, `approve_challenge`, `reject_challenge`, `expire_challenge`, and `get_pending_challenges`.
-  - **Security & Multi-Worker Invariants**: Enforced human-only approver boundary (`LLM != APPROVER`), exact-once approval semantics, terminal state immutability (`APPROVED`, `REJECTED`, `EXPIRED`), expiry evaluation (`check_time >= expires_at` fails closed), and database row locking (`SELECT ... FOR UPDATE`).
-  - **Concurrency & Controlled Mutation Proofs**: Verified 10 concurrent approval attempts resulting in exactly 1 approval and 9 failures (0 double approvals!). Controlled Mutation A (double approval bypass) and Mutation B (expiry bypass) caught by security tests.
-  - **Quality Gates (`make check`)**: 100% PASS (**464 total automated tests PASS 100%**, Black clean, Flake8 0 errors, MyPy 0 errors, Secret scanner PASS, Architecture guard PASS).
+- [x] **M05 / S05.3.6.2 — ReplayRepository & Durable Replay Protection Persistence** — **COMPLETE / FROZEN**
+  - **ReplayRepository**: Created [`db/repository/replay_repository.py`](file:///home/santhakumar/Desktop/Raserpay/db/repository/replay_repository.py) extending `BaseRepository[ReplayRecordModel]`.
+  - **Durable Replay Management**: Implemented `record_replay_fingerprint`, `get_replay_record`, `get_replay_for_transaction`, `lock_replay_for_update`, `is_fingerprint_replayed`, and `check_and_record_replay`.
+  - **Security & Multi-Worker Invariants**: Enforced single-use replay protection invariant (consumed fingerprint in active window rejected), context-binding validation (`transaction_id` mismatch raises `ValueError`), TTL expiry evaluation using timezone-aware UTC, immutability of security records, and primary key uniqueness constraint protection for PostgreSQL multi-worker concurrency.
+  - **Concurrency & Controlled Mutation Proofs**: Verified 10 concurrent replay submissions resulting in exactly 1 registration and 9 rejections (0 double registrations!). Controlled Mutation A (active replay detection bypass), Mutation B (conflicting context bypass), and Mutation C (expiry boundary check) caught by security tests.
+  - **Quality Gates (`make check`)**: 100% PASS (**475 total automated tests PASS 100%**, Black clean, Flake8 0 errors, MyPy 0 errors, Secret scanner PASS, Architecture guard PASS).
   - **`PROJECT_CONTEXT.md` SHA-256**: `2b62d52aa707bc9bb5df60d93b04f60933562e69af8068c46cc3b6cdc2eb670a` — INTACT.
+
 
 
