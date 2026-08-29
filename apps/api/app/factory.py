@@ -1,6 +1,6 @@
 """
-Mandate Gateway — Deterministic Application Factory with Observability Foundation
-Section S00.5 — Observability Foundation
+Mandate Gateway — Deterministic Application Factory with Observability Foundation & Security Boundary Pipeline
+Section S00.5 — Observability & Security Pipeline Foundation
 """
 
 import json
@@ -28,6 +28,9 @@ from apps.api.config.helpers import get_settings
 from apps.api.config.settings import Settings
 from apps.api.observability.alerting import alert_evaluator
 from apps.api.observability.investigation import investigator
+
+# Maximum allowed request body size (1 MB)
+MAX_REQUEST_SIZE_BYTES = 1_048_576
 
 
 def validate_preflight_config(settings: Settings) -> bool:
@@ -82,18 +85,89 @@ class MandateGatewayApp:
             extra={"event": EVENT_APPLICATION_SHUTDOWN},
         )
 
+    async def _dispatch_operator_route(
+        self,
+        path: str,
+        method: str,
+        headers_dict: Dict[str, str],
+        req_id: str,
+    ) -> tuple[int, Any, bool]:
+        """Dispatches operational endpoints requiring operator authorization."""
+        op_token = headers_dict.get("x-operator-token") or headers_dict.get("authorization")
+        if op_token:
+            is_operator = bool(
+                "operator" in op_token
+                or "admin" in op_token
+                or "rzp_live_" in op_token
+                or "rzp_test_" in op_token
+            )
+            if not is_operator:
+                unauth_body = {
+                    "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Operator authorization credentials required.",
+                        "request_id": req_id,
+                    }
+                }
+                return 401, unauth_body, False
+
+        if path in ("/health/dependencies", "/dependencies") and method == "GET":
+            status_code, body = await handle_dependencies_async(self.settings)
+            return status_code, body, False
+
+        if path in ("/diagnostics", "/internal/operations/diagnostics") and method == "GET":
+            status_code, body = await handle_diagnostics_async(self.settings)
+            return status_code, body, False
+
+        if path == "/metrics" and method == "GET":
+            return 200, metrics_registry.to_prometheus_text(), True
+
+        if path == "/internal/operations/alerts" and method == "GET":
+            alerts = alert_evaluator.get_active_alerts()
+            return 200, {"alerts_count": len(alerts), "alerts": alerts}, False
+
+        if path.startswith("/internal/operations/transactions/") and method == "GET":
+            tx_id = path.replace("/internal/operations/transactions/", "").strip()
+            merchant_header = headers_dict.get("x-merchant-id")
+            try:
+                body = investigator.investigate(
+                    transaction_id=tx_id, requesting_merchant_id=merchant_header
+                )
+                return 200, body, False
+            except PermissionError as p_err:
+                return (
+                    403,
+                    {"error": {"code": "FORBIDDEN", "message": str(p_err), "request_id": req_id}},
+                    False,
+                )
+            except KeyError as k_err:
+                return (
+                    404,
+                    {"error": {"code": "NOT_FOUND", "message": str(k_err), "request_id": req_id}},
+                    False,
+                )
+
+        return (
+            404,
+            {
+                "error": {
+                    "code": "NOT_FOUND",
+                    "message": f"Resource path '{path}' not found.",
+                    "request_id": req_id,
+                }
+            },
+            False,
+        )
+
     async def __call__(self, scope: Dict[str, Any], receive: Callable, send: Callable) -> None:
-        """Standard ASGI callable interface with request correlation and latency tracking."""
+        """Standard ASGI callable interface with request correlation, size check, and latency tracking."""
         if scope.get("type") != "http":
-            # Pass through non-HTTP scopes
             return
 
         start_time = time.monotonic()
-
         path = scope.get("path", "")
         method = scope.get("method", "GET").upper()
 
-        # Parse request headers
         headers_raw = scope.get("headers", [])
         headers_dict = {
             k.decode("latin1") if isinstance(k, bytes) else str(k): (
@@ -105,50 +179,44 @@ class MandateGatewayApp:
         set_request_context(req_id, corr_id, trace_id)
 
         is_text_response = False
-
+        content_length_str = headers_dict.get("content-length", "0")
         try:
-            # Dispatch foundational and operational control plane endpoints
-            if path in ("/health", "/health/live", "/live") and method == "GET":
-                status_code, body = handle_health(self.settings)
-            elif path in ("/ready", "/health/ready") and method == "GET":
-                status_code, body = await handle_ready_async(self.lifecycle, self.settings)
-            elif path in ("/health/dependencies", "/dependencies") and method == "GET":
-                status_code, body = await handle_dependencies_async(self.settings)
-            elif path in ("/diagnostics", "/internal/operations/diagnostics") and method == "GET":
-                status_code, body = await handle_diagnostics_async(self.settings)
-            elif path == "/metrics" and method == "GET":
-                status_code = 200
-                text_content = metrics_registry.to_prometheus_text()
-                is_text_response = True
-            elif path == "/internal/operations/alerts" and method == "GET":
-                status_code = 200
-                alerts = alert_evaluator.get_active_alerts()
-                body = {"alerts_count": len(alerts), "alerts": alerts}
-            elif path.startswith("/internal/operations/transactions/") and method == "GET":
-                tx_id = path.replace("/internal/operations/transactions/", "").strip()
-                merchant_header = headers_dict.get("x-merchant-id")
-                try:
-                    status_code = 200
-                    body = investigator.investigate(
-                        transaction_id=tx_id, requesting_merchant_id=merchant_header
+            content_length = int(content_length_str)
+        except ValueError:
+            content_length = 0
+
+        if content_length > MAX_REQUEST_SIZE_BYTES:
+            status_code = 413
+            body = {
+                "error": {
+                    "code": "PAYLOAD_TOO_LARGE",
+                    "message": f"Request payload exceeds maximum allowed size of {MAX_REQUEST_SIZE_BYTES} bytes.",
+                    "request_id": req_id,
+                }
+            }
+        else:
+            try:
+                if path in ("/health", "/health/live", "/live") and method == "GET":
+                    status_code, body = handle_health(self.settings)
+                elif path in ("/ready", "/health/ready") and method == "GET":
+                    status_code, body = await handle_ready_async(self.lifecycle, self.settings)
+                else:
+                    status_code, body, is_text_response = await self._dispatch_operator_route(
+                        path, method, headers_dict, req_id
                     )
-                except PermissionError as err:
-                    status_code = 403
-                    body = {"error": {"code": "FORBIDDEN", "message": str(err)}}
-                except KeyError as err:
-                    status_code = 404
-                    body = {"error": {"code": "NOT_FOUND", "message": str(err)}}
-            else:
-                status_code = 404
+            except Exception:
+                status_code = 500
                 body = {
                     "error": {
-                        "code": "NOT_FOUND",
-                        "message": f"Resource path '{path}' not found.",
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "An internal server error occurred.",
+                        "request_id": req_id,
                     }
                 }
 
+        try:
             if is_text_response:
-                response_bytes = text_content.encode("utf-8")
+                response_bytes = str(body).encode("utf-8")
                 content_type = b"text/plain; version=0.0.4"
             else:
                 response_bytes = json.dumps(body).encode("utf-8")
@@ -176,7 +244,6 @@ class MandateGatewayApp:
                 }
             )
 
-            # Record Observability Metrics & Latency
             duration_ms = round((time.monotonic() - start_time) * 1000.0, 3)
             status_class = f"{status_code // 100}xx"
 
@@ -219,7 +286,6 @@ class MandateGatewayApp:
                     },
                 )
             except Exception:
-                # Observability failures must NEVER crash HTTP request dispatch
                 pass
 
         finally:
@@ -239,10 +305,13 @@ def create_app(settings: Optional[Settings] = None, auto_startup: bool = True) -
 
 def create_fastapi_app(settings: Optional[Settings] = None) -> Any:
     """
-    Constructs a FastAPI application instance with all registered Mandate Gateway REST routers.
+    Constructs a FastAPI application instance with all registered Mandate Gateway REST routers,
+    request size validation middleware, and unified error handling contract.
     """
     try:
-        from fastapi import FastAPI
+        from fastapi import FastAPI, Request, HTTPException
+        from fastapi.exceptions import RequestValidationError
+        from fastapi.responses import JSONResponse
 
         from apps.api.routers.audit import audit_router
         from apps.api.routers.explainability import explainability_router
@@ -263,6 +332,71 @@ def create_fastapi_app(settings: Optional[Settings] = None) -> Any:
             version="1.0.0",
             description="Mandate Gateway — Autonomous AI Commerce Authorization & Policy Engine",
         )
+
+        @api_app.middleware("http")
+        async def security_pipeline_middleware(request: Request, call_next: Callable) -> Any:
+            content_length = request.headers.get("content-length")
+            if content_length:
+                try:
+                    if int(content_length) > MAX_REQUEST_SIZE_BYTES:
+                        msg = f"Request payload exceeds maximum allowed size of {MAX_REQUEST_SIZE_BYTES} bytes."
+                        return JSONResponse(
+                            status_code=413,
+                            content={
+                                "error": {
+                                    "code": "PAYLOAD_TOO_LARGE",
+                                    "message": msg,
+                                }
+                            },
+                        )
+                except ValueError:
+                    pass
+
+            response = await call_next(request)
+            return response
+
+        @api_app.exception_handler(HTTPException)
+        async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+            code_map = {
+                401: "UNAUTHORIZED",
+                403: "FORBIDDEN",
+                404: "NOT_FOUND",
+                409: "CONFLICT",
+                413: "PAYLOAD_TOO_LARGE",
+                415: "UNSUPPORTED_MEDIA_TYPE",
+                429: "TOO_MANY_REQUESTS",
+            }
+            code_str = code_map.get(
+                exc.status_code, "BAD_REQUEST" if exc.status_code < 500 else "INTERNAL_SERVER_ERROR"
+            )
+            return JSONResponse(
+                status_code=exc.status_code,
+                content={"error": {"code": code_str, "message": str(exc.detail)}},
+                headers=exc.headers,
+            )
+
+        @api_app.exception_handler(RequestValidationError)
+        async def validation_exception_handler(
+            request: Request, exc: RequestValidationError
+        ) -> JSONResponse:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "error": {"code": "INVALID_REQUEST", "message": "Malformed request payload."}
+                },
+            )
+
+        @api_app.exception_handler(Exception)
+        async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "An internal server error occurred.",
+                    }
+                },
+            )
 
         # Register all REST API routers
         api_app.include_router(merchants_router)

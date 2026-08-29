@@ -18,8 +18,13 @@ from apps.api.contracts.merchant import (
 )
 from apps.api.domain.types import Currency, McpOperation, Region
 
+from apps.api.security.dependencies import (
+    get_current_principal,
+    verify_merchant_tenant_access,
+)
+
 try:
-    from fastapi import APIRouter, HTTPException, status
+    from fastapi import APIRouter, Depends, HTTPException, status
 
     HAS_FASTAPI = True
 except ImportError:  # pragma: no cover
@@ -154,8 +159,13 @@ def create_merchant(payload: MerchantCreate) -> MerchantResponse:
     "/merchants/{merchant_id}",
     response_model=MerchantResponse,
 )
-def get_merchant(merchant_id: str) -> MerchantResponse:
+def get_merchant(
+    merchant_id: str,
+    principal: Any = Depends(get_current_principal) if HAS_FASTAPI else None,
+) -> MerchantResponse:
     """Fetch merchant by ID."""
+    if principal is not None and hasattr(principal, "merchant_id"):
+        verify_merchant_tenant_access(merchant_id, principal)
     uow = _get_uow_or_none()
     if uow is not None:
         import asyncio

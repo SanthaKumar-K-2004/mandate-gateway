@@ -46,6 +46,17 @@ class AuthenticatedPrincipal:
         return all(self.has_scope(s) for s in required_scopes)
 
 
+def compute_credential_fingerprint(raw_secret: str) -> str:
+    """
+    Computes a safe non-reversible SHA-256 fingerprint of a raw API key for logging and security audit trail.
+    Plaintext API keys MUST NEVER be written to logs or audit records.
+    """
+    if not raw_secret or not raw_secret.strip():
+        return "fp_rzp_unknown"
+    digest = hashlib.sha256(raw_secret.strip().encode("utf-8")).hexdigest()[:16]
+    return f"fp_rzp_{digest}"
+
+
 def hash_credential_secret(raw_secret: str) -> str:
     """
     Compute a secure salted SHA-256 hash of a raw API secret.

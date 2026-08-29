@@ -1,10 +1,11 @@
 """
-M13 — Operational Intelligence & Control Plane REST Router.
-Section 13 — API Design
+M13 & M14 — Operational Intelligence & Control Plane REST Router.
+Protected by OPERATOR_INTERNAL security controls for internal endpoints.
 """
 
 from __future__ import annotations
 
+import json
 from typing import Any, Callable, Dict, Optional
 
 from apps.api.app.health import (
@@ -17,9 +18,10 @@ from apps.api.app.metrics import metrics_registry
 from apps.api.config.helpers import get_settings
 from apps.api.observability.alerting import alert_evaluator
 from apps.api.observability.investigation import investigator
+from apps.api.security.dependencies import get_operator_principal
 
 try:
-    from fastapi import APIRouter, Header, HTTPException, Query, Response, status
+    from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response, status
 
     HAS_FASTAPI = True
 except ImportError:  # pragma: no cover
@@ -28,6 +30,7 @@ except ImportError:  # pragma: no cover
 
     class status:  # type: ignore[no-redef]
         HTTP_200_OK = 200
+        HTTP_401_UNAUTHORIZED = 401
         HTTP_403_FORBIDDEN = 403
         HTTP_404_NOT_FOUND = 404
         HTTP_503_SERVICE_UNAVAILABLE = 503
@@ -66,7 +69,6 @@ if HAS_FASTAPI:
         lifecycle = AppLifecycle()
         lifecycle.startup()  # Mark ready for router evaluation if initialized
         status_code, body = await handle_ready_async(lifecycle, settings)
-        import json
 
         return Response(
             content=json.dumps(body),
@@ -75,10 +77,11 @@ if HAS_FASTAPI:
         )
 
     @operations_router.get("/health/dependencies", summary="Dependency Diagnostics Probe")
-    async def get_dependencies() -> Response:
+    async def get_dependencies(
+        operator: Any = Depends(get_operator_principal),
+    ) -> Response:
         settings = get_settings()
         status_code, body = await handle_dependencies_async(settings)
-        import json
 
         return Response(
             content=json.dumps(body),
@@ -87,7 +90,9 @@ if HAS_FASTAPI:
         )
 
     @operations_router.get("/metrics", summary="Metrics Export Endpoint")
-    def get_metrics() -> Response:
+    def get_metrics(
+        operator: Any = Depends(get_operator_principal),
+    ) -> Response:
         content = metrics_registry.to_prometheus_text()
         return Response(content=content, media_type="text/plain; version=0.0.4")
 
@@ -99,6 +104,7 @@ if HAS_FASTAPI:
         transaction_id: str,
         x_merchant_id: Optional[str] = Header(None, alias="X-Merchant-ID"),
         merchant_id: Optional[str] = Query(None),
+        operator: Any = Depends(get_operator_principal),
     ) -> Dict[str, Any]:
         req_merchant = x_merchant_id or merchant_id
         try:
@@ -118,7 +124,9 @@ if HAS_FASTAPI:
             )
 
     @operations_router.get("/internal/operations/alerts", summary="Operational Alert Status")
-    def get_alerts_endpoint() -> Dict[str, Any]:
+    def get_alerts_endpoint(
+        operator: Any = Depends(get_operator_principal),
+    ) -> Dict[str, Any]:
         alerts = alert_evaluator.get_active_alerts()
         return {
             "alerts_count": len(alerts),

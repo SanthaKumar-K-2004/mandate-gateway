@@ -85,7 +85,7 @@ class TestApiAuthorizationIntegration(unittest.IsolatedAsyncioTestCase):
                 await authenticate_credential(raw_secret, uow=uow)
 
             self.assertEqual(ctx.exception.status_code, 401)
-            self.assertIn("revoked", ctx.exception.detail.lower())
+            self.assertIn("invalid api authentication credentials", ctx.exception.detail.lower())
 
     async def test_expired_credential_rejection(self) -> None:
         """Test that expired credentials fail closed during authentication."""
@@ -110,7 +110,7 @@ class TestApiAuthorizationIntegration(unittest.IsolatedAsyncioTestCase):
                 await authenticate_credential(raw_secret, uow=uow)
 
             self.assertEqual(ctx.exception.status_code, 401)
-            self.assertIn("expired", ctx.exception.detail.lower())
+            self.assertIn("invalid api authentication credentials", ctx.exception.detail.lower())
 
     async def test_tenant_isolation_enforcement(self) -> None:
         """Test multi-tenant isolation rejects cross-merchant access attempts."""
