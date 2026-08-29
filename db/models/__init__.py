@@ -6,6 +6,7 @@ Section S05.2 — ORM Data Models & Alembic Schema.
 from db.models.audit import AuditEventModel
 from db.models.base import Base
 from db.models.budget import BudgetReservationModel
+from db.models.credential import ApiCredentialModel
 from db.models.mandate import MandateModel
 from db.models.merchant import MerchantModel
 from db.models.policy import MerchantPolicyModel
@@ -30,4 +31,6 @@ __all__ = [
     "AuditEventModel",
     "ActionReceiptModel",
     "WebhookEventModel",
+    "ApiCredentialModel",
 ]
+

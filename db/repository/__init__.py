@@ -5,6 +5,7 @@ M05.3 Repository Layer Package.
 from db.repository.audit_repository import AuditRepository
 from db.repository.base import BaseRepository
 from db.repository.budget_repository import BudgetRepository
+from db.repository.credential_repository import ApiCredentialRepository
 from db.repository.mandate_repository import MandateRepository
 from db.repository.merchant_repository import MerchantRepository
 from db.repository.nonce_repository import NonceRepository
@@ -26,4 +27,6 @@ __all__ = [
     "AuditRepository",
     "ReceiptRepository",
     "WebhookRepository",
+    "ApiCredentialRepository",
 ]
+

@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from db.repository.audit_repository import AuditRepository
 from db.repository.budget_repository import BudgetRepository
+from db.repository.credential_repository import ApiCredentialRepository
 from db.repository.mandate_repository import MandateRepository
 from db.repository.merchant_repository import MerchantRepository
 from db.repository.nonce_repository import NonceRepository
@@ -88,6 +89,7 @@ class AsyncUnitOfWork:
         self._audit_repo: Optional[AuditRepository] = None
         self._receipt_repo: Optional[ReceiptRepository] = None
         self._webhook_repo: Optional[WebhookRepository] = None
+        self._credential_repo: Optional[ApiCredentialRepository] = None
 
     async def __aenter__(self) -> AsyncUnitOfWork:
         if self._is_active or self._closed:
@@ -215,6 +217,7 @@ class AsyncUnitOfWork:
         self._audit_repo = None
         self._receipt_repo = None
         self._webhook_repo = None
+        self._credential_repo = None
 
     def _assert_active(self) -> None:
         if self._closed or not self._is_active or self._session is None:
@@ -305,3 +308,12 @@ class AsyncUnitOfWork:
         if self._webhook_repo is None:
             self._webhook_repo = WebhookRepository(self._session)
         return self._webhook_repo
+
+    @property
+    def credentials(self) -> ApiCredentialRepository:
+        self._assert_active()
+        assert self._session is not None
+        if self._credential_repo is None:
+            self._credential_repo = ApiCredentialRepository(self._session)
+        return self._credential_repo
+

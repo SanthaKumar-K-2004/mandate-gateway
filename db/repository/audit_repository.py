@@ -7,6 +7,7 @@ sequence number monotonicity, and cryptographic chain verification.
 
 from __future__ import annotations
 
+import asyncio
 import json
 from datetime import datetime, timezone
 from typing import Any, Sequence
@@ -22,6 +23,25 @@ from db.repository.base import BaseRepository
 
 def _utc_now() -> datetime:
     return datetime.now(tz=timezone.utc)
+
+
+_audit_append_lock: asyncio.Lock | None = None
+_audit_append_loop: Any = None
+
+
+def _get_audit_lock() -> asyncio.Lock:
+    global _audit_append_lock, _audit_append_loop
+    try:
+        current_loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.Lock()
+
+    if _audit_append_lock is None or _audit_append_loop is not current_loop:
+        _audit_append_lock = asyncio.Lock()
+        _audit_append_loop = current_loop
+    return _audit_append_lock
+
+
 
 
 class AuditRepository(BaseRepository[AuditEventModel]):
@@ -77,16 +97,18 @@ class AuditRepository(BaseRepository[AuditEventModel]):
         Atomically derives next sequence number and previous_hash from the latest event.
         Flushes to session without committing.
         """
-        event_type_enum = (
-            event_type if isinstance(event_type, AuditEventType) else AuditEventType(str(event_type))
-        )
-        event_type_str = event_type_enum.value
+        async with _get_audit_lock():
+            event_type_enum = (
+                event_type if isinstance(event_type, AuditEventType) else AuditEventType(str(event_type))
+            )
+            event_type_str = event_type_enum.value
 
-        event_time = at if at is not None else _utc_now()
-        safe_payload = payload or {}
+            event_time = at if at is not None else _utc_now()
+            safe_payload = payload or {}
 
-        # 1. Lock and fetch latest audit event in chain
-        latest = await self.get_latest_event(lock=True)
+            # 1. Lock and fetch latest audit event in chain
+            latest = await self.get_latest_event(lock=True)
+
 
         if latest is None:
             next_seq = 1

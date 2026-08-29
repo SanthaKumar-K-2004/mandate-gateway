@@ -308,3 +308,64 @@ def get_merchant_policy(merchant_id: str) -> PolicyResponse:
             detail=f"Policy for merchant '{merchant_id}' not found.",
         )
     return _MERCHANT_POLICIES[merchant_id]
+
+
+@merchants_router.post(
+    "/merchants/{merchant_id}/credentials",
+    status_code=status.HTTP_201_CREATED,
+)
+def create_merchant_credential(merchant_id: str, scopes: list[str] | None = None) -> dict[str, Any]:
+    """
+    Issue a new API credential key pair for a merchant.
+
+    Returns the raw_secret ONCE upon creation.
+    """
+    from apps.api.domain.identity import generate_credential_key_pair
+
+    uow = _get_uow_or_none()
+    cred_id, prefix, raw_secret, secret_hash = generate_credential_key_pair(environment="live")
+    granted_scopes = (
+        " ".join(scopes)
+        if scopes
+        else (
+            "merchant:read merchant:write mandate:read mandate:write "
+            "transaction:read transaction:write audit:read receipt:read reconciliation:write"
+        )
+    )
+
+    if uow is not None:
+        import asyncio
+
+        async def _persist_cred() -> None:
+            async with uow:
+                await uow.credentials.create_credential(
+                    credential_id=cred_id,
+                    merchant_id=merchant_id,
+                    credential_prefix=prefix,
+                    credential_secret_hash=secret_hash,
+                    scopes=granted_scopes,
+                )
+                await uow.audit.append_event(
+                    event_type="API_CREDENTIAL_CREATED",
+                    merchant_id=merchant_id,
+                    payload={
+                        "action": f"Created API credential '{cred_id}' for merchant '{merchant_id}'"
+                    },
+                )
+                await uow.commit()
+
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(_persist_cred())
+        except RuntimeError:
+            asyncio.run(_persist_cred())
+
+    return {
+        "credential_id": cred_id,
+        "merchant_id": merchant_id,
+        "credential_prefix": prefix,
+        "raw_secret": raw_secret,
+        "status": "ACTIVE",
+        "scopes": granted_scopes.split(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
