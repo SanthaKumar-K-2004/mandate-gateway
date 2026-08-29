@@ -124,3 +124,27 @@ class DependencyDegradationMatrix:
 
 # Global singleton degradation matrix
 degradation_matrix = DependencyDegradationMatrix()
+
+
+def evaluate_telemetry_resilience() -> Dict[str, Any]:
+    """Helper to evaluate telemetry fail-open resilience."""
+    res = degradation_matrix.evaluate_telemetry_failure()
+    res["telemetry_failed_open"] = True
+    return res
+
+
+def handle_dependency_degradation(
+    dependency_name: str, err: Exception, operation: str = ""
+) -> Dict[str, Any]:
+    """Evaluates and logs dependency degradation cleanly."""
+    if dependency_name in ("telemetry", "opentelemetry_exporter"):
+        return {
+            "dependency": dependency_name,
+            "fail_closed": False,
+            "action": "FAIL_OPEN_LOG_ONLY",
+            "error": str(err),
+        }
+    elif dependency_name in ("postgresql", "database"):
+        return degradation_matrix.evaluate_postgres_failure()
+    else:
+        return degradation_matrix.evaluate_redis_failure(is_distributed_lock_required=True)

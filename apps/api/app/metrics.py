@@ -4,7 +4,7 @@ Section S00.5 — Observability Foundation
 """
 
 import threading
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 # Bounded metric label safety allowlist (strict cardinality protection)
 ALLOWED_LABEL_KEYS = {
@@ -106,6 +106,36 @@ class MetricsRegistry:
             self._counters.clear()
             self._gauges.clear()
             self._latencies.clear()
+
+    def get_metrics_summary(self) -> Dict[str, Any]:
+        """Returns structured summary of all counters, gauges, and latencies."""
+        with self._lock:
+            counters_out = {
+                f"{k[0]}{{{','.join(f'{lk}=\"{lv}\"' for lk, lv in k[1])}}}": v
+                for k, v in self._counters.items()
+            }
+            gauges_out = {
+                f"{k[0]}{{{','.join(f'{lk}=\"{lv}\"' for lk, lv in k[1])}}}": v
+                for k, v in self._gauges.items()
+            }
+            return {
+                "counters": counters_out,
+                "gauges": gauges_out,
+            }
+
+    def to_prometheus_text(self) -> str:
+        """Formats collected metrics as Prometheus text representation."""
+        lines = []
+        with self._lock:
+            for (name, labels), val in sorted(self._counters.items(), key=lambda x: x[0][0]):
+                label_str = "{" + ",".join(f'{k}="{v}"' for k, v in labels) + "}" if labels else ""
+                lines.append(f"# TYPE {name} counter")
+                lines.append(f"{name}{label_str} {val}")
+            for (name, labels), g_val in sorted(self._gauges.items(), key=lambda x: x[0][0]):
+                label_str = "{" + ",".join(f'{k}="{v}"' for k, v in labels) + "}" if labels else ""
+                lines.append(f"# TYPE {name} gauge")
+                lines.append(f"{name}{label_str} {g_val}")
+        return "\n".join(lines) + "\n" if lines else "# No metrics recorded.\n"
 
 
 # Global singleton metrics registry

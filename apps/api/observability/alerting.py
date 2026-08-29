@@ -125,31 +125,70 @@ class AlertEvaluator:
     def __init__(self) -> None:
         self._last_alerted: Dict[str, float] = {}
         self._cooldown_seconds: float = 60.0  # 1-minute deduplication window
+        self._active_alerts: Dict[str, Dict[str, Any]] = {}
 
     def evaluate_rule(
-        self, rule_name: str, metric_value: float, threshold: float
+        self,
+        rule_name: str,
+        metric_value: float,
+        threshold: float,
+        category: Optional[str] = None,
+        context: Optional[Dict[str, Any]] = None,
     ) -> Optional[Dict[str, Any]]:
         """Evaluates an alert rule and returns alert payload if triggered and not deduplicated."""
         rule = next((r for r in ALERT_RULES if r.name == rule_name), None)
-        if not rule:
-            return None
+        severity = rule.severity if rule else "CRITICAL"
 
         if metric_value >= threshold:
-            now = time.monotonic()
-            last_time = self._last_alerted.get(rule_name, 0.0)
-            if now - last_time >= self._cooldown_seconds:
-                self._last_alerted[rule_name] = now
-                return {
-                    "alert_name": rule.name,
-                    "severity": rule.severity,
-                    "trigger_condition": rule.trigger_condition,
-                    "metric_value": metric_value,
-                    "threshold": threshold,
-                    "recommended_action": rule.recommended_action,
-                    "runbook_reference": rule.runbook_reference,
-                    "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                }
+            now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            alert_id = f"alert_{rule_name}"
+
+            if alert_id in self._active_alerts:
+                existing = self._active_alerts[alert_id]
+                existing["last_detected_at"] = now_iso
+                existing["metric_value"] = metric_value
+                if context:
+                    existing["context"].update(context)
+                return existing
+
+            alert = {
+                "alert_id": alert_id,
+                "rule_name": rule_name,
+                "category": category or rule_name,
+                "severity": severity,
+                "status": "ACTIVE",
+                "first_detected_at": now_iso,
+                "last_detected_at": now_iso,
+                "metric_value": metric_value,
+                "threshold": threshold,
+                "context": context or {},
+                "trigger_condition": (
+                    rule.trigger_condition if rule else f"{rule_name} >= {threshold}"
+                ),
+                "recommended_action": rule.recommended_action if rule else "Inspect system logs",
+                "runbook_reference": (
+                    rule.runbook_reference if rule else "RUNBOOK_A_STUCK_EXECUTING.md"
+                ),
+            }
+            self._active_alerts[alert_id] = alert
+            return alert
         return None
+
+    def get_active_alerts(self) -> List[Dict[str, Any]]:
+        """Returns list of currently active alert objects."""
+        return list(self._active_alerts.values())
+
+    def resolve_alert(self, alert_id: str) -> bool:
+        """Resolves an active alert by alert_id."""
+        if alert_id in self._active_alerts:
+            self._active_alerts.pop(alert_id)
+            return True
+        return False
+
+    def clear_alerts(self) -> None:
+        """Clears all active alerts and history (for test isolation)."""
+        self._active_alerts.clear()
+        self._last_alerted.clear()
 
 
 # Global singleton alert evaluator

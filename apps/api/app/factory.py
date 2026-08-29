@@ -9,6 +9,7 @@ from typing import Any, Callable, Dict, Optional
 
 from apps.api.app.context import clear_request_context, set_request_context
 from apps.api.app.health import (
+    handle_dependencies_async,
     handle_diagnostics_async,
     handle_health,
     handle_ready_async,
@@ -25,6 +26,8 @@ from apps.api.app.metrics import metrics_registry
 from apps.api.app.middleware import extract_request_headers
 from apps.api.config.helpers import get_settings
 from apps.api.config.settings import Settings
+from apps.api.observability.alerting import alert_evaluator
+from apps.api.observability.investigation import investigator
 
 
 def validate_preflight_config(settings: Settings) -> bool:
@@ -101,14 +104,40 @@ class MandateGatewayApp:
         req_id, corr_id, trace_id = extract_request_headers(headers_dict)
         set_request_context(req_id, corr_id, trace_id)
 
+        is_text_response = False
+
         try:
-            # Dispatch foundational endpoints
-            if path == "/health" and method == "GET":
+            # Dispatch foundational and operational control plane endpoints
+            if path in ("/health", "/health/live", "/live") and method == "GET":
                 status_code, body = handle_health(self.settings)
-            elif path == "/ready" and method == "GET":
+            elif path in ("/ready", "/health/ready") and method == "GET":
                 status_code, body = await handle_ready_async(self.lifecycle, self.settings)
-            elif path == "/diagnostics" and method == "GET":
+            elif path in ("/health/dependencies", "/dependencies") and method == "GET":
+                status_code, body = await handle_dependencies_async(self.settings)
+            elif path in ("/diagnostics", "/internal/operations/diagnostics") and method == "GET":
                 status_code, body = await handle_diagnostics_async(self.settings)
+            elif path == "/metrics" and method == "GET":
+                status_code = 200
+                text_content = metrics_registry.to_prometheus_text()
+                is_text_response = True
+            elif path == "/internal/operations/alerts" and method == "GET":
+                status_code = 200
+                alerts = alert_evaluator.get_active_alerts()
+                body = {"alerts_count": len(alerts), "alerts": alerts}
+            elif path.startswith("/internal/operations/transactions/") and method == "GET":
+                tx_id = path.replace("/internal/operations/transactions/", "").strip()
+                merchant_header = headers_dict.get("x-merchant-id")
+                try:
+                    status_code = 200
+                    body = investigator.investigate(
+                        transaction_id=tx_id, requesting_merchant_id=merchant_header
+                    )
+                except PermissionError as err:
+                    status_code = 403
+                    body = {"error": {"code": "FORBIDDEN", "message": str(err)}}
+                except KeyError as err:
+                    status_code = 404
+                    body = {"error": {"code": "NOT_FOUND", "message": str(err)}}
             else:
                 status_code = 404
                 body = {
@@ -118,9 +147,15 @@ class MandateGatewayApp:
                     }
                 }
 
-            response_bytes = json.dumps(body).encode("utf-8")
+            if is_text_response:
+                response_bytes = text_content.encode("utf-8")
+                content_type = b"text/plain; version=0.0.4"
+            else:
+                response_bytes = json.dumps(body).encode("utf-8")
+                content_type = b"application/json"
+
             response_headers = [
-                (b"content-type", b"application/json"),
+                (b"content-type", content_type),
                 (b"content-length", str(len(response_bytes)).encode("ascii")),
                 (b"x-request-id", req_id.encode("ascii")),
                 (b"x-correlation-id", corr_id.encode("ascii")),
@@ -214,6 +249,7 @@ def create_fastapi_app(settings: Optional[Settings] = None) -> Any:
         from apps.api.routers.hardening import router as hardening_router
         from apps.api.routers.mandates import mandates_router
         from apps.api.routers.merchants import merchants_router
+        from apps.api.routers.operations import operations_router
         from apps.api.routers.orchestrator import orchestrator_router
         from apps.api.routers.products import products_router
         from apps.api.routers.redteam import redteam_router
@@ -240,6 +276,7 @@ def create_fastapi_app(settings: Optional[Settings] = None) -> Any:
         api_app.include_router(security_router)
         api_app.include_router(submission_router)
         api_app.include_router(hardening_router)
+        api_app.include_router(operations_router)
 
         return api_app
     except ImportError:  # pragma: no cover

@@ -5,6 +5,7 @@ Section S00.5 — Observability Foundation
 
 import json
 import logging
+import re
 import time
 from typing import Any, Dict
 
@@ -44,6 +45,11 @@ SENSITIVE_KEY_PATTERNS = {
     "credential",
 }
 
+_SENSITIVE_STRING_PATTERN = re.compile(
+    r"(?i)\b(secret(?:_key)?|password|token|api_key|apikey|auth(?:orization)?"
+    r"|private_key|signature|cvv|nonce|credential)\s*=\s*([^\s,;]+)"
+)
+
 
 def redact_value(obj: Any) -> Any:
     """Recursively redacts SecretString objects and sensitive keys inside strings, dicts, lists, and tuples."""
@@ -52,7 +58,7 @@ def redact_value(obj: Any) -> Any:
     elif isinstance(obj, str):
         if "SecretString(" in obj:
             return "[REDACTED]"
-        return obj
+        return _SENSITIVE_STRING_PATTERN.sub(r"\1=[REDACTED]", obj)
     elif isinstance(obj, dict):
         cleaned: Dict[str, Any] = {}
         for k, v in obj.items():

@@ -132,7 +132,7 @@ tracer = Tracer()
 
 
 class TraceSpanContextManager:
-    """Async & sync context manager for boundary tracing with fail-open semantics."""
+    """Async & sync context manager and decorator for boundary tracing with fail-open semantics."""
 
     def __init__(self, span_name: str, attributes: Optional[Dict[str, Any]] = None) -> None:
         self.span_name = span_name
@@ -163,16 +163,12 @@ class TraceSpanContextManager:
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> Literal[False]:
         return self.__exit__(exc_type, exc_val, exc_tb)
 
-
-def trace_span(span_name: str, attributes: Optional[Dict[str, Any]] = None) -> Callable[[F], F]:
-    """Decorator to instrument functions with tracing boundaries."""
-
-    def decorator(func: F) -> F:
+    def __call__(self, func: F) -> F:
         if inspect.iscoroutinefunction(func):
 
             @functools.wraps(func)
             async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
-                async with TraceSpanContextManager(span_name, attributes):
+                async with self:
                     return await func(*args, **kwargs)
 
             return async_wrapper  # type: ignore[return-value]
@@ -180,9 +176,14 @@ def trace_span(span_name: str, attributes: Optional[Dict[str, Any]] = None) -> C
 
             @functools.wraps(func)
             def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
-                with TraceSpanContextManager(span_name, attributes):
+                with self:
                     return func(*args, **kwargs)
 
             return sync_wrapper  # type: ignore[return-value]
 
-    return decorator
+
+def trace_span(
+    span_name: str, attributes: Optional[Dict[str, Any]] = None
+) -> TraceSpanContextManager:
+    """Returns a TraceSpanContextManager which functions as both decorator and context manager."""
+    return TraceSpanContextManager(span_name, attributes)
