@@ -132,3 +132,115 @@ if HAS_FASTAPI:
             "alerts_count": len(alerts),
             "alerts": alerts,
         }
+
+    @operations_router.get(
+        "/internal/operations/transactions/{transaction_id}/timeline",
+        summary="Transaction Timeline Reconstruction",
+    )
+    async def get_transaction_timeline_endpoint(
+        transaction_id: str,
+        x_merchant_id: Optional[str] = Header(None, alias="X-Merchant-ID"),
+        merchant_id: Optional[str] = Query(None),
+        operator: Any = Depends(get_operator_principal),
+    ) -> Dict[str, Any]:
+        from apps.api.observability.timeline import timeline_reconstructor
+        from db.unit_of_work import AsyncUnitOfWork
+
+        req_merchant = x_merchant_id or merchant_id
+        try:
+            async with AsyncUnitOfWork() as uow:
+                res = await timeline_reconstructor.reconstruct(
+                    transaction_id=transaction_id,
+                    uow=uow,
+                    requesting_merchant_id=req_merchant,
+                )
+            return res
+        except PermissionError as err:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=str(err),
+            )
+        except ValueError as err:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(err),
+            )
+
+    @operations_router.get("/internal/operations/incidents", summary="Operational Incidents Query")
+    def get_incidents_endpoint(
+        classification: Optional[str] = Query(None),
+        severity: Optional[str] = Query(None),
+        status_val: Optional[str] = Query(None, alias="status"),
+        merchant_id: Optional[str] = Query(None),
+        operator: Any = Depends(get_operator_principal),
+    ) -> Dict[str, Any]:
+        from apps.api.observability.incident_engine import incident_engine
+
+        incidents = incident_engine.query_incidents(
+            classification=classification,
+            severity=severity,
+            status=status_val,
+            merchant_id=merchant_id,
+        )
+        return {
+            "count": len(incidents),
+            "incidents": [inc.to_dict() for inc in incidents],
+        }
+
+    @operations_router.get(
+        "/internal/operations/incidents/{incident_id}", summary="Operational Incident Detail"
+    )
+    def get_incident_detail_endpoint(
+        incident_id: str,
+        operator: Any = Depends(get_operator_principal),
+    ) -> Dict[str, Any]:
+        from apps.api.observability.incident_engine import incident_engine
+
+        inc = incident_engine.get_incident_by_id(incident_id)
+        if not inc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Incident '{incident_id}' not found.",
+            )
+        return inc.to_dict()
+
+    @operations_router.get(
+        "/internal/operations/security/summary", summary="Security Posture Summary"
+    )
+    def get_security_summary_endpoint(
+        operator: Any = Depends(get_operator_principal),
+    ) -> Dict[str, Any]:
+        from apps.api.observability.forensics import forensic_engine
+        from apps.api.observability.incident_engine import incident_engine
+
+        forensics = forensic_engine.query_memory_events(limit=500)
+        incidents = incident_engine.query_incidents(limit=500)
+
+        security_incidents = [inc for inc in incidents if inc.classification == "SECURITY"]
+        abuse_incidents = [inc for inc in incidents if inc.classification == "ABUSE"]
+
+        return {
+            "status": "SECURE",
+            "forensic_events_count": len(forensics),
+            "total_incidents_count": len(incidents),
+            "security_incidents_count": len(security_incidents),
+            "abuse_incidents_count": len(abuse_incidents),
+            "recent_incidents": [inc.to_dict() for inc in incidents[:10]],
+        }
+
+    @operations_router.get(
+        "/internal/operations/reliability/summary", summary="Reliability & Recovery Summary"
+    )
+    def get_reliability_summary_endpoint(
+        operator: Any = Depends(get_operator_principal),
+    ) -> Dict[str, Any]:
+        from apps.api.observability.incident_engine import incident_engine
+
+        incidents = incident_engine.query_incidents(limit=500)
+        reliability_incidents = [inc for inc in incidents if inc.classification == "RELIABILITY"]
+
+        return {
+            "status": "HEALTHY",
+            "reliability_incidents_count": len(reliability_incidents),
+            "recent_reliability_incidents": [inc.to_dict() for inc in reliability_incidents[:10]],
+        }

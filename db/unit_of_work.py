@@ -16,6 +16,7 @@ from db.repository.audit_repository import AuditRepository
 from db.repository.budget_repository import BudgetRepository
 from db.repository.credential_repository import ApiCredentialRepository
 from db.repository.execution_attempt_repository import ExecutionAttemptRepository
+from db.repository.forensic_repository import ForensicRepository
 from db.repository.mandate_repository import MandateRepository
 from db.repository.merchant_repository import MerchantRepository
 from db.repository.nonce_repository import NonceRepository
@@ -94,6 +95,7 @@ class AsyncUnitOfWork:
         self._credential_repo: Optional[ApiCredentialRepository] = None
         self._outbox_repo: Optional[OutboxRepository] = None
         self._execution_attempt_repo: Optional[ExecutionAttemptRepository] = None
+        self._forensic_repo: Optional[ForensicRepository] = None
 
     async def __aenter__(self) -> AsyncUnitOfWork:
         if self._is_active or self._closed:
@@ -336,3 +338,11 @@ class AsyncUnitOfWork:
         if self._execution_attempt_repo is None:
             self._execution_attempt_repo = ExecutionAttemptRepository(self._session)
         return self._execution_attempt_repo
+
+    @property
+    def forensics(self) -> ForensicRepository:
+        self._assert_active()
+        assert self._session is not None
+        if self._forensic_repo is None:
+            self._forensic_repo = ForensicRepository(self._session)
+        return self._forensic_repo

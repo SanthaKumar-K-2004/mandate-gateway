@@ -85,6 +85,125 @@ class MandateGatewayApp:
             extra={"event": EVENT_APPLICATION_SHUTDOWN},
         )
 
+    async def _dispatch_transaction_route(
+        self,
+        path: str,
+        headers_dict: Dict[str, str],
+        req_id: str,
+    ) -> tuple[int, Any, bool]:
+        merchant_header = headers_dict.get("x-merchant-id")
+        if path.endswith("/timeline"):
+            tx_id = (
+                path.replace("/internal/operations/transactions/", "")
+                .replace("/timeline", "")
+                .strip()
+            )
+            from apps.api.observability.timeline import timeline_reconstructor
+            from db.unit_of_work import AsyncUnitOfWork, UnitOfWorkError
+
+            try:
+                async with AsyncUnitOfWork() as uow:
+                    res = await timeline_reconstructor.reconstruct(
+                        transaction_id=tx_id, uow=uow, requesting_merchant_id=merchant_header
+                    )
+                    return 200, res, False
+            except PermissionError as p_err:
+                return (
+                    403,
+                    {"error": {"code": "FORBIDDEN", "message": str(p_err), "request_id": req_id}},
+                    False,
+                )
+            except (ValueError, UnitOfWorkError) as v_err:
+                return (
+                    404,
+                    {"error": {"code": "NOT_FOUND", "message": str(v_err), "request_id": req_id}},
+                    False,
+                )
+
+        tx_id = path.replace("/internal/operations/transactions/", "").strip()
+        try:
+            body = investigator.investigate(
+                transaction_id=tx_id, requesting_merchant_id=merchant_header
+            )
+            return 200, body, False
+        except PermissionError as p_err:
+            return (
+                403,
+                {"error": {"code": "FORBIDDEN", "message": str(p_err), "request_id": req_id}},
+                False,
+            )
+        except KeyError as k_err:
+            return (
+                404,
+                {"error": {"code": "NOT_FOUND", "message": str(k_err), "request_id": req_id}},
+                False,
+            )
+
+    def _dispatch_incident_route(self, path: str, req_id: str) -> tuple[int, Any, bool]:
+        from apps.api.observability.forensics import forensic_engine
+        from apps.api.observability.incident_engine import incident_engine
+
+        if path == "/internal/operations/incidents":
+            incidents = incident_engine.query_incidents()
+            return (
+                200,
+                {"count": len(incidents), "incidents": [inc.to_dict() for inc in incidents]},
+                False,
+            )
+
+        if path.startswith("/internal/operations/incidents/"):
+            inc_id = path.replace("/internal/operations/incidents/", "").strip()
+            inc = incident_engine.get_incident_by_id(inc_id)
+            if not inc:
+                return (
+                    404,
+                    {
+                        "error": {
+                            "code": "NOT_FOUND",
+                            "message": f"Incident '{inc_id}' not found.",
+                            "request_id": req_id,
+                        }
+                    },
+                    False,
+                )
+            return 200, inc.to_dict(), False
+
+        if path == "/internal/operations/security/summary":
+            forensics = forensic_engine.query_memory_events()
+            incidents = incident_engine.query_incidents()
+            return (
+                200,
+                {
+                    "status": "SECURE",
+                    "forensic_events_count": len(forensics),
+                    "total_incidents_count": len(incidents),
+                    "security_incidents_count": len(
+                        [i for i in incidents if i.classification == "SECURITY"]
+                    ),
+                    "abuse_incidents_count": len(
+                        [i for i in incidents if i.classification == "ABUSE"]
+                    ),
+                },
+                False,
+            )
+
+        if path == "/internal/operations/reliability/summary":
+            incidents = incident_engine.query_incidents()
+            rel = [i for i in incidents if i.classification == "RELIABILITY"]
+            return 200, {"status": "HEALTHY", "reliability_incidents_count": len(rel)}, False
+
+        return (
+            404,
+            {
+                "error": {
+                    "code": "NOT_FOUND",
+                    "message": f"Resource path '{path}' not found.",
+                    "request_id": req_id,
+                }
+            },
+            False,
+        )
+
     async def _dispatch_operator_route(
         self,
         path: str,
@@ -127,25 +246,10 @@ class MandateGatewayApp:
             return 200, {"alerts_count": len(alerts), "alerts": alerts}, False
 
         if path.startswith("/internal/operations/transactions/") and method == "GET":
-            tx_id = path.replace("/internal/operations/transactions/", "").strip()
-            merchant_header = headers_dict.get("x-merchant-id")
-            try:
-                body = investigator.investigate(
-                    transaction_id=tx_id, requesting_merchant_id=merchant_header
-                )
-                return 200, body, False
-            except PermissionError as p_err:
-                return (
-                    403,
-                    {"error": {"code": "FORBIDDEN", "message": str(p_err), "request_id": req_id}},
-                    False,
-                )
-            except KeyError as k_err:
-                return (
-                    404,
-                    {"error": {"code": "NOT_FOUND", "message": str(k_err), "request_id": req_id}},
-                    False,
-                )
+            return await self._dispatch_transaction_route(path, headers_dict, req_id)
+
+        if path.startswith("/internal/operations/") and method == "GET":
+            return self._dispatch_incident_route(path, req_id)
 
         return (
             404,

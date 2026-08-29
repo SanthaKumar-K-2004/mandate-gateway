@@ -12,6 +12,7 @@ from db.models.merchant import MerchantModel
 from db.models.policy import MerchantPolicyModel
 from db.models.product import ProductModel
 from db.models.execution_attempt import ExecutionAttemptModel
+from db.models.forensic_event import ForensicEventModel
 from db.models.outbox import OutboxEventModel
 from db.models.receipt import ActionReceiptModel
 from db.models.replay import NonceRecordModel, ReplayRecordModel
@@ -36,4 +37,5 @@ __all__ = [
     "ApiCredentialModel",
     "OutboxEventModel",
     "ExecutionAttemptModel",
+    "ForensicEventModel",
 ]
