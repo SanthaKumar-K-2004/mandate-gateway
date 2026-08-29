@@ -78,9 +78,7 @@ class ReplayRepository(BaseRepository[ReplayRecordModel]):
             return None
         return await self.get_by_id(fingerprint.strip())
 
-    async def get_replay_for_transaction(
-        self, transaction_id: str
-    ) -> Sequence[ReplayRecordModel]:
+    async def get_replay_for_transaction(self, transaction_id: str) -> Sequence[ReplayRecordModel]:
         """Fetch all replay records bound to a given transaction ID."""
         stmt = (
             select(ReplayRecordModel)
@@ -90,17 +88,13 @@ class ReplayRepository(BaseRepository[ReplayRecordModel]):
         result = await self._session.execute(stmt)
         return result.scalars().all()
 
-    async def lock_replay_for_update(
-        self, fingerprint: str
-    ) -> ReplayRecordModel | None:
+    async def lock_replay_for_update(self, fingerprint: str) -> ReplayRecordModel | None:
         """Acquire SELECT ... FOR UPDATE row lock on ReplayRecordModel."""
         bind = getattr(self._session, "bind", None)
         dialect = getattr(bind, "dialect", None)
         dialect_name = getattr(dialect, "name", "") if dialect else ""
 
-        stmt = select(ReplayRecordModel).where(
-            ReplayRecordModel.fingerprint == fingerprint
-        )
+        stmt = select(ReplayRecordModel).where(ReplayRecordModel.fingerprint == fingerprint)
         if dialect_name != "sqlite":
             stmt = stmt.with_for_update()
 
@@ -174,7 +168,12 @@ class ReplayRepository(BaseRepository[ReplayRecordModel]):
 
             # Check TTL expiry
             if ttl_seconds > 0:
-                age_seconds = (check_time - existing.created_at).total_seconds()
+                created_at_utc = (
+                    existing.created_at.replace(tzinfo=timezone.utc)
+                    if existing.created_at.tzinfo is None
+                    else existing.created_at
+                )
+                age_seconds = (check_time - created_at_utc).total_seconds()
                 if age_seconds < ttl_seconds:
                     return True, existing
             else:

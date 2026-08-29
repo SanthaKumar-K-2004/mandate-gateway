@@ -15,9 +15,11 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from db.repository.audit_repository import AuditRepository
 from db.repository.budget_repository import BudgetRepository
 from db.repository.credential_repository import ApiCredentialRepository
+from db.repository.execution_attempt_repository import ExecutionAttemptRepository
 from db.repository.mandate_repository import MandateRepository
 from db.repository.merchant_repository import MerchantRepository
 from db.repository.nonce_repository import NonceRepository
+from db.repository.outbox_repository import OutboxRepository
 from db.repository.receipt_repository import ReceiptRepository
 from db.repository.replay_repository import ReplayRepository
 from db.repository.step_up_repository import StepUpRepository
@@ -90,6 +92,8 @@ class AsyncUnitOfWork:
         self._receipt_repo: Optional[ReceiptRepository] = None
         self._webhook_repo: Optional[WebhookRepository] = None
         self._credential_repo: Optional[ApiCredentialRepository] = None
+        self._outbox_repo: Optional[OutboxRepository] = None
+        self._execution_attempt_repo: Optional[ExecutionAttemptRepository] = None
 
     async def __aenter__(self) -> AsyncUnitOfWork:
         if self._is_active or self._closed:
@@ -165,9 +169,7 @@ class AsyncUnitOfWork:
         if self._committed:
             raise UnitOfWorkError("UnitOfWork has already been committed.")
         if self._rolled_back:
-            raise UnitOfWorkError(
-                "Cannot commit a transaction that has already been rolled back."
-            )
+            raise UnitOfWorkError("Cannot commit a transaction that has already been rolled back.")
 
         try:
             assert self._session is not None
@@ -218,6 +220,8 @@ class AsyncUnitOfWork:
         self._receipt_repo = None
         self._webhook_repo = None
         self._credential_repo = None
+        self._outbox_repo = None
+        self._execution_attempt_repo = None
 
     def _assert_active(self) -> None:
         if self._closed or not self._is_active or self._session is None:
@@ -317,3 +321,18 @@ class AsyncUnitOfWork:
             self._credential_repo = ApiCredentialRepository(self._session)
         return self._credential_repo
 
+    @property
+    def outbox(self) -> OutboxRepository:
+        self._assert_active()
+        assert self._session is not None
+        if self._outbox_repo is None:
+            self._outbox_repo = OutboxRepository(self._session)
+        return self._outbox_repo
+
+    @property
+    def execution_attempts(self) -> ExecutionAttemptRepository:
+        self._assert_active()
+        assert self._session is not None
+        if self._execution_attempt_repo is None:
+            self._execution_attempt_repo = ExecutionAttemptRepository(self._session)
+        return self._execution_attempt_repo

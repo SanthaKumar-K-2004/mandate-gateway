@@ -11,6 +11,8 @@ from db.models.mandate import MandateModel
 from db.models.merchant import MerchantModel
 from db.models.policy import MerchantPolicyModel
 from db.models.product import ProductModel
+from db.models.execution_attempt import ExecutionAttemptModel
+from db.models.outbox import OutboxEventModel
 from db.models.receipt import ActionReceiptModel
 from db.models.replay import NonceRecordModel, ReplayRecordModel
 from db.models.step_up import StepUpChallengeModel
@@ -32,5 +34,6 @@ __all__ = [
     "ActionReceiptModel",
     "WebhookEventModel",
     "ApiCredentialModel",
+    "OutboxEventModel",
+    "ExecutionAttemptModel",
 ]
-

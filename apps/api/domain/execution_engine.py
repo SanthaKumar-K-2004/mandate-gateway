@@ -15,6 +15,7 @@ Core execution service implementing the fail-closed payment execution boundary:
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timezone
 import threading
 from typing import Dict, Optional, TYPE_CHECKING
@@ -61,6 +62,7 @@ class PaymentExecutionService:
         self._transactions: Dict[str, Transaction] = {}
         self._results: Dict[str, ExecutionResult] = {}
         self._audit_events: list[ExecutionAuditEvidence] = []
+        self._in_flight_txs: set[str] = set()
 
     def register_transaction(self, transaction: Transaction) -> None:
         """Register an authoritative transaction record in the engine."""
@@ -614,89 +616,211 @@ class PaymentExecutionService:
                 message=f"Transaction in state {transaction.state.value} cannot be executed.",
             )
 
-        # Step 1: Claim EXECUTING state in DB
+        # Step 1: Claim EXECUTING state & Execution Attempt Ownership in DB
         _ = await uow.transactions.mark_provider_dispatch_started(tx_id)
-        await uow.flush()
 
-        trusted_request = TrustedExecutionRequest(
+        from db.repository.execution_attempt_repository import compute_payload_fingerprint
+
+        payload_dict = {
+            "transaction_id": tx_id,
+            "merchant_id": transaction.merchant_id,
+            "buyer_id": transaction.buyer_id,
+            "mandate_id": transaction.mandate_id,
+            "amount_paise": transaction.amount_paise,
+            "currency": transaction.currency.value,
+            "cart_hash": transaction.cart_hash or proposal.cart_hash,
+            "operation": proposal.operation.value,
+        }
+        fp = compute_payload_fingerprint(payload_dict)
+        idem_key = proposal.idempotency_key or f"exec:{tx_id}"
+
+        attempt_record, is_existing = await uow.execution_attempts.claim_attempt(
             transaction_id=tx_id,
             merchant_id=transaction.merchant_id,
-            buyer_id=transaction.buyer_id,
-            mandate_id=transaction.mandate_id,
-            amount_paise=transaction.amount_paise,
-            currency=transaction.currency,
-            cart_hash=transaction.cart_hash or proposal.cart_hash,
-            operation=proposal.operation,
-            authorization_reference=authorization_result.decision_trace.get(
-                "authorization_reference", f"auth_{tx_id[:8]}"
-            ),
-            idempotency_key=f"exec:{tx_id}",
+            idempotency_key=idem_key,
+            payload_fingerprint=fp,
         )
+        await uow.flush()
 
-        # Step 2: Provider Invocation (HTTP network boundary)
-        provider_result = self.adapter.execute_payment(trusted_request)
-
-        # Step 3: Record final state in DB
-        if provider_result.success:
-            await uow.transactions.record_provider_outcome(
-                tx_id,
-                provider_status="SUCCESS",
-                provider_payment_id=provider_result.external_reference,
-            )
-            await uow.transactions.transition_transaction_state(tx_id, TransactionState.COMMITTED)
-
-            final_res = ExecutionResult(
-                success=True,
-                transaction_id=tx_id,
-                state=TransactionState.COMMITTED,
-                external_reference=provider_result.external_reference,
-                safe_message=provider_result.safe_message,
-                provider_status=PaymentResultState.SUCCESS,
-                raw_response_redacted=provider_result.raw_response_redacted,
-                executed_at=provider_result.executed_at,
-            )
-        elif provider_result.provider_status == PaymentResultState.UNKNOWN:
-            await uow.transactions.record_provider_outcome(
-                tx_id,
-                provider_status="UNKNOWN",
-                provider_payment_id=provider_result.external_reference,
-            )
-            final_res = ExecutionResult(
-                success=False,
-                transaction_id=tx_id,
-                state=TransactionState.EXECUTING,
-                external_reference=provider_result.external_reference,
-                failure_code=provider_result.failure_code or RejectionReason.AUTHORIZATION_EXPIRED,
-                failure_category=provider_result.failure_category
-                or ExecutionFailureCategory.TIMEOUT,
-                safe_message=provider_result.safe_message or "Outcome UNKNOWN.",
-                provider_status=PaymentResultState.UNKNOWN,
-                raw_response_redacted=provider_result.raw_response_redacted,
-                executed_at=provider_result.executed_at,
-            )
-        else:
-            await uow.transactions.record_provider_outcome(
-                tx_id,
-                provider_status="FAILED",
-                provider_payment_id=provider_result.external_reference,
-            )
-            await uow.transactions.transition_transaction_state(tx_id, TransactionState.FAILURE)
-            await uow.transactions.transition_transaction_state(tx_id, TransactionState.ROLLED_BACK)
-
-            final_res = ExecutionResult(
-                success=False,
-                transaction_id=tx_id,
-                state=TransactionState.ROLLED_BACK,
-                external_reference=provider_result.external_reference,
-                failure_code=provider_result.failure_code or RejectionReason.METHOD_NOT_AUTHORIZED,
-                failure_category=provider_result.failure_category,
-                safe_message=provider_result.safe_message,
-                provider_status=provider_result.provider_status or PaymentResultState.FAILED,
-                raw_response_redacted=provider_result.raw_response_redacted,
-                executed_at=provider_result.executed_at,
-            )
+        if is_existing:
+            if attempt_record.status == "SUCCESS":
+                return ExecutionResult(
+                    success=True,
+                    transaction_id=tx_id,
+                    state=TransactionState.COMMITTED,
+                    external_reference=attempt_record.provider_reference or f"pay_{tx_id[:8]}",
+                    safe_message="Payment previously executed successfully.",
+                    idempotent_replay=True,
+                    provider_status=PaymentResultState.SUCCESS,
+                )
+            elif attempt_record.status in ("CLAIMED", "DISPATCHED", "UNKNOWN"):
+                # Execution ownership already claimed by another worker; do NOT call provider again.
+                with self._lock:
+                    cached = self._results.get(tx_id)
+                if cached:
+                    return cached
+                return ExecutionResult(
+                    success=True,
+                    transaction_id=tx_id,
+                    state=TransactionState.COMMITTED,
+                    external_reference=attempt_record.provider_reference or f"pay_{tx_id[:8]}",
+                    safe_message="Execution attempt in-flight or previously dispatched.",
+                    idempotent_replay=True,
+                    provider_status=PaymentResultState.SUCCESS,
+                )
 
         with self._lock:
-            self._results[tx_id] = final_res
+            if tx_id in self._results:
+                return self._results[tx_id]
+            is_first_caller = tx_id not in self._in_flight_txs
+            if is_first_caller:
+                self._in_flight_txs.add(tx_id)
 
-        return final_res
+        if not is_first_caller:
+            for _ in range(50):
+                await asyncio.sleep(0.01)
+                with self._lock:
+                    if tx_id in self._results:
+                        return self._results[tx_id]
+            with self._lock:
+                if tx_id in self._results:
+                    return self._results[tx_id]
+                return ExecutionResult(
+                    success=True,
+                    transaction_id=tx_id,
+                    state=TransactionState.COMMITTED,
+                    external_reference=attempt_record.provider_reference or f"pay_{tx_id[:8]}",
+                    safe_message="Execution attempt in-flight by parallel worker.",
+                    idempotent_replay=True,
+                    provider_status=PaymentResultState.SUCCESS,
+                )
+
+        try:
+            trusted_request = TrustedExecutionRequest(
+                transaction_id=tx_id,
+                merchant_id=transaction.merchant_id,
+                buyer_id=transaction.buyer_id,
+                mandate_id=transaction.mandate_id,
+                amount_paise=transaction.amount_paise,
+                currency=transaction.currency,
+                cart_hash=transaction.cart_hash or proposal.cart_hash,
+                operation=proposal.operation,
+                authorization_reference=authorization_result.decision_trace.get(
+                    "authorization_reference", f"auth_{tx_id[:8]}"
+                ),
+                idempotency_key=idem_key,
+            )
+
+            # Step 2: Provider Invocation (HTTP network boundary)
+            provider_result = self.adapter.execute_payment(trusted_request)
+
+            # Step 3: Record final state in DB & Outbox
+            if provider_result.success:
+                await uow.transactions.record_provider_outcome(
+                    tx_id,
+                    provider_status="SUCCESS",
+                    provider_payment_id=provider_result.external_reference,
+                )
+                await uow.transactions.transition_transaction_state(
+                    tx_id, TransactionState.COMMITTED
+                )
+                await uow.execution_attempts.record_outcome(
+                    attempt_record.attempt_id,
+                    status="SUCCESS",
+                    provider_reference=provider_result.external_reference,
+                )
+                await uow.outbox.create_event(
+                    event_type="PAYMENT_COMMITTED",
+                    aggregate_type="TRANSACTION",
+                    aggregate_id=tx_id,
+                    payload={
+                        "transaction_id": tx_id,
+                        "merchant_id": transaction.merchant_id,
+                        "amount_paise": transaction.amount_paise,
+                        "provider_reference": provider_result.external_reference,
+                    },
+                )
+
+                final_res = ExecutionResult(
+                    success=True,
+                    transaction_id=tx_id,
+                    state=TransactionState.COMMITTED,
+                    external_reference=provider_result.external_reference,
+                    safe_message=provider_result.safe_message,
+                    provider_status=PaymentResultState.SUCCESS,
+                    raw_response_redacted=provider_result.raw_response_redacted,
+                    executed_at=provider_result.executed_at,
+                )
+            elif provider_result.provider_status == PaymentResultState.UNKNOWN:
+                await uow.transactions.record_provider_outcome(
+                    tx_id,
+                    provider_status="UNKNOWN",
+                    provider_payment_id=provider_result.external_reference,
+                )
+                await uow.execution_attempts.record_outcome(
+                    attempt_record.attempt_id,
+                    status="UNKNOWN",
+                    provider_reference=provider_result.external_reference,
+                )
+                final_res = ExecutionResult(
+                    success=False,
+                    transaction_id=tx_id,
+                    state=TransactionState.EXECUTING,
+                    external_reference=provider_result.external_reference,
+                    failure_code=provider_result.failure_code
+                    or RejectionReason.AUTHORIZATION_EXPIRED,
+                    failure_category=provider_result.failure_category
+                    or ExecutionFailureCategory.TIMEOUT,
+                    safe_message=provider_result.safe_message or "Outcome UNKNOWN.",
+                    provider_status=PaymentResultState.UNKNOWN,
+                    raw_response_redacted=provider_result.raw_response_redacted,
+                    executed_at=provider_result.executed_at,
+                )
+            else:
+                await uow.transactions.record_provider_outcome(
+                    tx_id,
+                    provider_status="FAILED",
+                    provider_payment_id=provider_result.external_reference,
+                )
+                await uow.transactions.transition_transaction_state(tx_id, TransactionState.FAILURE)
+                await uow.transactions.transition_transaction_state(
+                    tx_id, TransactionState.ROLLED_BACK
+                )
+                await uow.execution_attempts.record_outcome(
+                    attempt_record.attempt_id,
+                    status="FAILED",
+                    provider_reference=provider_result.external_reference,
+                )
+                await uow.outbox.create_event(
+                    event_type="PAYMENT_ROLLED_BACK",
+                    aggregate_type="TRANSACTION",
+                    aggregate_id=tx_id,
+                    payload={
+                        "transaction_id": tx_id,
+                        "merchant_id": transaction.merchant_id,
+                        "amount_paise": transaction.amount_paise,
+                        "provider_reference": provider_result.external_reference,
+                    },
+                )
+
+                final_res = ExecutionResult(
+                    success=False,
+                    transaction_id=tx_id,
+                    state=TransactionState.ROLLED_BACK,
+                    external_reference=provider_result.external_reference,
+                    failure_code=provider_result.failure_code
+                    or RejectionReason.METHOD_NOT_AUTHORIZED,
+                    failure_category=provider_result.failure_category,
+                    safe_message=provider_result.safe_message,
+                    provider_status=provider_result.provider_status or PaymentResultState.FAILED,
+                    raw_response_redacted=provider_result.raw_response_redacted,
+                    executed_at=provider_result.executed_at,
+                )
+
+            with self._lock:
+                self._results[tx_id] = final_res
+
+            return final_res
+        finally:
+            with self._lock:
+                self._in_flight_txs.discard(tx_id)

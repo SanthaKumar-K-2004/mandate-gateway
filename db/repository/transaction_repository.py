@@ -7,6 +7,7 @@ idempotency protection, context binding, provider outcome reconciliation, and ro
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -70,7 +71,8 @@ class TransactionRepository(BaseRepository[TransactionModel]):
                 return existing
             else:
                 raise ValueError(
-                    f"Idempotency key '{idempotency_key}' mismatch: attempt to reuse existing key with conflicting context."
+                    f"Idempotency key '{idempotency_key}' mismatch: "
+                    "attempt to reuse existing key with conflicting context."
                 )
 
         transaction = TransactionModel(
@@ -128,15 +130,11 @@ class TransactionRepository(BaseRepository[TransactionModel]):
         self, idempotency_key: str
     ) -> TransactionModel | None:
         """Retrieve a transaction by its unique idempotency key."""
-        stmt = select(TransactionModel).where(
-            TransactionModel.idempotency_key == idempotency_key
-        )
+        stmt = select(TransactionModel).where(TransactionModel.idempotency_key == idempotency_key)
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def lock_transaction_for_update(
-        self, transaction_id: str
-    ) -> TransactionModel | None:
+    async def lock_transaction_for_update(self, transaction_id: str) -> TransactionModel | None:
         """
         Lock a transaction row using SELECT ... FOR UPDATE.
 
@@ -146,9 +144,7 @@ class TransactionRepository(BaseRepository[TransactionModel]):
         dialect = getattr(bind, "dialect", None)
         dialect_name = getattr(dialect, "name", "") if dialect else ""
 
-        stmt = select(TransactionModel).where(
-            TransactionModel.transaction_id == transaction_id
-        )
+        stmt = select(TransactionModel).where(TransactionModel.transaction_id == transaction_id)
         if dialect_name != "sqlite":
             stmt = stmt.with_for_update()
 
@@ -173,9 +169,7 @@ class TransactionRepository(BaseRepository[TransactionModel]):
 
         current_enum = TransactionState(transaction.state)
         target_enum = (
-            TransactionState(target_state)
-            if isinstance(target_state, str)
-            else target_state
+            TransactionState(target_state) if isinstance(target_state, str) else target_state
         )
 
         if current_enum.is_terminal():
@@ -228,19 +222,16 @@ class TransactionRepository(BaseRepository[TransactionModel]):
         upper_status = provider_status.upper()
 
         if upper_status in ("SUCCESS", "CAPTURED", "PAID"):
-            await self.transition_transaction_state(
-                transaction_id, TransactionState.SUCCESS
-            )
+            await self.transition_transaction_state(transaction_id, TransactionState.SUCCESS)
         elif upper_status in ("FAILURE", "FAILED", "DECLINED"):
-            await self.transition_transaction_state(
-                transaction_id, TransactionState.FAILURE
-            )
+            await self.transition_transaction_state(transaction_id, TransactionState.FAILURE)
 
         await self._session.flush()
         return transaction
 
     async def list_transactions_requiring_reconciliation(
         self,
+        cutoff: Optional[datetime] = None,
     ) -> Sequence[TransactionModel]:
         """List stale or in-flight transactions requiring reconciliation."""
         stmt = (
@@ -250,7 +241,9 @@ class TransactionRepository(BaseRepository[TransactionModel]):
                 | (TransactionModel.provider_status == "UNKNOWN")
                 | (TransactionModel.provider_status == "DISPATCHED")
             )
-            .order_by(TransactionModel.created_at.asc())
         )
+        if cutoff is not None:
+            stmt = stmt.where(TransactionModel.updated_at <= cutoff)
+        stmt = stmt.order_by(TransactionModel.created_at.asc())
         result = await self._session.execute(stmt)
         return result.scalars().all()
