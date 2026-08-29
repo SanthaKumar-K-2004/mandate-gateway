@@ -24,6 +24,8 @@ import threading
 import uuid
 from datetime import datetime, timezone
 
+from typing import TYPE_CHECKING
+
 from apps.api.contracts.transaction import StepUpDiff
 from apps.api.domain.step_up import (
     StepUpChallengeRecord,
@@ -33,6 +35,9 @@ from apps.api.domain.step_up import (
     TrustedConfirmation,
 )
 from apps.api.domain.types import PolicyDecision, RejectionReason, StepUpZone
+
+if TYPE_CHECKING:
+    from db.unit_of_work import AsyncUnitOfWork
 
 
 def _utc_now() -> datetime:
@@ -408,3 +413,192 @@ class StepUpEngine:
         cid = challenge_id.strip() if challenge_id else ""
         with self._lock:
             return self._challenges.get(cid)
+
+    # -----------------------------------------------------------------------
+    # Async Persistent Methods (S05.4 Domain Engine Persistence Integration)
+    # -----------------------------------------------------------------------
+
+    async def async_create_challenge(
+        self,
+        uow: AsyncUnitOfWork,
+        mandate_id: str,
+        transaction_id: str,
+        cart_hash: str,
+        approved_paise: int,
+        proposed_paise: int,
+        merchant_id: str,
+        ttl_seconds: int = 300,
+        at: datetime | None = None,
+    ) -> StepUpChallengeRecord:
+        """Create and persist step-up challenge in database via uow.step_up."""
+        import json
+
+        created_time = at if at is not None else _utc_now()
+        expires_time = datetime.fromtimestamp(
+            created_time.timestamp() + ttl_seconds, tz=timezone.utc
+        )
+        cid = f"challenge-{uuid.uuid4()}"
+
+        meta_json = json.dumps(
+            {
+                "mandate_id": mandate_id.strip(),
+                "cart_hash": cart_hash.strip().lower(),
+                "approved_paise": approved_paise,
+                "proposed_paise": proposed_paise,
+                "merchant_id": merchant_id.strip(),
+            }
+        )
+
+        model = await uow.step_up.create_challenge(
+            challenge_id=cid,
+            transaction_id=transaction_id.strip(),
+            risk_classification="STEP_UP_REQUIRED",
+            expires_at=expires_time,
+            status=StepUpChallengeStatus.PENDING,
+            approver_metadata=meta_json,
+        )
+
+        record = StepUpChallengeRecord(
+            challenge_id=model.challenge_id,
+            mandate_id=mandate_id.strip(),
+            transaction_id=model.transaction_id,
+            cart_hash=cart_hash.strip().lower(),
+            approved_paise=approved_paise,
+            proposed_paise=proposed_paise,
+            merchant_id=merchant_id.strip(),
+            status=StepUpChallengeStatus.PENDING,
+            created_at=model.created_at,
+            expires_at=model.expires_at,
+        )
+
+        with self._lock:
+            self._challenges[cid] = record
+        return record
+
+    async def async_record_human_confirmation(
+        self,
+        uow: AsyncUnitOfWork,
+        confirmation: TrustedConfirmation,
+        at: datetime | None = None,
+    ) -> StepUpChallengeRecord:
+        """Atomically record human confirmation in database under row lock via uow.step_up."""
+        import json
+
+        eval_time = at if at is not None else _utc_now()
+        cid = confirmation.challenge_id.strip()
+
+        model = await uow.step_up.lock_challenge_for_update(cid)
+        if model is None:
+            raise ValueError(f"Step-up challenge {cid!r} not found.")
+
+        if model.status != StepUpChallengeStatus.PENDING.value:
+            raise ValueError(f"Step-up challenge {cid!r} is already {model.status}.")
+
+        if eval_time >= model.expires_at:
+            await uow.step_up.reject_challenge(cid, reason="Challenge expired")
+            raise ValueError(f"Step-up challenge {cid!r} has EXPIRED.")
+
+        meta_dict = json.loads(model.approver_metadata) if model.approver_metadata else {}
+        recorded_mandate = meta_dict.get("mandate_id", "")
+        recorded_cart = meta_dict.get("cart_hash", "")
+        approved_paise = meta_dict.get("approved_paise", 0)
+        proposed_paise = meta_dict.get("proposed_paise", 0)
+        merchant_id = meta_dict.get("merchant_id", "")
+
+        if recorded_mandate and recorded_mandate != confirmation.mandate_id.strip():
+            raise ValueError(f"Confirmation mandate_id mismatch for challenge {cid!r}.")
+
+        if model.transaction_id != confirmation.transaction_id.strip():
+            raise ValueError(f"Confirmation transaction_id mismatch for challenge {cid!r}.")
+
+        if recorded_cart and recorded_cart != confirmation.cart_hash.strip().lower():
+            raise ValueError(f"Confirmation cart_hash mismatch for challenge {cid!r}.")
+
+        updated_model = await uow.step_up.approve_challenge(
+            challenge_id=cid,
+            approver_id=confirmation.confirmed_by,
+        )
+
+        record = StepUpChallengeRecord(
+            challenge_id=updated_model.challenge_id,
+            mandate_id=confirmation.mandate_id,
+            transaction_id=updated_model.transaction_id,
+            cart_hash=confirmation.cart_hash,
+            approved_paise=approved_paise,
+            proposed_paise=proposed_paise,
+            merchant_id=merchant_id or confirmation.merchant_id,
+            status=StepUpChallengeStatus.APPROVED,
+            created_at=updated_model.created_at,
+            expires_at=updated_model.expires_at,
+            confirmed_at=updated_model.approved_at,
+            confirmed_by=confirmation.confirmed_by,
+        )
+
+        with self._lock:
+            self._challenges[cid] = record
+        return record
+
+    async def async_reject_challenge(
+        self,
+        uow: AsyncUnitOfWork,
+        challenge_id: str,
+        reason: str = "Human rejected challenge",
+        at: datetime | None = None,
+    ) -> StepUpChallengeRecord:
+        """Reject step-up challenge in database via uow.step_up."""
+        import json
+
+        cid = challenge_id.strip()
+        model = await uow.step_up.lock_challenge_for_update(cid)
+        if model is None:
+            raise ValueError(f"Step-up challenge {cid!r} not found.")
+
+        updated_model = await uow.step_up.reject_challenge(cid, reason=reason)
+        eval_time = at if at is not None else _utc_now()
+        meta_dict = json.loads(model.approver_metadata) if model.approver_metadata else {}
+
+        record = StepUpChallengeRecord(
+            challenge_id=updated_model.challenge_id,
+            mandate_id=meta_dict.get("mandate_id", ""),
+            transaction_id=updated_model.transaction_id,
+            cart_hash=meta_dict.get("cart_hash", ""),
+            approved_paise=meta_dict.get("approved_paise", 0),
+            proposed_paise=meta_dict.get("proposed_paise", 0),
+            merchant_id=meta_dict.get("merchant_id", ""),
+            status=StepUpChallengeStatus.REJECTED,
+            created_at=updated_model.created_at,
+            expires_at=updated_model.expires_at,
+            confirmed_at=eval_time,
+        )
+
+        with self._lock:
+            self._challenges[cid] = record
+        return record
+
+    async def async_get_challenge(
+        self, uow: AsyncUnitOfWork, challenge_id: str
+    ) -> StepUpChallengeRecord | None:
+        """Lookup challenge in database via uow.step_up."""
+        import json
+
+        cid = challenge_id.strip() if challenge_id else ""
+        if not cid:
+            return None
+        model = await uow.step_up.get_challenge(cid)
+        if model is None:
+            return None
+        meta_dict = json.loads(model.approver_metadata) if model.approver_metadata else {}
+        return StepUpChallengeRecord(
+            challenge_id=model.challenge_id,
+            mandate_id=meta_dict.get("mandate_id", ""),
+            transaction_id=model.transaction_id,
+            cart_hash=meta_dict.get("cart_hash", ""),
+            approved_paise=meta_dict.get("approved_paise", 0),
+            proposed_paise=meta_dict.get("proposed_paise", 0),
+            merchant_id=meta_dict.get("merchant_id", ""),
+            status=StepUpChallengeStatus(model.status),
+            created_at=model.created_at,
+            expires_at=model.expires_at,
+            confirmed_at=model.approved_at,
+            confirmed_by=meta_dict.get("confirmed_by"),
+        )

@@ -22,9 +22,14 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
+from typing import TYPE_CHECKING
+
 from apps.api.domain.authorization_aggregator import SecurityControlOutcome
 from apps.api.domain.budget import BudgetInsufficientError, BudgetReservation, DailyBudget
 from apps.api.domain.types import BudgetState, Currency, PolicyDecision, RejectionReason
+
+if TYPE_CHECKING:
+    from db.unit_of_work import AsyncUnitOfWork
 
 
 def _utc_now() -> datetime:
@@ -435,3 +440,228 @@ class BudgetEngine:
                 self._reservations[reservation_id] = updated_reservation
 
             return updated_reservation
+
+    # -----------------------------------------------------------------------
+    # Async Persistent Methods (S05.4 Domain Engine Persistence Integration)
+    # -----------------------------------------------------------------------
+
+    async def async_reserve(
+        self,
+        uow: AsyncUnitOfWork,
+        mandate_id: str,
+        transaction_id: str,
+        amount_paise: int,
+        currency: Currency,
+        reservation_id: str | None = None,
+        ttl_seconds: int = 300,
+        at: datetime | None = None,
+    ) -> BudgetEvaluationResult:
+        """
+        Atomically evaluate and persist a budget reservation using uow.budgets.
+        Row-locks MandateModel for atomic accounting under database concurrency.
+        """
+        eval_time = at if at is not None else _utc_now()
+
+        if amount_paise <= 0:
+            return BudgetEvaluationResult(
+                valid=False,
+                decision=PolicyDecision.REJECT,
+                mandate_id=mandate_id,
+                requested_paise=amount_paise,
+                available_paise=0,
+                rejection_reason=RejectionReason.INVALID_AMOUNT,
+                rejection_detail=f"Budget reservation amount must be positive integer paise, got {amount_paise}.",
+                evaluated_at=eval_time,
+            )
+
+        # 1. Lock mandate row for update in database
+        mandate_row = await uow.budgets.lock_mandate_budget_for_update(mandate_id)
+        if mandate_row is None:
+            return BudgetEvaluationResult(
+                valid=False,
+                decision=PolicyDecision.REJECT,
+                mandate_id=mandate_id,
+                requested_paise=amount_paise,
+                available_paise=0,
+                rejection_reason=RejectionReason.BUDGET_EXCEEDED,
+                rejection_detail=f"No budget registered for mandate {mandate_id}.",
+                evaluated_at=eval_time,
+            )
+
+        daily_limit = mandate_row.daily_budget_paise
+        mandate_currency = Currency(mandate_row.currency)
+
+        if mandate_currency != currency:
+            return BudgetEvaluationResult(
+                valid=False,
+                decision=PolicyDecision.REJECT,
+                mandate_id=mandate_id,
+                requested_paise=amount_paise,
+                available_paise=0,
+                rejection_reason=RejectionReason.BUDGET_CURRENCY_MISMATCH,
+                rejection_detail=(
+                    f"Budget currency mismatch: mandate is in {mandate_currency.value}, "
+                    f"requested in {currency.value}."
+                ),
+                evaluated_at=eval_time,
+            )
+
+        res_id = reservation_id if reservation_id else _new_uuid()
+        existing_res = await uow.budgets.get_reservation(res_id)
+        if existing_res is not None:
+            return BudgetEvaluationResult(
+                valid=False,
+                decision=PolicyDecision.REJECT,
+                mandate_id=mandate_id,
+                requested_paise=amount_paise,
+                available_paise=0,
+                rejection_reason=RejectionReason.INVALID_TRANSACTION_STATE,
+                rejection_detail=f"Duplicate reservation ID {res_id} already exists in state {existing_res.state}.",
+                evaluated_at=eval_time,
+            )
+
+        current_reserved_spent = await uow.budgets.calculate_reserved_total(mandate_id)
+        available_paise = max(0, daily_limit - current_reserved_spent)
+
+        if current_reserved_spent + amount_paise > daily_limit:
+            return BudgetEvaluationResult(
+                valid=False,
+                decision=PolicyDecision.REJECT,
+                mandate_id=mandate_id,
+                requested_paise=amount_paise,
+                available_paise=available_paise,
+                rejection_reason=RejectionReason.BUDGET_EXCEEDED,
+                rejection_detail=(
+                    f"Budget limit exceeded: requested {amount_paise} paise, available {available_paise} paise "
+                    f"(limit={daily_limit}, spent_and_reserved={current_reserved_spent})."
+                ),
+                evaluated_at=eval_time,
+            )
+
+        res_model = await uow.budgets.create_reservation(
+            reservation_id=res_id,
+            mandate_id=mandate_id,
+            transaction_id=transaction_id,
+            requested_paise=amount_paise,
+            reserved_paise=amount_paise,
+            state=BudgetState.RESERVED,
+        )
+
+        expires_at = datetime.fromtimestamp(eval_time.timestamp() + ttl_seconds, tz=timezone.utc)
+        domain_res = BudgetReservation(
+            reservation_id=res_model.reservation_id,
+            transaction_id=res_model.transaction_id,
+            mandate_id=res_model.mandate_id,
+            amount_paise=res_model.requested_paise,
+            currency=currency,
+            state=BudgetState.RESERVED,
+            created_at=eval_time,
+            expires_at=expires_at,
+            updated_at=eval_time,
+        )
+
+        self._budgets[mandate_id] = DailyBudget(
+            mandate_id=mandate_id,
+            currency=currency,
+            date_utc=eval_time.strftime("%Y-%m-%d"),
+            daily_limit_paise=daily_limit,
+            spent_paise=0,
+            reserved_paise=current_reserved_spent + amount_paise,
+        )
+        self._reservations[res_id] = domain_res
+
+        return BudgetEvaluationResult(
+            valid=True,
+            decision=PolicyDecision.ALLOW,
+            mandate_id=mandate_id,
+            requested_paise=amount_paise,
+            available_paise=available_paise - amount_paise,
+            reservation=domain_res,
+            evaluated_at=eval_time,
+        )
+
+    async def async_commit(
+        self,
+        uow: AsyncUnitOfWork,
+        mandate_id: str,
+        reservation_id: str,
+        at: datetime | None = None,
+    ) -> BudgetReservation:
+        """Commit budget reservation in database via uow.budgets."""
+        _ = await uow.budgets.lock_mandate_budget_for_update(mandate_id)
+        res_model = await uow.budgets.get_reservation(reservation_id)
+        if res_model is None:
+            raise ValueError(f"Reservation {reservation_id} not found.")
+        if res_model.mandate_id != mandate_id:
+            raise ValueError(
+                f"Reservation {reservation_id} belongs to mandate {res_model.mandate_id}, not {mandate_id}."
+            )
+        if res_model.state == BudgetState.COMMITTED.value:
+            raise ValueError(
+                f"Double-commit error: Reservation {reservation_id} is already COMMITTED."
+            )
+        if res_model.state == BudgetState.RELEASED.value:
+            raise ValueError(
+                f"Illegal state transition: Cannot commit RELEASED reservation {reservation_id}."
+            )
+        if res_model.state != BudgetState.RESERVED.value:
+            raise ValueError(
+                f"Cannot commit reservation {reservation_id} in state {res_model.state}."
+            )
+
+        updated_model = await uow.budgets.commit_reservation(reservation_id)
+        eval_time = at if at is not None else _utc_now()
+        domain_res = BudgetReservation(
+            reservation_id=updated_model.reservation_id,
+            transaction_id=updated_model.transaction_id,
+            mandate_id=updated_model.mandate_id,
+            amount_paise=updated_model.requested_paise,
+            currency=Currency.INR,
+            state=BudgetState.COMMITTED,
+            created_at=updated_model.created_at,
+            expires_at=datetime.fromtimestamp(eval_time.timestamp() + 300, tz=timezone.utc),
+            updated_at=eval_time,
+        )
+        self._reservations[reservation_id] = domain_res
+        return domain_res
+
+    async def async_release(
+        self,
+        uow: AsyncUnitOfWork,
+        mandate_id: str,
+        reservation_id: str,
+        at: datetime | None = None,
+    ) -> BudgetReservation:
+        """Release budget reservation in database via uow.budgets."""
+        _ = await uow.budgets.lock_mandate_budget_for_update(mandate_id)
+        res_model = await uow.budgets.get_reservation(reservation_id)
+        if res_model is None:
+            raise ValueError(f"Reservation {reservation_id} not found.")
+        if res_model.mandate_id != mandate_id:
+            raise ValueError(
+                f"Reservation {reservation_id} belongs to mandate {res_model.mandate_id}, not {mandate_id}."
+            )
+        if res_model.state == BudgetState.RELEASED.value:
+            raise ValueError(
+                f"Double-release error: Reservation {reservation_id} is already RELEASED."
+            )
+        if res_model.state == BudgetState.COMMITTED.value:
+            raise ValueError(
+                f"Illegal state transition: Cannot release COMMITTED reservation {reservation_id}."
+            )
+
+        updated_model = await uow.budgets.release_reservation(reservation_id)
+        eval_time = at if at is not None else _utc_now()
+        domain_res = BudgetReservation(
+            reservation_id=updated_model.reservation_id,
+            transaction_id=updated_model.transaction_id,
+            mandate_id=updated_model.mandate_id,
+            amount_paise=updated_model.requested_paise,
+            currency=Currency.INR,
+            state=BudgetState.RELEASED,
+            created_at=updated_model.created_at,
+            expires_at=datetime.fromtimestamp(eval_time.timestamp() + 300, tz=timezone.utc),
+            updated_at=eval_time,
+        )
+        self._reservations[reservation_id] = domain_res
+        return domain_res

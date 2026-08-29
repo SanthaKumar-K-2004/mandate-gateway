@@ -16,11 +16,14 @@ from __future__ import annotations
 
 import threading
 from datetime import datetime
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from apps.api.domain.audit import GENESIS_HASH, AuditEvent
 from apps.api.domain.audit_errors import AuditChainTamperedError
 from apps.api.domain.types import AuditEventType
+
+if TYPE_CHECKING:
+    from db.unit_of_work import AsyncUnitOfWork
 
 
 class AuditLedger:
@@ -224,3 +227,59 @@ class AuditLedger:
         with self._lock:
             self._events.clear()
             self._head_hash = GENESIS_HASH
+
+    # -----------------------------------------------------------------------
+    # Async Persistent Methods (S05.4 Domain Engine Persistence Integration)
+    # -----------------------------------------------------------------------
+
+    async def async_append_event(
+        self,
+        uow: AsyncUnitOfWork,
+        event_type: AuditEventType,
+        *,
+        transaction_id: str | None = None,
+        mandate_id: str | None = None,
+        merchant_id: str | None = None,
+        buyer_id: str | None = None,
+        payload: dict[str, Any] | None = None,
+        at: datetime | None = None,
+    ) -> AuditEvent:
+        """
+        Append a new AuditEvent to the database via uow.audit under row lock.
+        Maintains strict hash-chain continuity H_n = SHA256(H_{n-1} + canonical(payload)).
+        """
+        import json
+
+        model = await uow.audit.append_event(
+            event_type=event_type,
+            transaction_id=transaction_id,
+            mandate_id=mandate_id,
+            merchant_id=merchant_id,
+            buyer_id=buyer_id,
+            payload=payload,
+            at=at,
+        )
+
+        payload_dict = json.loads(model.payload_json) if model.payload_json else {}
+
+        domain_event = AuditEvent(
+            event_id=model.event_id,
+            event_type=AuditEventType(model.event_type),
+            previous_hash=model.previous_hash,
+            event_hash=model.event_hash,
+            timestamp=model.timestamp,
+            transaction_id=model.transaction_id,
+            mandate_id=model.mandate_id,
+            merchant_id=model.merchant_id,
+            buyer_id=model.buyer_id,
+            payload=payload_dict,
+        )
+
+        with self._lock:
+            self._events.append(domain_event)
+            self._head_hash = domain_event.event_hash
+        return domain_event
+
+    async def async_verify_chain(self, uow: AsyncUnitOfWork) -> tuple[bool, str | None]:
+        """Verify complete cryptographic chain integrity in database via uow.audit."""
+        return await uow.audit.verify_chain()

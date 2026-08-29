@@ -143,6 +143,14 @@ class AsyncUnitOfWork:
         # Return False to propagate original exception if present
         return False
 
+    async def flush(self) -> None:
+        """
+        Flush pending state mutations to the underlying session without committing.
+        """
+        self._assert_active()
+        assert self._session is not None
+        await self._session.flush()
+
     async def commit(self) -> None:
         """
         Explicitly commit the active transaction.

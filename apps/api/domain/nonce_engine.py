@@ -21,6 +21,8 @@ import threading
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
+from typing import TYPE_CHECKING
+
 from apps.api.domain.authorization_aggregator import SecurityControlOutcome
 from apps.api.domain.nonce import (
     AuthorizationExpiredError,
@@ -29,6 +31,9 @@ from apps.api.domain.nonce import (
     generate_nonce,
 )
 from apps.api.domain.types import NonceState, PolicyDecision, RejectionReason
+
+if TYPE_CHECKING:
+    from db.unit_of_work import AsyncUnitOfWork
 
 
 def _utc_now() -> datetime:
@@ -281,3 +286,198 @@ class NonceEngine:
         """Return total number of active/recorded nonces."""
         with self._lock:
             return len(self._records)
+
+    # -----------------------------------------------------------------------
+    # Async Persistent Methods (S05.4 Domain Engine Persistence Integration)
+    # -----------------------------------------------------------------------
+
+    async def async_issue_nonce(
+        self,
+        uow: AsyncUnitOfWork,
+        mandate_id: str,
+        transaction_id: str,
+        ttl_seconds: int = 300,
+        at: datetime | None = None,
+    ) -> NonceRecord:
+        """Issue a new cryptographically random nonce and persist to database via uow.nonces."""
+        if not mandate_id or not mandate_id.strip():
+            raise ValueError("mandate_id cannot be empty")
+        if not transaction_id or not transaction_id.strip():
+            raise ValueError("transaction_id cannot be empty")
+
+        issued_time = at if at is not None else _utc_now()
+        expires_time = datetime.fromtimestamp(
+            issued_time.timestamp() + ttl_seconds, tz=timezone.utc
+        )
+        value = generate_nonce()
+
+        model = await uow.nonces.create_nonce(
+            nonce=value,
+            transaction_id=transaction_id.strip(),
+            mandate_id=mandate_id.strip(),
+            status=NonceState.ISSUED,
+            created_at=issued_time,
+        )
+
+        record = NonceRecord(
+            nonce_value=model.nonce,
+            mandate_id=model.mandate_id,
+            transaction_id=model.transaction_id,
+            state=NonceState.ISSUED,
+            issued_at=model.created_at,
+            expires_at=expires_time,
+            consumed_at=None,
+        )
+
+        with self._lock:
+            self._records[value] = record
+        return record
+
+    async def async_validate_and_consume(
+        self,
+        uow: AsyncUnitOfWork,
+        nonce_value: str,
+        mandate_id: str,
+        transaction_id: str,
+        at: datetime | None = None,
+        ttl_seconds: int = 300,
+    ) -> NonceEvaluationResult:
+        """
+        Atomically validate nonce in database under row lock (FOR UPDATE).
+        If valid, transition state to CONSUMED in database via uow.nonces.
+        """
+        eval_time = at if at is not None else _utc_now()
+        clean_nonce = nonce_value.strip() if nonce_value else ""
+
+        if not clean_nonce:
+            return NonceEvaluationResult(
+                valid=False,
+                decision=PolicyDecision.REJECT,
+                nonce_value=nonce_value,
+                mandate_id=mandate_id,
+                transaction_id=transaction_id,
+                rejection_reason=RejectionReason.NONCE_INVALID,
+                rejection_detail="Nonce validation failed: Nonce value cannot be empty.",
+                evaluated_at=eval_time,
+            )
+
+        model = await uow.nonces.lock_nonce_for_update(clean_nonce)
+        if model is None:
+            return NonceEvaluationResult(
+                valid=False,
+                decision=PolicyDecision.REJECT,
+                nonce_value=clean_nonce,
+                mandate_id=mandate_id,
+                transaction_id=transaction_id,
+                rejection_reason=RejectionReason.NONCE_INVALID,
+                rejection_detail=f"Nonce validation failed: Nonce {clean_nonce!r} not found in database.",
+                evaluated_at=eval_time,
+            )
+
+        expires_time = datetime.fromtimestamp(
+            model.created_at.timestamp() + ttl_seconds, tz=timezone.utc
+        )
+        domain_record = NonceRecord(
+            nonce_value=model.nonce,
+            mandate_id=model.mandate_id,
+            transaction_id=model.transaction_id,
+            state=NonceState(model.status),
+            issued_at=model.created_at,
+            expires_at=expires_time,
+            consumed_at=model.consumed_at,
+        )
+
+        if model.mandate_id != mandate_id.strip() or model.transaction_id != transaction_id.strip():
+            return NonceEvaluationResult(
+                valid=False,
+                decision=PolicyDecision.REJECT,
+                nonce_value=clean_nonce,
+                mandate_id=mandate_id,
+                transaction_id=transaction_id,
+                record=domain_record,
+                rejection_reason=RejectionReason.NONCE_INVALID,
+                rejection_detail=(
+                    f"Nonce binding mismatch: Nonce {clean_nonce[:8]}... is bound to "
+                    f"mandate={model.mandate_id!r}, tx={model.transaction_id!r}, but submitted for "
+                    f"mandate={mandate_id!r}, tx={transaction_id!r}."
+                ),
+                evaluated_at=eval_time,
+            )
+
+        if model.status == NonceState.CONSUMED.value:
+            return NonceEvaluationResult(
+                valid=False,
+                decision=PolicyDecision.REJECT,
+                nonce_value=clean_nonce,
+                mandate_id=mandate_id,
+                transaction_id=transaction_id,
+                record=domain_record,
+                rejection_reason=RejectionReason.NONCE_ALREADY_CONSUMED,
+                rejection_detail=f"Nonce {clean_nonce!r} has already been consumed at {model.consumed_at}.",
+                evaluated_at=eval_time,
+            )
+
+        if eval_time >= expires_time:
+            return NonceEvaluationResult(
+                valid=False,
+                decision=PolicyDecision.REJECT,
+                nonce_value=clean_nonce,
+                mandate_id=mandate_id,
+                transaction_id=transaction_id,
+                record=domain_record,
+                rejection_reason=RejectionReason.AUTHORIZATION_EXPIRED,
+                rejection_detail=f"Nonce {clean_nonce!r} expired at {expires_time.isoformat()}.",
+                evaluated_at=eval_time,
+            )
+
+        consumed_model = await uow.nonces.consume_nonce(
+            nonce=clean_nonce,
+            transaction_id=transaction_id.strip(),
+            mandate_id=mandate_id.strip(),
+            at=eval_time,
+        )
+
+        consumed_record = domain_record.model_copy(
+            update={
+                "state": NonceState.CONSUMED,
+                "consumed_at": consumed_model.consumed_at or eval_time,
+            }
+        )
+
+        with self._lock:
+            self._records[clean_nonce] = consumed_record
+
+        return NonceEvaluationResult(
+            valid=True,
+            decision=PolicyDecision.ALLOW,
+            nonce_value=clean_nonce,
+            mandate_id=mandate_id,
+            transaction_id=transaction_id,
+            record=consumed_record,
+            rejection_reason=None,
+            rejection_detail=None,
+            evaluated_at=eval_time,
+        )
+
+    async def async_get_nonce(
+        self, uow: AsyncUnitOfWork, nonce_value: str, ttl_seconds: int = 300
+    ) -> NonceRecord | None:
+        """Lookup nonce in database via uow.nonces."""
+        clean = nonce_value.strip() if nonce_value else ""
+        if not clean:
+            return None
+        model = await uow.nonces.get_nonce(clean)
+        if model is None:
+            return None
+        expires_time = datetime.fromtimestamp(
+            model.created_at.timestamp() + ttl_seconds, tz=timezone.utc
+        )
+        return NonceRecord(
+            nonce_value=model.nonce,
+            mandate_id=model.mandate_id,
+            transaction_id=model.transaction_id,
+            state=NonceState(model.status),
+            issued_at=model.created_at,
+            expires_at=expires_time,
+            consumed_at=model.consumed_at,
+        )

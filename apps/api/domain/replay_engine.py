@@ -25,8 +25,13 @@ import threading
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
+from typing import TYPE_CHECKING
+
 from apps.api.domain.authorization_aggregator import SecurityControlOutcome
 from apps.api.domain.types import PolicyDecision, RejectionReason
+
+if TYPE_CHECKING:
+    from db.unit_of_work import AsyncUnitOfWork
 
 
 def _utc_now() -> datetime:
@@ -226,3 +231,99 @@ class ReplayProtectionEngine:
         """Return total number of active replay records in memory."""
         with self._lock:
             return len(self._records)
+
+    # -----------------------------------------------------------------------
+    # Async Persistent Methods (S05.4 Domain Engine Persistence Integration)
+    # -----------------------------------------------------------------------
+
+    async def async_check_and_record(
+        self,
+        uow: AsyncUnitOfWork,
+        mandate_id: str,
+        transaction_id: str,
+        cart_hash: str | None = None,
+        merchant_id: str | None = None,
+        ttl_seconds: int = 86400,
+        at: datetime | None = None,
+    ) -> ReplayEvaluationResult:
+        """
+        Atomically check and record replay protection fingerprint in database via uow.replay.
+        """
+        eval_time = at if at is not None else _utc_now()
+
+        if not mandate_id or not mandate_id.strip():
+            return ReplayEvaluationResult(
+                valid=False,
+                decision=PolicyDecision.REJECT,
+                fingerprint="",
+                mandate_id=mandate_id,
+                transaction_id=transaction_id,
+                rejection_reason=RejectionReason.INVALID_TRANSACTION_STATE,
+                rejection_detail="Replay check failed: mandate_id cannot be empty.",
+                evaluated_at=eval_time,
+            )
+
+        if not transaction_id or not transaction_id.strip():
+            return ReplayEvaluationResult(
+                valid=False,
+                decision=PolicyDecision.REJECT,
+                fingerprint="",
+                mandate_id=mandate_id,
+                transaction_id=transaction_id,
+                rejection_reason=RejectionReason.INVALID_TRANSACTION_STATE,
+                rejection_detail="Replay check failed: transaction_id cannot be empty.",
+                evaluated_at=eval_time,
+            )
+
+        fingerprint = compute_replay_fingerprint(
+            mandate_id=mandate_id,
+            transaction_id=transaction_id,
+            cart_hash=cart_hash,
+            merchant_id=merchant_id,
+        )
+
+        is_replayed = await uow.replay.is_fingerprint_replayed(
+            fingerprint, ttl_seconds=ttl_seconds, at=eval_time
+        )
+        if is_replayed:
+            return ReplayEvaluationResult(
+                valid=False,
+                decision=PolicyDecision.REJECT,
+                fingerprint=fingerprint,
+                mandate_id=mandate_id,
+                transaction_id=transaction_id,
+                rejection_reason=RejectionReason.REPLAY_ATTEMPT_DETECTED,
+                rejection_detail=(
+                    f"Replay attack blocked: Transaction/action identity {transaction_id} "
+                    f"for mandate {mandate_id} (fingerprint {fingerprint[:12]}...) was previously executed."
+                ),
+                evaluated_at=eval_time,
+            )
+
+        model = await uow.replay.record_replay_fingerprint(
+            fingerprint=fingerprint,
+            transaction_id=transaction_id,
+            created_at=eval_time,
+        )
+
+        record = ReplayRecord(
+            fingerprint=model.fingerprint,
+            mandate_id=mandate_id,
+            transaction_id=model.transaction_id,
+            created_at=model.created_at,
+            expires_at=datetime.fromtimestamp(eval_time.timestamp() + ttl_seconds, tz=timezone.utc),
+        )
+
+        with self._lock:
+            self._records[fingerprint] = record
+
+        return ReplayEvaluationResult(
+            valid=True,
+            decision=PolicyDecision.ALLOW,
+            fingerprint=fingerprint,
+            mandate_id=mandate_id,
+            transaction_id=transaction_id,
+            rejection_reason=None,
+            rejection_detail=None,
+            evaluated_at=eval_time,
+        )

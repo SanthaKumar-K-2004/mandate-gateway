@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
 from apps.api.domain.cart import Cart
 from apps.api.domain.intent import CommerceIntent
@@ -27,6 +28,9 @@ from apps.api.domain.types import (
     PolicyDecision,
     RejectionReason,
 )
+
+if TYPE_CHECKING:
+    from db.unit_of_work import AsyncUnitOfWork
 
 
 def _utc_now() -> datetime:
@@ -458,3 +462,70 @@ class MerchantPolicyEngine:
             evaluated_rules=tuple(steps),
             evaluated_at=eval_time,
         )
+
+    # -----------------------------------------------------------------------
+    # Async Persistent Methods (S05.4 Domain Engine Persistence Integration)
+    # -----------------------------------------------------------------------
+    @classmethod
+    async def async_get_active_policy(
+        cls, uow: AsyncUnitOfWork, merchant_id: str
+    ) -> MerchantPolicy | None:
+        """Lookup active MerchantPolicy in database via uow.merchants."""
+        import json
+
+        clean_id = merchant_id.strip() if merchant_id else ""
+        if not clean_id:
+            return None
+        model = await uow.merchants.get_active_policy(clean_id)
+        if model is None:
+            return None
+
+        from apps.api.domain.types import Currency, McpOperation
+
+        allowed_categories = frozenset(json.loads(model.allowed_categories_json or "[]"))
+        allowed_ops = frozenset(
+            [McpOperation(op) for op in json.loads(model.allowed_operations_json or "[]")]
+        )
+        blocked_ops = frozenset(
+            [McpOperation(op) for op in json.loads(model.blocked_operations_json or "[]")]
+        )
+
+        version_int = int(model.policy_version) if str(model.policy_version).isdigit() else 1
+
+        return MerchantPolicy(
+            policy_id=model.id,
+            merchant_id=model.merchant_id,
+            policy_version=version_int,
+            ai_commerce_enabled=model.active,
+            currency=Currency.INR,
+            allowed_categories=allowed_categories,
+            autonomous_purchase_limit_paise=model.autonomous_limit_paise,
+            step_up_threshold_paise=model.step_up_threshold_paise,
+            max_step_up_percent=10,
+            allowed_operations=allowed_ops,
+            blocked_operations=blocked_ops,
+        )
+
+    @classmethod
+    async def async_evaluate(
+        cls,
+        uow: AsyncUnitOfWork,
+        merchant_id: str,
+        intent: CommerceIntent,
+        cart: Cart | None = None,
+        at: datetime | None = None,
+    ) -> MerchantPolicyEvaluationResult:
+        """Fetch active policy from database and evaluate intent & cart."""
+        eval_time = at if at is not None else _utc_now()
+        policy = await cls.async_get_active_policy(uow, merchant_id)
+        if policy is None:
+            return MerchantPolicyEvaluationResult(
+                decision=PolicyDecision.REJECT,
+                merchant_id=merchant_id,
+                policy_id="",
+                policy_version=0,
+                rejection_reason=RejectionReason.POLICY_VERSION_INVALID,
+                rejection_detail=f"Active merchant policy for merchant {merchant_id!r} not found in database.",
+                evaluated_at=eval_time,
+            )
+        return cls.evaluate(policy=policy, intent=intent, cart=cart, at=eval_time)

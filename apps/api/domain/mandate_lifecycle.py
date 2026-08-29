@@ -19,14 +19,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
 from apps.api.domain.cart import Cart
 from apps.api.domain.intent import CommerceIntent
 from apps.api.domain.mandate import BuyerMandate
 from apps.api.domain.types import (
+    Currency,
     MandateStatus,
+    Region,
     RejectionReason,
 )
+
+if TYPE_CHECKING:
+    from db.unit_of_work import AsyncUnitOfWork
 
 
 def _utc_now() -> datetime:
@@ -620,3 +626,105 @@ class MandateEvaluator:
             evaluated_rules=tuple(steps),
             evaluated_at=eval_time,
         )
+
+
+# -----------------------------------------------------------------------
+# Async Persistent Helper Functions (S05.4 Domain Engine Persistence Integration)
+# -----------------------------------------------------------------------
+
+
+async def async_get_mandate(uow: AsyncUnitOfWork, mandate_id: str) -> BuyerMandate | None:
+    """Lookup BuyerMandate in database via uow.mandates."""
+    clean_id = mandate_id.strip() if mandate_id else ""
+    if not clean_id:
+        return None
+    model = await uow.mandates.get_mandate(clean_id)
+    if model is None:
+        return None
+    return BuyerMandate(
+        mandate_id=model.mandate_id,
+        buyer_id=model.buyer_id,
+        merchant_scope=frozenset([model.merchant_id]) if model.merchant_id else frozenset(),
+        category_scope=frozenset([model.category_scope]) if model.category_scope else frozenset(),
+        allowed_regions=frozenset([Region.IN]),
+        maximum_amount_paise=model.daily_budget_paise,
+        daily_budget_paise=model.daily_budget_paise,
+        currency=Currency.INR,
+        autonomous_execution=True,
+        issued_at=model.created_at,
+        expires_at=model.expires_at,
+        status=MandateStatus(model.status),
+    )
+
+
+async def async_create_mandate(
+    uow: AsyncUnitOfWork,
+    mandate_id: str,
+    buyer_id: str,
+    daily_budget_paise: int,
+    expires_at: datetime,
+    merchant_id: str | None = None,
+    status: MandateStatus = MandateStatus.ACTIVE,
+) -> BuyerMandate:
+    """Create and persist a new BuyerMandate in database via uow.mandates."""
+    model = await uow.mandates.create_mandate(
+        mandate_id=mandate_id.strip(),
+        buyer_id=buyer_id.strip(),
+        daily_budget_paise=daily_budget_paise,
+        expires_at=expires_at,
+        merchant_id=merchant_id.strip() if merchant_id else None,
+        status=status,
+    )
+    return BuyerMandate(
+        mandate_id=model.mandate_id,
+        buyer_id=model.buyer_id,
+        merchant_scope=frozenset([model.merchant_id]) if model.merchant_id else frozenset(),
+        category_scope=frozenset([model.category_scope]) if model.category_scope else frozenset(),
+        allowed_regions=frozenset([Region.IN]),
+        maximum_amount_paise=model.daily_budget_paise,
+        daily_budget_paise=model.daily_budget_paise,
+        currency=Currency.INR,
+        autonomous_execution=True,
+        issued_at=model.created_at,
+        expires_at=model.expires_at,
+        status=MandateStatus(model.status),
+    )
+
+
+async def async_transition_mandate(
+    uow: AsyncUnitOfWork,
+    mandate_id: str,
+    target_status: MandateStatus,
+) -> BuyerMandate:
+    """Atomically transition mandate status in database under row lock via uow.mandates."""
+    clean_id = mandate_id.strip()
+    model = await uow.mandates.lock_mandate_for_update(clean_id)
+    if model is None:
+        raise MandateLifecycleError(f"Mandate {clean_id!r} not found in database.")
+
+    current_status = MandateStatus(model.status)
+    legal_next = _MANDATE_LEGAL_TRANSITIONS.get(current_status, frozenset())
+    if target_status not in legal_next:
+        raise MandateStateTransitionError(current_status, target_status)
+
+    updated_model = await uow.mandates.transition_mandate_status(clean_id, target_status)
+    return BuyerMandate(
+        mandate_id=updated_model.mandate_id,
+        buyer_id=updated_model.buyer_id,
+        merchant_scope=(
+            frozenset([updated_model.merchant_id]) if updated_model.merchant_id else frozenset()
+        ),
+        category_scope=(
+            frozenset([updated_model.category_scope])
+            if updated_model.category_scope
+            else frozenset()
+        ),
+        allowed_regions=frozenset([Region.IN]),
+        maximum_amount_paise=updated_model.daily_budget_paise,
+        daily_budget_paise=updated_model.daily_budget_paise,
+        currency=Currency.INR,
+        autonomous_execution=True,
+        issued_at=updated_model.created_at,
+        expires_at=updated_model.expires_at,
+        status=MandateStatus(updated_model.status),
+    )
