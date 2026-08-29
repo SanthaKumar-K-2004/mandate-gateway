@@ -81,7 +81,13 @@ class ToolRequestValidator:
                 f"Non-canonical tool identifier syntax: {tool_name!r}.",
             )
 
-        if ".." in tool_name or "/" in tool_name or "\\" in tool_name or "\x00" in tool_name or "\n" in tool_name:
+        if (
+            ".." in tool_name
+            or "/" in tool_name
+            or "\\" in tool_name
+            or "\x00" in tool_name
+            or "\n" in tool_name
+        ):
             raise ToolExecutionError(
                 ToolErrorCode.INVALID_TOOL_REQUEST,
                 f"Path traversal or control characters detected in tool name: {tool_name!r}.",
@@ -95,7 +101,9 @@ class ToolRequestValidator:
                 )
 
     @classmethod
-    def validate_input_payload(cls, tool_name: str, arguments: dict[str, Any], max_bytes: int) -> None:
+    def validate_input_payload(
+        cls, tool_name: str, arguments: dict[str, Any], max_bytes: int
+    ) -> None:
         """
         Validate argument size, authority field absence, and SSRF targets.
         """

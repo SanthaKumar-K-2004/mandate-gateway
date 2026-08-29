@@ -42,8 +42,6 @@ def _get_audit_lock() -> asyncio.Lock:
     return _audit_append_lock
 
 
-
-
 class AuditRepository(BaseRepository[AuditEventModel]):
     """
     Repository for durable, append-only cryptographic audit event ledger.
@@ -99,7 +97,9 @@ class AuditRepository(BaseRepository[AuditEventModel]):
         """
         async with _get_audit_lock():
             event_type_enum = (
-                event_type if isinstance(event_type, AuditEventType) else AuditEventType(str(event_type))
+                event_type
+                if isinstance(event_type, AuditEventType)
+                else AuditEventType(str(event_type))
             )
             event_type_str = event_type_enum.value
 
@@ -108,7 +108,6 @@ class AuditRepository(BaseRepository[AuditEventModel]):
 
             # 1. Lock and fetch latest audit event in chain
             latest = await self.get_latest_event(lock=True)
-
 
         if latest is None:
             next_seq = 1
@@ -230,7 +229,10 @@ class AuditRepository(BaseRepository[AuditEventModel]):
             try:
                 event_type_enum = AuditEventType(event.event_type)
             except Exception:
-                return False, f"Invalid event_type '{event.event_type}' at sequence {event.sequence_number}."
+                return (
+                    False,
+                    f"Invalid event_type '{event.event_type}' at sequence {event.sequence_number}.",
+                )
 
             evt_time = (
                 event.timestamp.replace(tzinfo=timezone.utc)

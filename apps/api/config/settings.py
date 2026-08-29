@@ -204,3 +204,27 @@ class Settings:
 
     def __str__(self) -> str:
         return self.__repr__()
+
+
+def validate_production_config(settings: Settings) -> None:
+    """
+    Enforces fail-fast startup validation for production mode (APP_ENV=production).
+    Rejects insecure defaults, missing passwords, or unsafe log levels before accepting traffic.
+    """
+    if settings.app_env != Environment.PRODUCTION:
+        return
+
+    pwd = settings.postgres_password.get_secret_value()
+    if not pwd or pwd.lower() in ("postgres", "password", "secret", "change_me", "admin"):
+        raise ConfigurationError(
+            "Insecure or default POSTGRES_PASSWORD prohibited in production mode."
+        )
+
+    if not settings.postgres_host:
+        raise ConfigurationError("POSTGRES_HOST must be explicitly specified in production mode.")
+
+    if not settings.redis_host:
+        raise ConfigurationError("REDIS_HOST must be explicitly specified in production mode.")
+
+    if settings.log_level == LogLevel.DEBUG:
+        raise ConfigurationError("LOG_LEVEL=DEBUG is prohibited in production mode.")

@@ -24,19 +24,21 @@ class ToolCapability(str, Enum):
 
 
 # Strictly prohibited capabilities that MUST NEVER be registered or granted to AI agents
-FORBIDDEN_CAPABILITIES: FrozenSet[str] = frozenset({
-    "payment.execute",
-    "payment.authorize",
-    "mandate.override",
-    "budget.override",
-    "nonce.override",
-    "policy.override",
-    "admin.override",
-    "arbitrary.http",
-    "arbitrary.python",
-    "arbitrary.shell",
-    "arbitrary.database",
-})
+FORBIDDEN_CAPABILITIES: FrozenSet[str] = frozenset(
+    {
+        "payment.execute",
+        "payment.authorize",
+        "mandate.override",
+        "budget.override",
+        "nonce.override",
+        "policy.override",
+        "admin.override",
+        "arbitrary.http",
+        "arbitrary.python",
+        "arbitrary.shell",
+        "arbitrary.database",
+    }
+)
 
 
 @dataclass(frozen=True, slots=True)

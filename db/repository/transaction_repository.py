@@ -234,13 +234,10 @@ class TransactionRepository(BaseRepository[TransactionModel]):
         cutoff: Optional[datetime] = None,
     ) -> Sequence[TransactionModel]:
         """List stale or in-flight transactions requiring reconciliation."""
-        stmt = (
-            select(TransactionModel)
-            .where(
-                (TransactionModel.state == TransactionState.EXECUTING.value)
-                | (TransactionModel.provider_status == "UNKNOWN")
-                | (TransactionModel.provider_status == "DISPATCHED")
-            )
+        stmt = select(TransactionModel).where(
+            (TransactionModel.state == TransactionState.EXECUTING.value)
+            | (TransactionModel.provider_status == "UNKNOWN")
+            | (TransactionModel.provider_status == "DISPATCHED")
         )
         if cutoff is not None:
             stmt = stmt.where(TransactionModel.updated_at <= cutoff)

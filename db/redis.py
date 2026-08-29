@@ -48,7 +48,9 @@ def initialize_redis(settings: Optional[Settings] = None) -> None:
     except Exception as exc:
         logger.error("Failed to initialize Redis client: %s", exc)
         if not is_test_mode:
-            raise RuntimeError(f"Redis initialization failed in production environment: {exc}") from exc
+            raise RuntimeError(
+                f"Redis initialization failed in production environment: {exc}"
+            ) from exc
 
 
 async def close_redis() -> None:

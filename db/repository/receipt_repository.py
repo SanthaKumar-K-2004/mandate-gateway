@@ -90,13 +90,9 @@ class ReceiptRepository(BaseRepository[ActionReceiptModel]):
             return None
         return await self.get_by_id(receipt_id.strip())
 
-    async def get_receipt_for_transaction(
-        self, transaction_id: str
-    ) -> ActionReceiptModel | None:
+    async def get_receipt_for_transaction(self, transaction_id: str) -> ActionReceiptModel | None:
         """Fetch action receipt bound to a given transaction_id."""
-        stmt = select(ActionReceiptModel).where(
-            ActionReceiptModel.transaction_id == transaction_id
-        )
+        stmt = select(ActionReceiptModel).where(ActionReceiptModel.transaction_id == transaction_id)
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 

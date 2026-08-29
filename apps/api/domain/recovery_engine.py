@@ -69,7 +69,13 @@ class TransactionRecoveryService:
         now = at if at is not None else _utc_now()
         cutoff = now - timedelta(seconds=stuck_threshold_seconds)
         stuck_txs = await uow.transactions.list_transactions_requiring_reconciliation(cutoff)
-        return [tx.transaction_id for tx in stuck_txs]
+        ids = [tx.transaction_id for tx in stuck_txs]
+
+        from apps.api.app.metrics import metrics_registry
+
+        metrics_registry.increment_counter("recovery_scans_total")
+        metrics_registry.set_gauge("recovery_stuck_transactions_count", float(len(ids)))
+        return ids
 
     async def reconcile_transaction(
         self,
@@ -150,6 +156,12 @@ class TransactionRecoveryService:
                     "reconciled": True,
                 },
             )
+            from apps.api.app.metrics import metrics_registry
+
+            metrics_registry.increment_counter(
+                "recovery_reconciled_total", labels={"status": "SUCCESS"}
+            )
+
             logger.info(
                 "Successfully recovered stuck transaction '%s' to COMMITTED.", transaction_id
             )
@@ -200,6 +212,13 @@ class TransactionRecoveryService:
                     "reconciled": True,
                 },
             )
+
+            from apps.api.app.metrics import metrics_registry
+
+            metrics_registry.increment_counter(
+                "recovery_reconciled_total", labels={"status": "FAILED"}
+            )
+
             logger.info(
                 "Successfully recovered stuck transaction '%s' to ROLLED_BACK.", transaction_id
             )
@@ -213,6 +232,12 @@ class TransactionRecoveryService:
             )
 
         else:
+            from apps.api.app.metrics import metrics_registry
+
+            metrics_registry.increment_counter(
+                "recovery_unresolved_total", labels={"status": "UNKNOWN"}
+            )
+
             # Remains UNKNOWN: maintain EXECUTING state fail-closed
             logger.warning(
                 "Transaction '%s' reconciliation returned UNKNOWN. Maintaining EXECUTING state.",

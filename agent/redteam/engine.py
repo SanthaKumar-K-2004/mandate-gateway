@@ -131,7 +131,9 @@ class RedTeamChaosEngine:
             injection_found = True
             category = exc.code.value
 
-        trace.append(f"3. Prompt Injection Defense result: detected={injection_found}, category={category}")
+        trace.append(
+            f"3. Prompt Injection Defense result: detected={injection_found}, category={category}"
+        )
 
         untrusted_dict = {
             "intent_id": "intent_attack_1",
@@ -229,7 +231,9 @@ class RedTeamChaosEngine:
             current_cart=tampered_cart,
         )
 
-        trace.append(f"3. CartIntegrityVerifier result: is_valid={result.is_valid}, reason={result.rejection_reason}")
+        trace.append(
+            f"3. CartIntegrityVerifier result: is_valid={result.is_valid}, reason={result.rejection_reason}"
+        )
 
         if result.is_valid:
             status = AttackStatus.EXPLOITED
@@ -245,7 +249,10 @@ class RedTeamChaosEngine:
         event = self._audit_ledger.append_event(
             event_type=AuditEventType.CART_TAMPER_BLOCKED,
             merchant_id="merch_1",
-            payload={"original_hash": original_hash, "tampered_hash": compute_cart_object_hash(tampered_cart)},
+            payload={
+                "original_hash": original_hash,
+                "tampered_hash": compute_cart_object_hash(tampered_cart),
+            },
         )
 
         return RedTeamAttackResult(
@@ -255,7 +262,10 @@ class RedTeamChaosEngine:
             expected_rejection_reason=RejectionReason.CART_INTEGRITY_VIOLATION.value,
             actual_rejection_reason=actual_reason,
             decision_trace=trace,
-            evidence={"original_hash": original_hash, "tampered_hash": compute_cart_object_hash(tampered_cart)},
+            evidence={
+                "original_hash": original_hash,
+                "tampered_hash": compute_cart_object_hash(tampered_cart),
+            },
             audit_event_id=event.event_id,
         )
 
@@ -270,7 +280,9 @@ class RedTeamChaosEngine:
             "2. First consumption of nonce N-100...",
         ]
 
-        nonce_record = nonce_engine.issue_nonce(mandate_id=mandate_id, transaction_id=tx_id, ttl_seconds=60)
+        nonce_record = nonce_engine.issue_nonce(
+            mandate_id=mandate_id, transaction_id=tx_id, ttl_seconds=60
+        )
         res1 = nonce_engine.validate_and_consume(
             nonce_value=nonce_record.nonce_value,
             mandate_id=mandate_id,
@@ -322,7 +334,9 @@ class RedTeamChaosEngine:
         daily_limit = 500000  # ₹5,000 (500,000 paise)
         requested_amount = 400000  # ₹4,000 per worker (total ₹8,000 > ₹5,000 limit)
 
-        budget_engine.register_budget(mandate_id=mandate_id, daily_limit_paise=daily_limit, currency=Currency.INR)
+        budget_engine.register_budget(
+            mandate_id=mandate_id, daily_limit_paise=daily_limit, currency=Currency.INR
+        )
 
         trace = [
             f"1. Initialized mandate budget: ₹{daily_limit // 100} ({daily_limit} paise).",
@@ -346,7 +360,9 @@ class RedTeamChaosEngine:
         successes = [r for r in (r1, r2) if r.is_allowed]
         rejections = [r for r in (r1, r2) if not r.is_allowed]
 
-        trace.append(f"3. Concurrent execution results: successes={len(successes)}, rejections={len(rejections)}")
+        trace.append(
+            f"3. Concurrent execution results: successes={len(successes)}, rejections={len(rejections)}"
+        )
 
         budget_state = budget_engine.get_budget(mandate_id)
         assert budget_state is not None
@@ -362,7 +378,11 @@ class RedTeamChaosEngine:
             actual_reason = "DOUBLE_SPEND_OVERRUN"
 
         event = self._audit_ledger.append_event(
-            event_type=AuditEventType.RESERVATION_CREATED if status == AttackStatus.BLOCKED else AuditEventType.TOOL_BLOCKED,
+            event_type=(
+                AuditEventType.RESERVATION_CREATED
+                if status == AttackStatus.BLOCKED
+                else AuditEventType.TOOL_BLOCKED
+            ),
             mandate_id=mandate_id,
             payload={"successes": len(successes), "rejections": len(rejections)},
         )
@@ -404,12 +424,24 @@ class RedTeamChaosEngine:
         auth_allow = AuthorizationResult(
             decision=PolicyDecision.ALLOW,
             control_outcomes=[
-                SecurityControlOutcome(control_name="MANDATE_EVALUATION", passed=True, decision=PolicyDecision.ALLOW),
-                SecurityControlOutcome(control_name="MERCHANT_POLICY", passed=True, decision=PolicyDecision.ALLOW),
-                SecurityControlOutcome(control_name="CART_INTEGRITY", passed=True, decision=PolicyDecision.ALLOW),
-                SecurityControlOutcome(control_name="BUDGET_RESERVATION", passed=True, decision=PolicyDecision.ALLOW),
-                SecurityControlOutcome(control_name="REPLAY_PROTECTION", passed=True, decision=PolicyDecision.ALLOW),
-                SecurityControlOutcome(control_name="NONCE_VALIDATION", passed=True, decision=PolicyDecision.ALLOW),
+                SecurityControlOutcome(
+                    control_name="MANDATE_EVALUATION", passed=True, decision=PolicyDecision.ALLOW
+                ),
+                SecurityControlOutcome(
+                    control_name="MERCHANT_POLICY", passed=True, decision=PolicyDecision.ALLOW
+                ),
+                SecurityControlOutcome(
+                    control_name="CART_INTEGRITY", passed=True, decision=PolicyDecision.ALLOW
+                ),
+                SecurityControlOutcome(
+                    control_name="BUDGET_RESERVATION", passed=True, decision=PolicyDecision.ALLOW
+                ),
+                SecurityControlOutcome(
+                    control_name="REPLAY_PROTECTION", passed=True, decision=PolicyDecision.ALLOW
+                ),
+                SecurityControlOutcome(
+                    control_name="NONCE_VALIDATION", passed=True, decision=PolicyDecision.ALLOW
+                ),
             ],
         )
 
@@ -429,12 +461,20 @@ class RedTeamChaosEngine:
             "1. Dispatching payment request to provider under simulated gateway timeout...",
         ]
 
-        res1 = service.execute_payment(proposal=proposal, authorization_result=auth_allow, transaction=tx)
-        trace.append(f"2. Provider returned UNKNOWN status: state={res1.state.value}, provider_status={res1.provider_status.value if res1.provider_status else 'UNKNOWN'}")
+        res1 = service.execute_payment(
+            proposal=proposal, authorization_result=auth_allow, transaction=tx
+        )
+        trace.append(
+            f"2. Provider returned UNKNOWN status: state={res1.state.value}, provider_status={res1.provider_status.value if res1.provider_status else 'UNKNOWN'}"
+        )
 
         trace.append("3. Attacker triggers duplicate retry while status is UNKNOWN...")
-        res2 = service.execute_payment(proposal=proposal, authorization_result=auth_allow, transaction=tx)
-        trace.append(f"4. Retry outcome: idempotent_replay={res2.idempotent_replay}, executed_calls={len(mock_adapter.executed_requests)}")
+        res2 = service.execute_payment(
+            proposal=proposal, authorization_result=auth_allow, transaction=tx
+        )
+        trace.append(
+            f"4. Retry outcome: idempotent_replay={res2.idempotent_replay}, executed_calls={len(mock_adapter.executed_requests)}"
+        )
 
         if len(mock_adapter.executed_requests) == 1:
             status = AttackStatus.BLOCKED
@@ -456,7 +496,10 @@ class RedTeamChaosEngine:
             expected_rejection_reason="DUPLICATE_EXECUTION_PREVENTED",
             actual_rejection_reason=actual_reason,
             decision_trace=trace,
-            evidence={"executed_calls": len(mock_adapter.executed_requests), "idempotent_replay": res2.idempotent_replay},
+            evidence={
+                "executed_calls": len(mock_adapter.executed_requests),
+                "idempotent_replay": res2.idempotent_replay,
+            },
             audit_event_id=event.event_id,
         )
 
@@ -496,7 +539,9 @@ class RedTeamChaosEngine:
             at=_utc_now(),
         )
 
-        trace.append(f"3. MandateEvaluator outcome: valid={result.valid}, reason={result.rejection_reason}")
+        trace.append(
+            f"3. MandateEvaluator outcome: valid={result.valid}, reason={result.rejection_reason}"
+        )
 
         if result.valid:
             status = AttackStatus.EXPLOITED
@@ -557,7 +602,9 @@ class RedTeamChaosEngine:
         )
 
         result = MerchantPolicyEngine.evaluate(policy=policy, intent=intent)
-        trace.append(f"3. MerchantPolicyEngine outcome: decision={result.decision.value}, reason={result.rejection_reason}")
+        trace.append(
+            f"3. MerchantPolicyEngine outcome: decision={result.decision.value}, reason={result.rejection_reason}"
+        )
 
         if result.decision == PolicyDecision.ALLOW:
             status = AttackStatus.EXPLOITED
@@ -611,7 +658,9 @@ class RedTeamChaosEngine:
         except McpGatewayError as exc:
             status = AttackStatus.BLOCKED
             actual_reason = RejectionReason.METHOD_NOT_AUTHORIZED.value
-            trace.append(f"3. McpRuntimeAuthorizer blocked call: code={exc.code.value}, detail={exc.detail}")
+            trace.append(
+                f"3. McpRuntimeAuthorizer blocked call: code={exc.code.value}, detail={exc.detail}"
+            )
 
         event = self._audit_ledger.append_event(
             event_type=AuditEventType.TOOL_BLOCKED,

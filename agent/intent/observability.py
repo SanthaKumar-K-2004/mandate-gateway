@@ -38,7 +38,14 @@ class IntentAuditLogger:
         if detail:
             extra_fields["detail"] = detail
 
-        if event_name in ("rejected", "prompt_injection_blocked", "catalog_poisoning_blocked", "authority_injection_blocked"):
-            logger.warning(f"Intent event {event_name!r} for session {session_id!r}: {detail or 'N/A'}")
+        if event_name in (
+            "rejected",
+            "prompt_injection_blocked",
+            "catalog_poisoning_blocked",
+            "authority_injection_blocked",
+        ):
+            logger.warning(
+                f"Intent event {event_name!r} for session {session_id!r}: {detail or 'N/A'}"
+            )
         else:
             logger.info(f"Intent event {event_name!r} for session {session_id!r}")

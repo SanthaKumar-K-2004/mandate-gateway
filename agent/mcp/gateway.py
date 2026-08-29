@@ -177,7 +177,10 @@ class McpSecurityGateway:
         if not isinstance(data, dict) or data.get("jsonrpc") != "2.0":
             return McpJsonRpcResponse(
                 id=data.get("id") if isinstance(data, dict) else None,
-                error={"code": -32600, "message": "Invalid Request: Missing or invalid 'jsonrpc' field."},
+                error={
+                    "code": -32600,
+                    "message": "Invalid Request: Missing or invalid 'jsonrpc' field.",
+                },
             ).to_dict()
 
         method = data.get("method")

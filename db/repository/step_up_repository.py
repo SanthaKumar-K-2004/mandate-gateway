@@ -80,9 +80,7 @@ class StepUpRepository(BaseRepository[StepUpChallengeModel]):
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def lock_challenge_for_update(
-        self, challenge_id: str
-    ) -> StepUpChallengeModel | None:
+    async def lock_challenge_for_update(self, challenge_id: str) -> StepUpChallengeModel | None:
         """
         Acquire row lock on StepUpChallengeModel row.
 
@@ -92,9 +90,7 @@ class StepUpRepository(BaseRepository[StepUpChallengeModel]):
         dialect = getattr(bind, "dialect", None)
         dialect_name = getattr(dialect, "name", "") if dialect else ""
 
-        stmt = select(StepUpChallengeModel).where(
-            StepUpChallengeModel.challenge_id == challenge_id
-        )
+        stmt = select(StepUpChallengeModel).where(StepUpChallengeModel.challenge_id == challenge_id)
         if dialect_name != "sqlite":
             stmt = stmt.with_for_update()
 

@@ -33,7 +33,11 @@ class GatewayAdapter:
         """
         payload: dict[str, Any] = state.proposal_payload or {}
         if not payload:
-            IntentAuditLogger.log_event("rejected", session_id=state.session_id, detail="Empty proposal payload in AgentState.")
+            IntentAuditLogger.log_event(
+                "rejected",
+                session_id=state.session_id,
+                detail="Empty proposal payload in AgentState.",
+            )
             raise IntentValidationError(
                 IntentErrorCode.MISSING_MANDATORY_FIELD,
                 "AgentState contains no proposal payload to normalize.",

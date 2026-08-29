@@ -116,9 +116,7 @@ class BudgetRepository(BaseRepository[BudgetReservationModel]):
         result = await self._session.execute(stmt)
         return result.scalars().all()
 
-    async def lock_mandate_budget_for_update(
-        self, mandate_id: str
-    ) -> MandateModel | None:
+    async def lock_mandate_budget_for_update(self, mandate_id: str) -> MandateModel | None:
         """
         Acquire database row lock on MandateModel row for budget evaluation.
 
@@ -147,9 +145,7 @@ class BudgetRepository(BaseRepository[BudgetReservationModel]):
             BudgetState.COMMITTED.value,
             BudgetState.SPENT.value,
         ]
-        stmt = select(
-            func.coalesce(func.sum(BudgetReservationModel.reserved_paise), 0)
-        ).where(
+        stmt = select(func.coalesce(func.sum(BudgetReservationModel.reserved_paise), 0)).where(
             BudgetReservationModel.mandate_id == mandate_id,
             BudgetReservationModel.state.in_(active_states),
         )

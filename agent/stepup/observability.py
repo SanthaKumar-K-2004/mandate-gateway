@@ -40,6 +40,8 @@ class StepUpAuditLogger:
             extra_fields["detail"] = detail
 
         if event_name in ("rejected", "expired", "tamper_detected", "ai_self_approval_blocked"):
-            logger.warning(f"Step-Up event {event_name!r} for challenge {challenge_id!r}: {detail or 'N/A'}")
+            logger.warning(
+                f"Step-Up event {event_name!r} for challenge {challenge_id!r}: {detail or 'N/A'}"
+            )
         else:
             logger.info(f"Step-Up event {event_name!r} for challenge {challenge_id!r}")

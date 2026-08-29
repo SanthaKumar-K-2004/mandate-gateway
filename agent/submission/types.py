@@ -18,10 +18,18 @@ def _utc_now() -> datetime:
 class BenchmarkMetricsResult(BaseModel):
     """Real performance benchmark measurements (Section 36)."""
 
-    authorization_engine_latency_ms: float = Field(..., description="Average policy evaluation latency in ms")
-    ed25519_signing_latency_ms: float = Field(..., description="Average receipt signing latency in ms")
-    rate_limiter_throughput_ops: float = Field(..., description="Rate limiter throughput in operations/sec")
-    concurrency_workers_verified: int = Field(default=50, description="Verified parallel worker thread count")
+    authorization_engine_latency_ms: float = Field(
+        ..., description="Average policy evaluation latency in ms"
+    )
+    ed25519_signing_latency_ms: float = Field(
+        ..., description="Average receipt signing latency in ms"
+    )
+    rate_limiter_throughput_ops: float = Field(
+        ..., description="Rate limiter throughput in operations/sec"
+    )
+    concurrency_workers_verified: int = Field(
+        default=50, description="Verified parallel worker thread count"
+    )
     measured_at: datetime = Field(default_factory=_utc_now)
 
 

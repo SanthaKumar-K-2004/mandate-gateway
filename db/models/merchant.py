@@ -25,11 +25,21 @@ class MerchantModel(Base):
 
     merchant_id: Mapped[str] = mapped_column(String(64), primary_key=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    razorpay_account_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
+    razorpay_account_id: Mapped[Optional[str]] = mapped_column(
+        String(64), nullable=True, index=True
+    )
     active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False
+    )
 
     # Relationships
-    policies: Mapped[List["MerchantPolicyModel"]] = relationship("MerchantPolicyModel", back_populates="merchant", cascade="all, delete-orphan")
-    products: Mapped[List["ProductModel"]] = relationship("ProductModel", back_populates="merchant", cascade="all, delete-orphan")
+    policies: Mapped[List["MerchantPolicyModel"]] = relationship(
+        "MerchantPolicyModel", back_populates="merchant", cascade="all, delete-orphan"
+    )
+    products: Mapped[List["ProductModel"]] = relationship(
+        "ProductModel", back_populates="merchant", cascade="all, delete-orphan"
+    )

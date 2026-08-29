@@ -47,7 +47,14 @@ class AgentIntentParser:
         raw_mid = item_data.get("merchant_id") or default_merchant_id
         raw_name = item_data.get("name") or item_data.get("item_name")
 
-        if not raw_pid or not str(raw_pid).strip() or not raw_mid or not str(raw_mid).strip() or not raw_name or not str(raw_name).strip():
+        if (
+            not raw_pid
+            or not str(raw_pid).strip()
+            or not raw_mid
+            or not str(raw_mid).strip()
+            or not raw_name
+            or not str(raw_name).strip()
+        ):
             raise IntentValidationError(
                 IntentErrorCode.MISSING_MANDATORY_FIELD,
                 "Line item missing required fields (product_id, merchant_id, or name).",
@@ -75,7 +82,11 @@ class AgentIntentParser:
             )
 
         # 4. Parse & Validate Unit Price
-        raw_price = item_data.get("unit_price_paise") or item_data.get("price_paise") or item_data.get("price")
+        raw_price = (
+            item_data.get("unit_price_paise")
+            or item_data.get("price_paise")
+            or item_data.get("price")
+        )
         if raw_price is None:
             raise IntentValidationError(
                 IntentErrorCode.MISSING_MANDATORY_FIELD,
@@ -211,11 +222,18 @@ class AgentIntentParser:
         calculated_grand_total = calculated_total_paise + tax_paise + shipping_paise
 
         # Verify against overall payload total if provided
-        provided_total = payload.get("total_paise") or payload.get("amount_paise") or payload.get("total_amount_paise")
+        provided_total = (
+            payload.get("total_paise")
+            or payload.get("amount_paise")
+            or payload.get("total_amount_paise")
+        )
         if provided_total is not None:
             try:
                 provided_total_int = int(provided_total)
-                if provided_total_int != calculated_grand_total and provided_total_int != calculated_total_paise:
+                if (
+                    provided_total_int != calculated_grand_total
+                    and provided_total_int != calculated_total_paise
+                ):
                     raise IntentValidationError(
                         IntentErrorCode.INVALID_LINE_ITEM_MATH,
                         f"Overall cart total mismatch: calculated items subtotal {calculated_grand_total} paise, "

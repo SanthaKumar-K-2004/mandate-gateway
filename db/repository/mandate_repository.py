@@ -12,7 +12,10 @@ from typing import Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from apps.api.domain.mandate_lifecycle import _MANDATE_LEGAL_TRANSITIONS, MandateStateTransitionError
+from apps.api.domain.mandate_lifecycle import (
+    _MANDATE_LEGAL_TRANSITIONS,
+    MandateStateTransitionError,
+)
 from apps.api.domain.types import MandateStatus
 from db.models.budget import BudgetReservationModel
 from db.models.mandate import MandateModel
@@ -147,7 +150,9 @@ class MandateRepository(BaseRepository[MandateModel]):
             raise ValueError(f"Mandate '{mandate_id}' not found.")
 
         current_enum = MandateStatus(mandate.status)
-        target_enum = MandateStatus(target_status) if isinstance(target_status, str) else target_status
+        target_enum = (
+            MandateStatus(target_status) if isinstance(target_status, str) else target_status
+        )
 
         legal_targets = _MANDATE_LEGAL_TRANSITIONS.get(current_enum, frozenset())
         if target_enum not in legal_targets:

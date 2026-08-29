@@ -7,7 +7,18 @@ import threading
 from typing import Dict, List, Optional, Tuple
 
 # Bounded metric label safety allowlist
-ALLOWED_LABEL_KEYS = {"method", "route", "status_class", "error_type"}
+ALLOWED_LABEL_KEYS = {
+    "method",
+    "route",
+    "status_class",
+    "error_type",
+    "event_type",
+    "aggregate_type",
+    "status",
+    "operation",
+    "provider_status",
+    "failure_category",
+}
 
 
 class MetricsRegistry:
@@ -19,6 +30,7 @@ class MetricsRegistry:
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._counters: Dict[Tuple[str, Tuple[Tuple[str, str], ...]], int] = {}
+        self._gauges: Dict[Tuple[str, Tuple[Tuple[str, str], ...]], float] = {}
         self._latencies: Dict[Tuple[str, Tuple[Tuple[str, str], ...]], List[float]] = {}
 
     def _validate_labels(self, labels: Dict[str, str]) -> Tuple[Tuple[str, str], ...]:
@@ -43,6 +55,14 @@ class MetricsRegistry:
         with self._lock:
             self._counters[key] = self._counters.get(key, 0) + value
 
+    def set_gauge(self, name: str, value: float, labels: Optional[Dict[str, str]] = None) -> None:
+        """Sets a gauge metric value safely."""
+        label_tuple = self._validate_labels(labels or {})
+        key = (name, label_tuple)
+
+        with self._lock:
+            self._gauges[key] = float(value)
+
     def record_latency(
         self, name: str, duration_ms: float, labels: Optional[Dict[str, str]] = None
     ) -> None:
@@ -62,6 +82,13 @@ class MetricsRegistry:
         with self._lock:
             return self._counters.get(key, 0)
 
+    def get_gauge_value(self, name: str, labels: Optional[Dict[str, str]] = None) -> float:
+        """Returns current gauge value for given name and labels."""
+        label_tuple = self._validate_labels(labels or {})
+        key = (name, label_tuple)
+        with self._lock:
+            return self._gauges.get(key, 0.0)
+
     def get_latencies(self, name: str, labels: Optional[Dict[str, str]] = None) -> List[float]:
         """Returns recorded latency values for given name and labels."""
         label_tuple = self._validate_labels(labels or {})
@@ -73,6 +100,7 @@ class MetricsRegistry:
         """Resets all metrics (for test isolation)."""
         with self._lock:
             self._counters.clear()
+            self._gauges.clear()
             self._latencies.clear()
 
 

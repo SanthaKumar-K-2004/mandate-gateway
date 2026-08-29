@@ -96,9 +96,7 @@ class WebhookRepository(BaseRepository[WebhookEventModel]):
             return None
         return await self.get_by_id(event_id.strip())
 
-    async def get_events_for_transaction(
-        self, transaction_id: str
-    ) -> Sequence[WebhookEventModel]:
+    async def get_events_for_transaction(self, transaction_id: str) -> Sequence[WebhookEventModel]:
         """Fetch all webhook events linked to a given transaction ID."""
         stmt = (
             select(WebhookEventModel)

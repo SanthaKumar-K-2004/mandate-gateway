@@ -60,6 +60,13 @@ class OutboxRepository(BaseRepository[OutboxEventModel]):
         )
         self._session.add(record)
         await self._session.flush()
+
+        from apps.api.app.metrics import metrics_registry
+
+        metrics_registry.increment_counter(
+            "outbox_events_created_total",
+            labels={"event_type": event_type, "aggregate_type": aggregate_type},
+        )
         return record
 
     async def get_pending_events(self, limit: int = 100) -> Sequence[OutboxEventModel]:
@@ -73,6 +80,46 @@ class OutboxRepository(BaseRepository[OutboxEventModel]):
         result = await self._session.execute(stmt)
         return result.scalars().all()
 
+    async def get_pending_count(self) -> int:
+        """Count total pending outbox events."""
+        from sqlalchemy import func
+
+        stmt = (
+            select(func.count())
+            .select_from(OutboxEventModel)
+            .where(OutboxEventModel.status == "PENDING")
+        )
+        result = await self._session.execute(stmt)
+        count = int(result.scalar_one_or_none() or 0)
+
+        from apps.api.app.metrics import metrics_registry
+
+        metrics_registry.set_gauge("outbox_events_pending", float(count))
+        return count
+
+    async def get_oldest_pending_age_seconds(self) -> float:
+        """Calculate age of oldest pending event in seconds."""
+        stmt = (
+            select(OutboxEventModel)
+            .where(OutboxEventModel.status == "PENDING")
+            .order_by(OutboxEventModel.created_at.asc())
+            .limit(1)
+        )
+        result = await self._session.execute(stmt)
+        oldest = result.scalar_one_or_none()
+        if oldest is None:
+            age = 0.0
+        else:
+            created_at = oldest.created_at
+            if created_at.tzinfo is None:
+                created_at = created_at.replace(tzinfo=timezone.utc)
+            age = max(0.0, (_utc_now() - created_at).total_seconds())
+
+        from apps.api.app.metrics import metrics_registry
+
+        metrics_registry.set_gauge("outbox_oldest_event_age_seconds", age)
+        return age
+
     async def mark_dispatched(self, outbox_id: str) -> OutboxEventModel:
         """Mark an outbox event as DISPATCHED."""
         record = await self.get_by_id(outbox_id)
@@ -82,6 +129,13 @@ class OutboxRepository(BaseRepository[OutboxEventModel]):
         record.status = "DISPATCHED"
         record.dispatched_at = _utc_now()
         await self._session.flush()
+
+        from apps.api.app.metrics import metrics_registry
+
+        metrics_registry.increment_counter(
+            "outbox_events_published_total",
+            labels={"event_type": record.event_type, "aggregate_type": record.aggregate_type},
+        )
         return record
 
     async def mark_failed(self, outbox_id: str) -> OutboxEventModel:
@@ -92,4 +146,11 @@ class OutboxRepository(BaseRepository[OutboxEventModel]):
 
         record.status = "FAILED"
         await self._session.flush()
+
+        from apps.api.app.metrics import metrics_registry
+
+        metrics_registry.increment_counter(
+            "outbox_publish_failures_total",
+            labels={"event_type": record.event_type, "aggregate_type": record.aggregate_type},
+        )
         return record

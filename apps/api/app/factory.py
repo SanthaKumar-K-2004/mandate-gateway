@@ -8,7 +8,11 @@ import time
 from typing import Any, Callable, Dict, Optional
 
 from apps.api.app.context import clear_request_context, set_request_context
-from apps.api.app.health import handle_health, handle_ready
+from apps.api.app.health import (
+    handle_diagnostics_async,
+    handle_health,
+    handle_ready_async,
+)
 from apps.api.app.lifecycle import AppLifecycle
 from apps.api.app.logging import (
     EVENT_APPLICATION_STARTED,
@@ -40,11 +44,21 @@ class MandateGatewayApp:
 
     def startup(self) -> None:
         """Triggers application startup sequence."""
-        self.lifecycle.startup()
-        self.logger.info(
-            "Application runtime started successfully.",
-            extra={"event": EVENT_APPLICATION_STARTED},
-        )
+        from apps.api.config.settings import validate_production_config
+
+        try:
+            validate_production_config(self.settings)
+            self.lifecycle.startup()
+            self.logger.info(
+                "Application runtime started successfully.",
+                extra={"event": EVENT_APPLICATION_STARTED},
+            )
+        except Exception as err:
+            self.logger.error(
+                f"Application startup failed: {err}",
+                extra={"event": "configuration.failed"},
+            )
+            raise
 
     def shutdown(self) -> None:
         """Triggers application shutdown sequence."""
@@ -81,7 +95,9 @@ class MandateGatewayApp:
             if path == "/health" and method == "GET":
                 status_code, body = handle_health(self.settings)
             elif path == "/ready" and method == "GET":
-                status_code, body = handle_ready(self.lifecycle, self.settings)
+                status_code, body = await handle_ready_async(self.lifecycle, self.settings)
+            elif path == "/diagnostics" and method == "GET":
+                status_code, body = await handle_diagnostics_async(self.settings)
             else:
                 status_code = 404
                 body = {

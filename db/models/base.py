@@ -17,13 +17,14 @@ class Base(DeclarativeBase):
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert ORM model attributes to dictionary representation."""
-        return {
-            c.name: getattr(self, c.name)
-            for c in self.__table__.columns
-        }
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
     def __repr__(self) -> str:
-        attrs = ", ".join(f"{c.name}={getattr(self, c.name)!r}" for c in self.__table__.columns if "password" not in c.name and "secret" not in c.name)
+        attrs = ", ".join(
+            f"{c.name}={getattr(self, c.name)!r}"
+            for c in self.__table__.columns
+            if "password" not in c.name and "secret" not in c.name
+        )
         return f"<{self.__class__.__name__}({attrs})>"
 
 

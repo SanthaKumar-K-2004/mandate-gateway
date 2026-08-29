@@ -40,11 +40,17 @@ class AgentProposalBuilder:
         """
         # 1. Mandatory Identifier Validations
         if not buyer_id or not buyer_id.strip():
-            raise IntentValidationError(IntentErrorCode.MISSING_MANDATORY_FIELD, "buyer_id cannot be empty.")
+            raise IntentValidationError(
+                IntentErrorCode.MISSING_MANDATORY_FIELD, "buyer_id cannot be empty."
+            )
         if not merchant_id or not merchant_id.strip():
-            raise IntentValidationError(IntentErrorCode.MISSING_MANDATORY_FIELD, "merchant_id cannot be empty.")
+            raise IntentValidationError(
+                IntentErrorCode.MISSING_MANDATORY_FIELD, "merchant_id cannot be empty."
+            )
         if not mandate_id or not mandate_id.strip():
-            raise IntentValidationError(IntentErrorCode.MISSING_MANDATORY_FIELD, "mandate_id cannot be empty.")
+            raise IntentValidationError(
+                IntentErrorCode.MISSING_MANDATORY_FIELD, "mandate_id cannot be empty."
+            )
 
         # 2. Sanitize Raw Prompt Text
         sanitized_prompt = PromptInjectionDefense.sanitize_text(raw_prompt)

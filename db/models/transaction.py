@@ -30,22 +30,42 @@ class TransactionModel(Base):
 
     transaction_id: Mapped[str] = mapped_column(String(64), primary_key=True)
     buyer_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
-    merchant_id: Mapped[str] = mapped_column(String(64), ForeignKey("merchants.merchant_id"), nullable=False, index=True)
-    mandate_id: Mapped[str] = mapped_column(String(64), ForeignKey("mandates.mandate_id"), nullable=False, index=True)
+    merchant_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("merchants.merchant_id"), nullable=False, index=True
+    )
+    mandate_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("mandates.mandate_id"), nullable=False, index=True
+    )
     cart_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     amount_paise: Mapped[int] = mapped_column(BigInteger, nullable=False)
     currency: Mapped[str] = mapped_column(String(10), default="INR", nullable=False)
     region: Mapped[str] = mapped_column(String(32), default="IN", nullable=False)
-    auth_decision: Mapped[str] = mapped_column(String(32), nullable=False)  # ALLOW, REQUIRE_STEP_UP, REJECT
-    state: Mapped[str] = mapped_column(String(32), nullable=False, index=True)  # INITIATED, AUTHORIZED, EXECUTED, FAILED, CANCELLED
+    auth_decision: Mapped[str] = mapped_column(
+        String(32), nullable=False
+    )  # ALLOW, REQUIRE_STEP_UP, REJECT
+    state: Mapped[str] = mapped_column(
+        String(32), nullable=False, index=True
+    )  # INITIATED, AUTHORIZED, EXECUTED, FAILED, CANCELLED
     provider_payment_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
     provider_status: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
-    idempotency_key: Mapped[str] = mapped_column(String(128), unique=True, nullable=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False, index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
+    idempotency_key: Mapped[str] = mapped_column(
+        String(128), unique=True, nullable=False, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False, index=True
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False
+    )
 
     # Relationships
     mandate: Mapped["MandateModel"] = relationship("MandateModel", back_populates="transactions")
-    reservations: Mapped[List["BudgetReservationModel"]] = relationship("BudgetReservationModel", back_populates="transaction")
-    step_up_challenges: Mapped[List["StepUpChallengeModel"]] = relationship("StepUpChallengeModel", back_populates="transaction")
-    receipts: Mapped[List["ActionReceiptModel"]] = relationship("ActionReceiptModel", back_populates="transaction")
+    reservations: Mapped[List["BudgetReservationModel"]] = relationship(
+        "BudgetReservationModel", back_populates="transaction"
+    )
+    step_up_challenges: Mapped[List["StepUpChallengeModel"]] = relationship(
+        "StepUpChallengeModel", back_populates="transaction"
+    )
+    receipts: Mapped[List["ActionReceiptModel"]] = relationship(
+        "ActionReceiptModel", back_populates="transaction"
+    )

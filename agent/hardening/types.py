@@ -91,6 +91,3 @@ class PenetrationAuditReport:
     architecture_guard_passed: bool = True
     fail_closed_verified: bool = True
     status: str = "COMPLETED_AND_FROZEN"
-
-
-

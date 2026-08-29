@@ -23,13 +23,24 @@ class StepUpChallengeModel(Base):
     __tablename__ = "step_up_challenges"
 
     challenge_id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    transaction_id: Mapped[str] = mapped_column(String(64), ForeignKey("transactions.transaction_id", ondelete="CASCADE"), nullable=False, index=True)
-    status: Mapped[str] = mapped_column(String(32), nullable=False, index=True)  # PENDING, APPROVED, REJECTED, EXPIRED
+    transaction_id: Mapped[str] = mapped_column(
+        String(64),
+        ForeignKey("transactions.transaction_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    status: Mapped[str] = mapped_column(
+        String(32), nullable=False, index=True
+    )  # PENDING, APPROVED, REJECTED, EXPIRED
     risk_classification: Mapped[str] = mapped_column(String(64), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     approver_metadata: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Relationships
-    transaction: Mapped["TransactionModel"] = relationship("TransactionModel", back_populates="step_up_challenges")
+    transaction: Mapped["TransactionModel"] = relationship(
+        "TransactionModel", back_populates="step_up_challenges"
+    )

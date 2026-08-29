@@ -30,9 +30,7 @@ class TestModelAdapter(ModelAdapterInterface):
         """Configure a sequence of scripted ModelResponse objects."""
         self._scripted_responses = list(responses)
 
-    def set_response_generator(
-        self, generator: Callable[[ModelRequest], ModelResponse]
-    ) -> None:
+    def set_response_generator(self, generator: Callable[[ModelRequest], ModelResponse]) -> None:
         """Set a dynamic request-to-response generator callback."""
         self._response_generator = generator
 

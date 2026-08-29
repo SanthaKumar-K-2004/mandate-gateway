@@ -81,22 +81,32 @@ class AgentRuntime:
             while not state.current_state.is_terminal:
                 # Check 1: Cancellation Token
                 if cancellation_token and cancellation_token.get("cancelled", False):
-                    state.transition_to(AgentStateEnum.CANCELLED, detail="Cancelled by user/system signal")
+                    state.transition_to(
+                        AgentStateEnum.CANCELLED, detail="Cancelled by user/system signal"
+                    )
                     state.set_failure_reason("Execution cancelled by token")
                     raise AgentCancellationError("Agent execution was explicitly cancelled.")
 
                 # Check 2: Wall-clock Timeout
                 elapsed = time.monotonic() - start_time
                 if elapsed > self.config.timeout_seconds:
-                    state.transition_to(AgentStateEnum.TIMED_OUT, detail=f"Timeout of {self.config.timeout_seconds}s exceeded")
+                    state.transition_to(
+                        AgentStateEnum.TIMED_OUT,
+                        detail=f"Timeout of {self.config.timeout_seconds}s exceeded",
+                    )
                     state.set_failure_reason(f"Timeout of {self.config.timeout_seconds}s exceeded")
                     raise AgentTimeoutError(f"Agent execution timed out after {elapsed:.2f}s.")
 
                 # Check 3: Max Iteration Limit
                 curr_iter = state.increment_iteration()
                 if curr_iter > self.config.max_iterations:
-                    state.transition_to(AgentStateEnum.FAILED, detail=f"Exceeded max iterations ({self.config.max_iterations})")
-                    state.set_failure_reason(f"Exceeded max iterations ({self.config.max_iterations})")
+                    state.transition_to(
+                        AgentStateEnum.FAILED,
+                        detail=f"Exceeded max iterations ({self.config.max_iterations})",
+                    )
+                    state.set_failure_reason(
+                        f"Exceeded max iterations ({self.config.max_iterations})"
+                    )
                     raise AgentLoopLimitExceededError(
                         f"Execution loop exceeded maximum allowed iterations ({self.config.max_iterations})."
                     )
@@ -110,8 +120,13 @@ class AgentRuntime:
                 elif current == AgentStateEnum.TOOL_REQUESTED:
                     # Check 4: Max Tool Call Limit
                     if state.tool_call_count >= self.config.max_tool_calls:
-                        state.transition_to(AgentStateEnum.FAILED, detail=f"Exceeded max tool calls ({self.config.max_tool_calls})")
-                        state.set_failure_reason(f"Exceeded max tool calls ({self.config.max_tool_calls})")
+                        state.transition_to(
+                            AgentStateEnum.FAILED,
+                            detail=f"Exceeded max tool calls ({self.config.max_tool_calls})",
+                        )
+                        state.set_failure_reason(
+                            f"Exceeded max tool calls ({self.config.max_tool_calls})"
+                        )
                         raise AgentToolLimitExceededError(
                             f"Exceeded maximum allowed tool invocations ({self.config.max_tool_calls})."
                         )
@@ -120,8 +135,14 @@ class AgentRuntime:
                     pending = state.pending_tool_call or {}
                     tool_sig = f"{pending.get('name')}:{pending.get('arguments')}"
                     tool_history_tracker.append(tool_sig)
-                    if len(tool_history_tracker) >= 3 and tool_history_tracker[-3:] == [tool_sig, tool_sig, tool_sig]:
-                        state.transition_to(AgentStateEnum.FAILED, detail="Infinite loop detected in tool requests")
+                    if len(tool_history_tracker) >= 3 and tool_history_tracker[-3:] == [
+                        tool_sig,
+                        tool_sig,
+                        tool_sig,
+                    ]:
+                        state.transition_to(
+                            AgentStateEnum.FAILED, detail="Infinite loop detected in tool requests"
+                        )
                         state.set_failure_reason("Infinite tool loop detected")
                         raise AgentSecurityViolationError(
                             f"Infinite loop detected for tool request {pending.get('name')!r}."
@@ -140,7 +161,9 @@ class AgentRuntime:
                     break
 
                 else:
-                    NodeFinalize.process(state, success=False, reason=f"Unhandled runtime state {current.value}")
+                    NodeFinalize.process(
+                        state, success=False, reason=f"Unhandled runtime state {current.value}"
+                    )
                     break
 
             return state

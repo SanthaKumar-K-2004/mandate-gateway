@@ -83,7 +83,9 @@ class ExplainabilityEngine:
                     "control_name": step.control_name,
                     "passed": step.passed,
                     "decision": step.decision.value,
-                    "rejection_reason": step.rejection_reason.value if step.rejection_reason else None,
+                    "rejection_reason": (
+                        step.rejection_reason.value if step.rejection_reason else None
+                    ),
                     "detail": step.detail,
                     "evaluated_at": step.evaluated_at.isoformat(),
                 }
@@ -119,7 +121,9 @@ class ExplainabilityEngine:
                     if first_failed.rejection_reason
                     else (first_failed.detail or "Constraint failed")
                 )
-                summary_reason = f"Security control '{first_failed.control_name}' failed: {reason_str}"
+                summary_reason = (
+                    f"Security control '{first_failed.control_name}' failed: {reason_str}"
+                )
             else:
                 summary_reason = "Authorization failed closed due to policy rejection."
 

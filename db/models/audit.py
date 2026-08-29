@@ -23,7 +23,9 @@ class AuditEventModel(Base):
     __tablename__ = "audit_events"
 
     event_id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    sequence_number: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False, index=True)
+    sequence_number: Mapped[int] = mapped_column(
+        BigInteger, unique=True, nullable=False, index=True
+    )
     event_type: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     transaction_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
     mandate_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
@@ -32,7 +34,11 @@ class AuditEventModel(Base):
     payload_json: Mapped[str] = mapped_column(Text, nullable=False)
     previous_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     event_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
-    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False, index=True)
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False, index=True
+    )
 
     # Relationships
-    receipts: Mapped[List["ActionReceiptModel"]] = relationship("ActionReceiptModel", back_populates="audit_event")
+    receipts: Mapped[List["ActionReceiptModel"]] = relationship(
+        "ActionReceiptModel", back_populates="audit_event"
+    )

@@ -29,14 +29,30 @@ class BudgetReservationModel(Base):
     )
 
     reservation_id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    mandate_id: Mapped[str] = mapped_column(String(64), ForeignKey("mandates.mandate_id", ondelete="CASCADE"), nullable=False, index=True)
-    transaction_id: Mapped[str] = mapped_column(String(64), ForeignKey("transactions.transaction_id", ondelete="CASCADE"), nullable=False, index=True)
+    mandate_id: Mapped[str] = mapped_column(
+        String(64),
+        ForeignKey("mandates.mandate_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    transaction_id: Mapped[str] = mapped_column(
+        String(64),
+        ForeignKey("transactions.transaction_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     requested_paise: Mapped[int] = mapped_column(BigInteger, nullable=False)
     reserved_paise: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    state: Mapped[str] = mapped_column(String(32), nullable=False, index=True)  # RESERVED, COMMITTED, RELEASED
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    state: Mapped[str] = mapped_column(
+        String(32), nullable=False, index=True
+    )  # RESERVED, COMMITTED, RELEASED
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
     resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relationships
     mandate: Mapped["MandateModel"] = relationship("MandateModel", back_populates="reservations")
-    transaction: Mapped["TransactionModel"] = relationship("TransactionModel", back_populates="reservations")
+    transaction: Mapped["TransactionModel"] = relationship(
+        "TransactionModel", back_populates="reservations"
+    )

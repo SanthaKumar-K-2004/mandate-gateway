@@ -28,16 +28,31 @@ class MandateModel(Base):
 
     mandate_id: Mapped[str] = mapped_column(String(64), primary_key=True)
     buyer_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
-    merchant_id: Mapped[Optional[str]] = mapped_column(String(64), ForeignKey("merchants.merchant_id", ondelete="SET NULL"), nullable=True, index=True)
+    merchant_id: Mapped[Optional[str]] = mapped_column(
+        String(64),
+        ForeignKey("merchants.merchant_id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     category_scope: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
     daily_budget_paise: Mapped[int] = mapped_column(BigInteger, nullable=False)
     cumulative_budget_paise: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
     currency: Mapped[str] = mapped_column(String(10), default="INR", nullable=False)
     region: Mapped[str] = mapped_column(String(32), default="IN", nullable=False)
-    status: Mapped[str] = mapped_column(String(32), nullable=False, index=True)  # ACTIVE, REVOKED, EXPIRED
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(32), nullable=False, index=True
+    )  # ACTIVE, REVOKED, EXPIRED
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
 
     # Relationships
-    transactions: Mapped[List["TransactionModel"]] = relationship("TransactionModel", back_populates="mandate")
-    reservations: Mapped[List["BudgetReservationModel"]] = relationship("BudgetReservationModel", back_populates="mandate")
+    transactions: Mapped[List["TransactionModel"]] = relationship(
+        "TransactionModel", back_populates="mandate"
+    )
+    reservations: Mapped[List["BudgetReservationModel"]] = relationship(
+        "BudgetReservationModel", back_populates="mandate"
+    )

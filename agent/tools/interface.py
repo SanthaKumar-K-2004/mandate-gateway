@@ -34,7 +34,9 @@ class ToolDefinition:
     output_schema: dict[str, Any]
     version: str = "1.0.0"
     capabilities: Set[ToolCapability] = field(default_factory=lambda: {ToolCapability.PRODUCT_READ})
-    allowed_operations: Set[McpOperation] = field(default_factory=lambda: {McpOperation.CREATE_ORDER})
+    allowed_operations: Set[McpOperation] = field(
+        default_factory=lambda: {McpOperation.CREATE_ORDER}
+    )
     is_trusted: bool = False
     is_blocked_by_default: bool = False
     max_input_bytes: int = 64 * 1024  # 64 KB
@@ -57,8 +59,16 @@ class ToolDefinition:
             )
 
         # Path traversal & dangerous character checks
-        if ".." in self.name or "/" in self.name or "\\" in self.name or "\x00" in self.name or "\n" in self.name:
-            raise ValueError(f"Tool name {self.name!r} contains forbidden path or control characters.")
+        if (
+            ".." in self.name
+            or "/" in self.name
+            or "\\" in self.name
+            or "\x00" in self.name
+            or "\n" in self.name
+        ):
+            raise ValueError(
+                f"Tool name {self.name!r} contains forbidden path or control characters."
+            )
 
         # Rejection of dangerous prefix/execution patterns
         for bad_prefix in ("python:", "shell:", "exec:", "eval:", "import:", "module:"):
@@ -69,7 +79,9 @@ class ToolDefinition:
         for cap in self.capabilities:
             cap_val = cap.value if hasattr(cap, "value") else str(cap)
             if cap_val in FORBIDDEN_CAPABILITIES or cap in FORBIDDEN_CAPABILITIES:
-                raise ValueError(f"Tool {self.name!r} cannot register forbidden capability {cap!r}.")
+                raise ValueError(
+                    f"Tool {self.name!r} cannot register forbidden capability {cap!r}."
+                )
 
         if self.max_input_bytes <= 0:
             raise ValueError("max_input_bytes must be > 0.")

@@ -74,20 +74,32 @@ class NodePlanning:
         if model_res.tool_calls:
             first_tool = model_res.tool_calls[0]
             state.set_pending_tool_call(first_tool)
-            state.transition_to(AgentStateEnum.TOOL_REQUESTED, detail=f"Model requested tool: {first_tool.get('name')}")
+            state.transition_to(
+                AgentStateEnum.TOOL_REQUESTED,
+                detail=f"Model requested tool: {first_tool.get('name')}",
+            )
         elif "proposal" in model_res.raw_response or "amount_paise" in model_res.content:
             # Parse proposal payload if present in response
             try:
-                payload = json.loads(model_res.content) if model_res.content.startswith("{") else model_res.raw_response.get("proposal", {})
+                payload = (
+                    json.loads(model_res.content)
+                    if model_res.content.startswith("{")
+                    else model_res.raw_response.get("proposal", {})
+                )
                 if not payload:
                     payload = {"amount_paise": 1000, "currency": "INR", "operation": "create_order"}
             except Exception:
                 payload = {"amount_paise": 1000, "currency": "INR", "operation": "create_order"}
-            
+
             state.set_proposal_payload(payload)
-            state.transition_to(AgentStateEnum.PROPOSAL_READY, detail="Model generated commerce proposal")
+            state.transition_to(
+                AgentStateEnum.PROPOSAL_READY, detail="Model generated commerce proposal"
+            )
         else:
-            state.transition_to(AgentStateEnum.COMPLETED, detail="Model completed planning without tools or proposals")
+            state.transition_to(
+                AgentStateEnum.COMPLETED,
+                detail="Model completed planning without tools or proposals",
+            )
 
 
 class NodeToolExecution:
@@ -116,15 +128,19 @@ class NodeToolExecution:
             session_id=state.session_id,
         )
 
-        state.set_tool_result({
-            "tool_name": tool_result.tool_name,
-            "success": tool_result.success,
-            "data": tool_result.data,
-            "error_message": tool_result.error_message,
-            "execution_time_ms": tool_result.execution_time_ms,
-        })
+        state.set_tool_result(
+            {
+                "tool_name": tool_result.tool_name,
+                "success": tool_result.success,
+                "data": tool_result.data,
+                "error_message": tool_result.error_message,
+                "execution_time_ms": tool_result.execution_time_ms,
+            }
+        )
         state.clear_pending_tool_call()
-        state.transition_to(AgentStateEnum.PROCESSING_TOOL_RESULT, detail=f"Completed tool {tool_name!r}")
+        state.transition_to(
+            AgentStateEnum.PROCESSING_TOOL_RESULT, detail=f"Completed tool {tool_name!r}"
+        )
 
 
 class NodeProcessToolResult:
@@ -155,7 +171,9 @@ class NodeProcessToolResult:
                 tool_name=tool_name,
             )
         )
-        state.transition_to(AgentStateEnum.PLANNING, detail=f"Processed result from tool {tool_name!r}")
+        state.transition_to(
+            AgentStateEnum.PLANNING, detail=f"Processed result from tool {tool_name!r}"
+        )
 
 
 class NodePrepareProposal:
@@ -176,8 +194,13 @@ class NodePrepareProposal:
             proposal_data=payload,
         )
 
-        state.transition_to(AgentStateEnum.WAITING_FOR_GATEWAY, detail=f"Proposal {proposal.proposal_id!r} waiting for gateway")
-        state.transition_to(AgentStateEnum.COMPLETED, detail="Proposal submitted to gateway boundary")
+        state.transition_to(
+            AgentStateEnum.WAITING_FOR_GATEWAY,
+            detail=f"Proposal {proposal.proposal_id!r} waiting for gateway",
+        )
+        state.transition_to(
+            AgentStateEnum.COMPLETED, detail="Proposal submitted to gateway boundary"
+        )
 
 
 class NodeFinalize:

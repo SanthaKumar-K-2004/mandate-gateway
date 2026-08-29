@@ -66,9 +66,7 @@ class CommerceOrchestrator:
         self.explainability_engine = ExplainabilityEngine()
         self._executed_intents: dict[str, EndToEndExecutionResult] = {}
 
-    def execute_intent(
-        self, request: OrchestratorExecutionRequest
-    ) -> EndToEndExecutionResult:
+    def execute_intent(self, request: OrchestratorExecutionRequest) -> EndToEndExecutionResult:
         """
         Executes a complete end-to-end user commerce intent through all 10 security control stages.
         """
@@ -113,9 +111,7 @@ class CommerceOrchestrator:
 
         # Stage 2: Catalog Product Selection & Cart Construction
         # Select matching products for merchant
-        merchant_products = [
-            p for p in _PRODUCTS.values() if p.merchant_id == request.merchant_id
-        ]
+        merchant_products = [p for p in _PRODUCTS.values() if p.merchant_id == request.merchant_id]
         if not merchant_products:
             # Fallback default product if catalog is empty in test mode
             from apps.api.contracts.product import ProductResponse
@@ -165,7 +161,9 @@ class CommerceOrchestrator:
             control_name="CART_INTEGRITY",
             passed=cart_integrity_ok,
             decision=PolicyDecision.ALLOW if cart_integrity_ok else PolicyDecision.REJECT,
-            rejection_reason=None if cart_integrity_ok else RejectionReason.CART_INTEGRITY_VIOLATION,
+            rejection_reason=(
+                None if cart_integrity_ok else RejectionReason.CART_INTEGRITY_VIOLATION
+            ),
             detail="Cart hash matches items." if cart_integrity_ok else "Cart hash mismatch.",
         )
 
@@ -175,7 +173,11 @@ class CommerceOrchestrator:
             passed=merchant_ok,
             decision=PolicyDecision.ALLOW if merchant_ok else PolicyDecision.REJECT,
             rejection_reason=None if merchant_ok else RejectionReason.AI_COMMERCE_DISABLED,
-            detail="Merchant AI commerce enabled." if merchant_ok else "AI commerce disabled by merchant.",
+            detail=(
+                "Merchant AI commerce enabled."
+                if merchant_ok
+                else "AI commerce disabled by merchant."
+            ),
         )
 
         mandate_ok = bool(mandate_response and mandate_response.status.value == "ACTIVE")
@@ -208,11 +210,7 @@ class CommerceOrchestrator:
             detail="Nonce validated and consumed.",
         )
 
-        limit_paise = (
-            policy_response.autonomous_purchase_limit_paise
-            if policy_response
-            else 500000
-        )
+        limit_paise = policy_response.autonomous_purchase_limit_paise if policy_response else 500000
         if cart.total_paise > limit_paise:
             from apps.api.contracts.transaction import StepUpDiff
 
@@ -280,7 +278,11 @@ class CommerceOrchestrator:
                     buyer_id=request.buyer_id,
                     merchant_id=request.merchant_id,
                     mandate_id=request.mandate_id,
-                    mandate_version=mandate_response.version if mandate_response and hasattr(mandate_response, "version") else 1,
+                    mandate_version=(
+                        mandate_response.version
+                        if mandate_response and hasattr(mandate_response, "version")
+                        else 1
+                    ),
                     policy_version=policy_response.policy_version if policy_response else 1,
                     cart_id=cart.cart_id,
                     cart_hash=cart_hash,
@@ -307,7 +309,9 @@ class CommerceOrchestrator:
                     transaction=tx,
                 )
                 exec_result = self.execution_service.get_execution_result(transaction_id)
-                state = TransactionState.COMMITTED if exec_resp.success else TransactionState.FAILURE
+                state = (
+                    TransactionState.COMMITTED if exec_resp.success else TransactionState.FAILURE
+                )
             except Exception:
                 exec_result = None
                 state = TransactionState.FAILURE
@@ -400,12 +404,16 @@ class CommerceOrchestrator:
             transaction_state=state,
             amount_paise=cart.total_paise,
             currency=cart.currency,
-            rejection_reason=auth_result.rejection_reason
-            if auth_result.decision == PolicyDecision.REJECT
-            else None,
-            rejection_detail=auth_result.rejection_detail
-            if auth_result.decision == PolicyDecision.REJECT
-            else None,
+            rejection_reason=(
+                auth_result.rejection_reason
+                if auth_result.decision == PolicyDecision.REJECT
+                else None
+            ),
+            rejection_detail=(
+                auth_result.rejection_detail
+                if auth_result.decision == PolicyDecision.REJECT
+                else None
+            ),
             authorization_result=auth_result,
             execution_result=exec_result,
             audit_events=[audit_event],

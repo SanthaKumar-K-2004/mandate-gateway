@@ -68,19 +68,26 @@ class AgentProposalBoundary:
         curr_str = proposal_data.get("currency", "INR")
         op_str = proposal_data.get("operation", "create_order")
         cart_id = proposal_data.get("cart_id", f"cart_{session_id[:8]}")
-        cart_hash = proposal_data.get("cart_hash", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+        cart_hash = proposal_data.get(
+            "cart_hash", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        )
         raw_prompt = proposal_data.get("raw_prompt", "AI Commerce Agent Proposal")
-        items_data = proposal_data.get("items", [
-            {
-                "product_id": f"prod_{session_id[:8]}",
-                "name": "Proposed Commerce Item",
-                "quantity": 1,
-                "unit_price_paise": amount,
-            }
-        ])
+        items_data = proposal_data.get(
+            "items",
+            [
+                {
+                    "product_id": f"prod_{session_id[:8]}",
+                    "name": "Proposed Commerce Item",
+                    "quantity": 1,
+                    "unit_price_paise": amount,
+                }
+            ],
+        )
 
         currency = Currency(curr_str.upper()) if isinstance(curr_str, str) else Currency.INR
-        operation = McpOperation(op_str.lower()) if isinstance(op_str, str) else McpOperation.CREATE_ORDER
+        operation = (
+            McpOperation(op_str.lower()) if isinstance(op_str, str) else McpOperation.CREATE_ORDER
+        )
 
         return AgentProposal(
             proposal_id=f"prop_{session_id[:8]}",

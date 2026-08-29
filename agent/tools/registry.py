@@ -42,12 +42,16 @@ class ToolRegistry:
             def_obj = tool.definition
             key = f"{def_obj.name}:{def_obj.version}"
             if key in self._tools or def_obj.name in self._tools:
-                raise ValueError(f"Tool {def_obj.name!r} version {def_obj.version!r} is already registered.")
+                raise ValueError(
+                    f"Tool {def_obj.name!r} version {def_obj.version!r} is already registered."
+                )
 
             # Validate that tool does NOT declare forbidden capabilities
             for cap in def_obj.capabilities:
                 if cap.value in FORBIDDEN_CAPABILITIES or cap in FORBIDDEN_CAPABILITIES:
-                    raise ValueError(f"Tool {def_obj.name!r} cannot declare forbidden capability {cap!r}.")
+                    raise ValueError(
+                        f"Tool {def_obj.name!r} cannot declare forbidden capability {cap!r}."
+                    )
 
             self._tools[def_obj.name] = tool
             self._tools[key] = tool
@@ -93,7 +97,9 @@ class ToolRegistry:
                 )
             return tool
 
-    def list_available(self, capability_policy: CapabilityPolicy | None = None) -> list[ToolDefinition]:
+    def list_available(
+        self, capability_policy: CapabilityPolicy | None = None
+    ) -> list[ToolDefinition]:
         """
         Return list of registered, non-blocked tool definitions matching capability_policy.
         """
@@ -162,8 +168,12 @@ class ToolRegistry:
             # 3. Check Enabled / Blocked Status
             if not tool_def.enabled or tool_def.is_blocked_by_default:
                 ToolAuditLogger.log_event(
-                    "denied", tool_name, tool_def.version, session_id,
-                    error_code=ToolErrorCode.TOOL_DISABLED, detail="Tool is disabled or blocked by default.",
+                    "denied",
+                    tool_name,
+                    tool_def.version,
+                    session_id,
+                    error_code=ToolErrorCode.TOOL_DISABLED,
+                    detail="Tool is disabled or blocked by default.",
                 )
                 return ToolResult(
                     tool_name=tool_name,
@@ -177,8 +187,12 @@ class ToolRegistry:
             for cap in tool_def.capabilities:
                 if not capability_policy.is_allowed(cap):
                     ToolAuditLogger.log_event(
-                        "denied", tool_name, tool_def.version, session_id,
-                        error_code=ToolErrorCode.CAPABILITY_DENIED, detail=f"Capability {cap.value!r} not authorized.",
+                        "denied",
+                        tool_name,
+                        tool_def.version,
+                        session_id,
+                        error_code=ToolErrorCode.CAPABILITY_DENIED,
+                        detail=f"Capability {cap.value!r} not authorized.",
                     )
                     return ToolResult(
                         tool_name=tool_name,
@@ -194,7 +208,10 @@ class ToolRegistry:
                 current_count = self._invocation_counts.get(session_key, 0)
                 if current_count >= tool_def.max_invocations:
                     ToolAuditLogger.log_event(
-                        "denied", tool_name, tool_def.version, session_id,
+                        "denied",
+                        tool_name,
+                        tool_def.version,
+                        session_id,
                         error_code=ToolErrorCode.TOOL_INVOCATION_LIMIT,
                         detail=f"Exceeded max invocations ({tool_def.max_invocations}).",
                     )
@@ -209,12 +226,18 @@ class ToolRegistry:
                 self._invocation_counts[session_key] = current_count + 1
 
             # 6. Validate Input Payload (Size, Authority Keys, SSRF)
-            ToolRequestValidator.validate_input_payload(tool_name, arguments, tool_def.max_input_bytes)
+            ToolRequestValidator.validate_input_payload(
+                tool_name, arguments, tool_def.max_input_bytes
+            )
 
         except ToolExecutionError as tee:
             ToolAuditLogger.log_event(
-                "validation_failed", tool_name, version or "1.0.0", session_id,
-                error_code=tee.code, detail=tee.detail,
+                "validation_failed",
+                tool_name,
+                version or "1.0.0",
+                session_id,
+                error_code=tee.code,
+                detail=tee.detail,
             )
             return ToolResult(
                 tool_name=tool_name,
@@ -225,8 +248,12 @@ class ToolRegistry:
             )
         except Exception as e:
             ToolAuditLogger.log_event(
-                "validation_failed", tool_name, version or "1.0.0", session_id,
-                error_code=ToolErrorCode.INVALID_TOOL_REQUEST, detail=str(e),
+                "validation_failed",
+                tool_name,
+                version or "1.0.0",
+                session_id,
+                error_code=ToolErrorCode.INVALID_TOOL_REQUEST,
+                detail=str(e),
             )
             return ToolResult(
                 tool_name=tool_name,
@@ -248,7 +275,10 @@ class ToolRegistry:
                 out_bytes = len(json.dumps(res.data).encode("utf-8"))
                 if out_bytes > tool_def.max_output_bytes:
                     ToolAuditLogger.log_event(
-                        "failed", tool_name, tool_def.version, session_id,
+                        "failed",
+                        tool_name,
+                        tool_def.version,
+                        session_id,
                         error_code=ToolErrorCode.TOOL_OUTPUT_TOO_LARGE,
                         detail=f"Output ({out_bytes} bytes) exceeds limit ({tool_def.max_output_bytes}).",
                     )
@@ -265,7 +295,9 @@ class ToolRegistry:
 
             ToolAuditLogger.log_event(
                 "completed" if res.success else "failed",
-                tool_name, tool_def.version, session_id,
+                tool_name,
+                tool_def.version,
+                session_id,
                 duration_ms=elapsed_ms,
             )
             return ToolResult(
@@ -280,8 +312,13 @@ class ToolRegistry:
         except Exception as e:
             elapsed_ms = (time.monotonic() - t0) * 1000.0
             ToolAuditLogger.log_event(
-                "failed", tool_name, tool_def.version, session_id,
-                error_code=ToolErrorCode.TOOL_EXECUTION_FAILED, detail=str(e), duration_ms=elapsed_ms,
+                "failed",
+                tool_name,
+                tool_def.version,
+                session_id,
+                error_code=ToolErrorCode.TOOL_EXECUTION_FAILED,
+                detail=str(e),
+                duration_ms=elapsed_ms,
             )
             return ToolResult(
                 tool_name=tool_name,
@@ -301,10 +338,7 @@ class ToolRegistry:
     def validate_target_url(url: str) -> bool:
         """Validate target URL against SSRF and prohibited patterns."""
         try:
-            ToolRequestValidator.validate_argument_safety(
-                "security_test_tool", {"url": url}
-            )
+            ToolRequestValidator.validate_argument_safety("security_test_tool", {"url": url})
             return True
         except Exception:
             return False
-

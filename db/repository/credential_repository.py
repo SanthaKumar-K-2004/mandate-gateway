@@ -98,9 +98,7 @@ class ApiCredentialRepository(BaseRepository[ApiCredentialModel]):
         res = await self._session.execute(stmt)
         return res.scalar_one_or_none()
 
-    async def get_credentials_for_merchant(
-        self, merchant_id: str
-    ) -> Sequence[ApiCredentialModel]:
+    async def get_credentials_for_merchant(self, merchant_id: str) -> Sequence[ApiCredentialModel]:
         """Fetch all credentials owned by a specific merchant."""
         if not merchant_id:
             return []

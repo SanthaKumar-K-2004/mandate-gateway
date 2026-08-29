@@ -76,9 +76,7 @@ class NonceRepository(BaseRepository[NonceRecordModel]):
         try:
             await self._session.flush()
         except IntegrityError as exc:
-            raise ValueError(
-                f"Nonce '{nonce}' already exists in persistence store."
-            ) from exc
+            raise ValueError(f"Nonce '{nonce}' already exists in persistence store.") from exc
         return record
 
     async def get_nonce(self, nonce: str) -> NonceRecordModel | None:
@@ -87,9 +85,7 @@ class NonceRepository(BaseRepository[NonceRecordModel]):
             return None
         return await self.get_by_id(nonce.strip())
 
-    async def get_nonces_for_transaction(
-        self, transaction_id: str
-    ) -> Sequence[NonceRecordModel]:
+    async def get_nonces_for_transaction(self, transaction_id: str) -> Sequence[NonceRecordModel]:
         """Fetch all nonces bound to a given transaction ID."""
         stmt = (
             select(NonceRecordModel)
@@ -99,9 +95,7 @@ class NonceRepository(BaseRepository[NonceRecordModel]):
         result = await self._session.execute(stmt)
         return result.scalars().all()
 
-    async def get_nonces_for_mandate(
-        self, mandate_id: str
-    ) -> Sequence[NonceRecordModel]:
+    async def get_nonces_for_mandate(self, mandate_id: str) -> Sequence[NonceRecordModel]:
         """Fetch all nonces bound to a given mandate ID."""
         stmt = (
             select(NonceRecordModel)
@@ -111,9 +105,7 @@ class NonceRepository(BaseRepository[NonceRecordModel]):
         result = await self._session.execute(stmt)
         return result.scalars().all()
 
-    async def lock_nonce_for_update(
-        self, nonce: str
-    ) -> NonceRecordModel | None:
+    async def lock_nonce_for_update(self, nonce: str) -> NonceRecordModel | None:
         """Acquire SELECT ... FOR UPDATE row lock on NonceRecordModel."""
         bind = getattr(self._session, "bind", None)
         dialect = getattr(bind, "dialect", None)

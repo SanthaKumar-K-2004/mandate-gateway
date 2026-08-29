@@ -94,4 +94,6 @@ class McpRuntimeAuthorizer:
                 f"Execution of MCP tool {tool_name!r} requires Gateway authorization (ALLOW).",
             )
 
-        McpAuditLogger.log_event("tools_call_authorized", tool_name=tool_name, session_id=session_id)
+        McpAuditLogger.log_event(
+            "tools_call_authorized", tool_name=tool_name, session_id=session_id
+        )

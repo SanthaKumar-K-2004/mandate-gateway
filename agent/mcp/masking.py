@@ -11,7 +11,6 @@ from typing import Dict, List, Set
 from agent.mcp.types import McpToolDefinition
 from apps.api.domain.types import McpOperation
 
-
 # Catalog of standard MCP Tools
 STANDARD_MCP_TOOLS: List[McpToolDefinition] = [
     McpToolDefinition(

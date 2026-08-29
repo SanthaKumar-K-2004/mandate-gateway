@@ -71,11 +71,16 @@ def initialize_database(settings: Optional[Settings] = None) -> None:
             expire_on_commit=False,
             autoflush=False,
         )
-        logger.info("SQLAlchemy async engine initialized successfully for host '%s'", app_settings.postgres_host)
+        logger.info(
+            "SQLAlchemy async engine initialized successfully for host '%s'",
+            app_settings.postgres_host,
+        )
     except Exception as exc:
         logger.error("Failed to initialize database engine: %s", exc)
         if not is_test_mode:
-            raise RuntimeError(f"Database initialization failed in production environment: {exc}") from exc
+            raise RuntimeError(
+                f"Database initialization failed in production environment: {exc}"
+            ) from exc
 
 
 async def close_database() -> None:
@@ -130,7 +135,9 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     Automatically commits on success or rolls back on exception.
     """
     if _async_session_factory is None:
-        raise RuntimeError("Database session factory is not initialized. Call initialize_database() first.")
+        raise RuntimeError(
+            "Database session factory is not initialized. Call initialize_database() first."
+        )
 
     session = _async_session_factory()
     try:

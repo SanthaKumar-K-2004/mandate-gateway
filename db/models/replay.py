@@ -21,7 +21,9 @@ class ReplayRecordModel(Base):
 
     fingerprint: Mapped[str] = mapped_column(String(128), primary_key=True)
     transaction_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False, index=True
+    )
 
 
 class NonceRecordModel(Base):
@@ -33,5 +35,7 @@ class NonceRecordModel(Base):
     transaction_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     mandate_id: Mapped[str] = mapped_column(String(64), nullable=False)
     status: Mapped[str] = mapped_column(String(32), nullable=False)  # ISSUED, CONSUMED
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
     consumed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)

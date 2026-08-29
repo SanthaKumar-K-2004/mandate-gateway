@@ -8,7 +8,6 @@ import logging
 import time
 from typing import Any, Dict
 
-from apps.api.app.context import get_request_context
 from apps.api.config.types import SecretString
 
 # Machine-Readable Event Taxonomy
@@ -30,8 +29,22 @@ def sanitize_log_string(val: Any) -> str:
     return val.replace("\r\n", " ").replace("\n", " ").replace("\r", " ").replace("\t", " ")
 
 
+SENSITIVE_KEY_PATTERNS = {
+    "secret",
+    "password",
+    "token",
+    "api_key",
+    "apikey",
+    "auth",
+    "authorization",
+    "private_key",
+    "signature",
+    "cvv",
+}
+
+
 def redact_value(obj: Any) -> Any:
-    """Recursively redacts SecretString objects inside strings, dicts, lists, and tuples."""
+    """Recursively redacts SecretString objects and sensitive keys inside strings, dicts, lists, and tuples."""
     if isinstance(obj, SecretString):
         return "[REDACTED]"
     elif isinstance(obj, str):
@@ -39,7 +52,14 @@ def redact_value(obj: Any) -> Any:
             return "[REDACTED]"
         return obj
     elif isinstance(obj, dict):
-        return {k: redact_value(v) for k, v in obj.items()}
+        cleaned: Dict[str, Any] = {}
+        for k, v in obj.items():
+            key_lower = str(k).lower()
+            if any(pattern in key_lower for pattern in SENSITIVE_KEY_PATTERNS):
+                cleaned[k] = "[REDACTED]"
+            else:
+                cleaned[k] = redact_value(v)
+        return cleaned
     elif isinstance(obj, list):
         return [redact_value(item) for item in obj]
     elif isinstance(obj, tuple):
@@ -64,7 +84,8 @@ class SecretRedactionFilter(logging.Filter):
 class StructuredJsonFormatter(logging.Formatter):
     """
     Structured JSON log formatter for Mandate Gateway.
-    Includes timestamp, level, service, environment, event, request_id, correlation_id, trace_id, and duration_ms.
+    Includes timestamp, level, service, environment, event, request_id, correlation_id, trace_id,
+    transaction_id, merchant_id, buyer_id, mandate_id, attempt_id, outbox_event_id, and duration_ms.
     Guarantees log injection protection and secret redaction.
     """
 
@@ -76,7 +97,9 @@ class StructuredJsonFormatter(logging.Formatter):
         self.environment = environment
 
     def format(self, record: logging.LogRecord) -> str:
-        ctx = get_request_context()
+        from apps.api.app.context import get_full_context
+
+        ctx = get_full_context()
 
         req_id = getattr(record, "request_id", None) or ctx.get("request_id")
         corr_id = getattr(record, "correlation_id", None) or ctx.get("correlation_id")
@@ -98,7 +121,20 @@ class StructuredJsonFormatter(logging.Formatter):
             "trace_id": trace_id,
         }
 
-        # Optional observability fields
+        # Context-derived domain identity fields
+        for ctx_key in (
+            "transaction_id",
+            "merchant_id",
+            "buyer_id",
+            "mandate_id",
+            "execution_attempt_id",
+            "outbox_event_id",
+        ):
+            val = getattr(record, ctx_key, None) or ctx.get(ctx_key)
+            if val is not None:
+                log_entry[ctx_key] = sanitize_log_string(str(val))
+
+        # Optional operational observability fields
         for field in (
             "duration_ms",
             "method",
@@ -106,14 +142,18 @@ class StructuredJsonFormatter(logging.Formatter):
             "status_code",
             "error_type",
             "error_code",
+            "provider_reference",
+            "operation_name",
+            "error_category",
         ):
             val = getattr(record, field, None)
             if val is not None:
                 log_entry[field] = sanitize_log_string(str(val)) if isinstance(val, str) else val
 
-        # Redact any accidental secret strings in log entry
-        if isinstance(log_entry["event"], SecretString) or "SecretString(" in str(
-            log_entry["event"]
+        # Redact any accidental secret strings or sensitive patterns in log entry
+        log_entry = redact_value(log_entry)
+        if isinstance(log_entry.get("event"), SecretString) or "SecretString(" in str(
+            log_entry.get("event")
         ):
             log_entry["event"] = "[REDACTED]"
 

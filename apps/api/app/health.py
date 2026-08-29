@@ -7,6 +7,7 @@ from typing import Any, Dict, Tuple
 
 from apps.api.app.lifecycle import AppLifecycle
 from apps.api.config.settings import Settings
+from apps.api.config.types import Environment
 
 
 def handle_health(settings: Settings) -> Tuple[int, Dict[str, Any]]:
@@ -25,10 +26,8 @@ def handle_health(settings: Settings) -> Tuple[int, Dict[str, Any]]:
 
 def handle_ready(lifecycle: AppLifecycle, settings: Settings) -> Tuple[int, Dict[str, Any]]:
     """
-    /ready handler (Application Readiness).
-    Returns 200 OK when application initialization completed (READY state).
-    Returns 503 Service Unavailable when application is not READY (e.g. BOOTING, INITIALIZING, FAILED).
-    Never exposes credentials, tracebacks, or secrets.
+    Synchronous /ready handler fallback.
+    Returns 200 OK when application lifecycle is in READY state.
     """
     is_ready = lifecycle.is_ready()
     state = lifecycle.state.value
@@ -42,3 +41,90 @@ def handle_ready(lifecycle: AppLifecycle, settings: Settings) -> Tuple[int, Dict
 
     status_code = 200 if is_ready else 503
     return status_code, payload
+
+
+async def handle_ready_async(
+    lifecycle: AppLifecycle, settings: Settings
+) -> Tuple[int, Dict[str, Any]]:
+    """
+    /ready handler (Application Readiness).
+    In PRODUCTION mode: Returns 200 OK strictly when application is READY and database/cache connections are CONNECTED.
+      Returns 503 Service Unavailable if database or cache connections fail.
+    In DEVELOPMENT/TEST mode: Returns 200 OK when application lifecycle is READY.
+    """
+    is_ready = lifecycle.is_ready()
+    state = lifecycle.state.value
+
+    from db.redis import check_redis_health
+    from db.session import check_database_health
+
+    db_health = await check_database_health()
+    redis_health = await check_redis_health()
+
+    if settings.app_env == Environment.PRODUCTION:
+        db_ok = db_health.get("status") == "CONNECTED"
+        redis_ok = redis_health.get("status") == "CONNECTED"
+        overall_ready = is_ready and db_ok and redis_ok
+    else:
+        overall_ready = is_ready
+
+    payload = {
+        "status": "READY" if overall_ready else "NOT_READY",
+        "state": state,
+        "service": settings.app_name,
+        "environment": settings.app_env.value,
+        "dependencies": {
+            "database": db_health.get("status", "UNAVAILABLE"),
+            "cache": redis_health.get("status", "UNAVAILABLE"),
+        },
+    }
+
+    status_code = 200 if overall_ready else 503
+    return status_code, payload
+
+
+async def handle_diagnostics_async(
+    settings: Settings,
+    outbox_backlog_count: int = 0,
+    recovery_stuck_count: int = 0,
+) -> Tuple[int, Dict[str, Any]]:
+    """
+    Internal operator diagnostics endpoint handler (/diagnostics).
+    Exposes operational intelligence and subsystem health without revealing secrets.
+    """
+    from db.redis import check_redis_health
+    from db.session import check_database_health
+
+    db_health = await check_database_health()
+    redis_health = await check_redis_health()
+
+    # Redact any accidental error details or credentials in diagnostic outputs
+    db_info = {
+        "status": db_health.get("status", "UNKNOWN"),
+        "host": db_health.get("host", "localhost"),
+        "port": db_health.get("port", 5432),
+        "database": db_health.get("database", "mandate_gateway"),
+    }
+
+    redis_info = {
+        "status": redis_health.get("status", "UNKNOWN"),
+        "host": redis_health.get("host", "localhost"),
+        "port": redis_health.get("port", 6379),
+    }
+
+    payload = {
+        "service": settings.app_name,
+        "environment": settings.app_env.value,
+        "subsystems": {
+            "database": db_info,
+            "cache": redis_info,
+            "outbox": {
+                "backlog_pending_count": outbox_backlog_count,
+            },
+            "recovery": {
+                "stuck_transactions_count": recovery_stuck_count,
+            },
+        },
+    }
+
+    return 200, payload

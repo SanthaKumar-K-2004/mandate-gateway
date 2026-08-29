@@ -106,7 +106,9 @@ class AgentStepUpManager:
                     created_at=ch.created_at,
                 )
                 self._challenges[challenge_id] = expired_ch
-                StepUpAuditLogger.log_event("expired", challenge_id=challenge_id, session_id=ch.session_id)
+                StepUpAuditLogger.log_event(
+                    "expired", challenge_id=challenge_id, session_id=ch.session_id
+                )
                 return expired_ch
             return ch
 
@@ -136,8 +138,11 @@ class AgentStepUpManager:
             ch = self.get_challenge(decision.challenge_id)
             if not ch:
                 StepUpAuditLogger.log_event(
-                    "rejected", challenge_id=decision.challenge_id, session_id=session_id,
-                    error_code=StepUpErrorCode.STEP_UP_NOT_FOUND, detail="Challenge ID not found.",
+                    "rejected",
+                    challenge_id=decision.challenge_id,
+                    session_id=session_id,
+                    error_code=StepUpErrorCode.STEP_UP_NOT_FOUND,
+                    detail="Challenge ID not found.",
                 )
                 raise StepUpWorkflowError(
                     StepUpErrorCode.STEP_UP_NOT_FOUND,
@@ -150,8 +155,11 @@ class AgentStepUpManager:
             except StepUpWorkflowError as swe:
                 if swe.code == StepUpErrorCode.AI_SELF_APPROVAL_BLOCKED:
                     StepUpAuditLogger.log_event(
-                        "ai_self_approval_blocked", challenge_id=ch.challenge_id, session_id=session_id,
-                        error_code=swe.code, detail=swe.detail,
+                        "ai_self_approval_blocked",
+                        challenge_id=ch.challenge_id,
+                        session_id=session_id,
+                        error_code=swe.code,
+                        detail=swe.detail,
                     )
                 raise
 
@@ -161,8 +169,11 @@ class AgentStepUpManager:
                 )
             except StepUpWorkflowError as swe:
                 StepUpAuditLogger.log_event(
-                    "tamper_detected", challenge_id=ch.challenge_id, session_id=session_id,
-                    error_code=swe.code, detail=swe.detail,
+                    "tamper_detected",
+                    challenge_id=ch.challenge_id,
+                    session_id=session_id,
+                    error_code=swe.code,
+                    detail=swe.detail,
                 )
                 raise
 
@@ -185,7 +196,9 @@ class AgentStepUpManager:
                     created_at=ch.created_at,
                 )
                 self._challenges[ch.challenge_id] = resolved_ch
-                StepUpAuditLogger.log_event("approved", challenge_id=ch.challenge_id, session_id=session_id)
+                StepUpAuditLogger.log_event(
+                    "approved", challenge_id=ch.challenge_id, session_id=session_id
+                )
                 return resolved_ch
             elif decision.decision == HumanDecisionChoice.REJECT:
                 resolved_ch = AgentStepUpChallenge(
@@ -202,7 +215,9 @@ class AgentStepUpManager:
                     created_at=ch.created_at,
                 )
                 self._challenges[ch.challenge_id] = resolved_ch
-                StepUpAuditLogger.log_event("rejected", challenge_id=ch.challenge_id, session_id=session_id)
+                StepUpAuditLogger.log_event(
+                    "rejected", challenge_id=ch.challenge_id, session_id=session_id
+                )
                 return resolved_ch
             else:
                 raise StepUpWorkflowError(
