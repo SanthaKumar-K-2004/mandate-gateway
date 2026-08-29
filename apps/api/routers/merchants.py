@@ -38,9 +38,21 @@ except ImportError:  # pragma: no cover
             self.detail = detail
 
 
-# In-memory store for merchants & merchant policies
+import json
+from db.unit_of_work import AsyncUnitOfWork
+
+# In-memory fallback store for merchants & merchant policies
 _MERCHANTS: dict[str, MerchantResponse] = {}
 _MERCHANT_POLICIES: dict[str, PolicyResponse] = {}
+
+
+def _get_uow_or_none() -> AsyncUnitOfWork | None:
+    """Return an active AsyncUnitOfWork if the database session factory is initialized."""
+    from db.session import _async_session_factory
+
+    if _async_session_factory is not None:
+        return AsyncUnitOfWork()
+    return None
 
 
 if HAS_FASTAPI:
@@ -75,7 +87,7 @@ else:
     status_code=status.HTTP_201_CREATED,
 )
 def create_merchant(payload: MerchantCreate) -> MerchantResponse:
-    """Register a new merchant."""
+    """Register a new merchant in database and memory."""
     merchant_id = f"mer_{uuid.uuid4().hex[:12]}"
     merchant = MerchantResponse(
         merchant_id=merchant_id,
@@ -104,6 +116,37 @@ def create_merchant(payload: MerchantCreate) -> MerchantResponse:
     )
     _MERCHANT_POLICIES[merchant_id] = default_policy
 
+    # Persist to database if database session factory is available
+    uow = _get_uow_or_none()
+    if uow is not None:
+        import asyncio
+
+        async def _persist() -> None:
+            async with uow:
+                await uow.merchants.create_merchant(
+                    merchant_id=merchant_id,
+                    name=payload.name,
+                    razorpay_account_id=payload.razorpay_account_id,
+                )
+                await uow.merchants.create_policy(
+                    policy_id=default_policy.policy_id,
+                    merchant_id=merchant_id,
+                    policy_version="1",
+                    active=True,
+                    autonomous_limit_paise=500000,
+                    step_up_threshold_paise=1000000,
+                    allowed_categories=list(default_policy.allowed_categories),
+                    allowed_operations=[op.value for op in default_policy.allowed_operations],
+                    blocked_operations=[op.value for op in default_policy.blocked_operations],
+                )
+                await uow.commit()
+
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(_persist())
+        except RuntimeError:
+            asyncio.run(_persist())
+
     return merchant
 
 
@@ -113,6 +156,30 @@ def create_merchant(payload: MerchantCreate) -> MerchantResponse:
 )
 def get_merchant(merchant_id: str) -> MerchantResponse:
     """Fetch merchant by ID."""
+    uow = _get_uow_or_none()
+    if uow is not None:
+        import asyncio
+
+        async def _get() -> MerchantResponse | None:
+            async with uow:
+                model = await uow.merchants.get_by_id(merchant_id)
+                if model is not None:
+                    return MerchantResponse(
+                        merchant_id=model.merchant_id,
+                        name=model.name,
+                        razorpay_account_id=model.razorpay_account_id or "",
+                        created_at=model.created_at,
+                    )
+                return None
+            return None
+
+        try:
+            res = asyncio.run(_get())
+            if res is not None:
+                return res
+        except Exception:
+            pass
+
     if merchant_id not in _MERCHANTS:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -124,7 +191,6 @@ def get_merchant(merchant_id: str) -> MerchantResponse:
 @merchants_router.post(
     "/merchants/{merchant_id}/policy",
     response_model=PolicyResponse,
-    status_code=status.HTTP_201_CREATED,
 )
 @merchants_router.put(
     "/merchants/{merchant_id}/policy",
@@ -147,7 +213,7 @@ def update_merchant_policy(merchant_id: str, payload: PolicyCreate) -> PolicyRes
         policy_version=policy_version,
         ai_commerce_enabled=payload.ai_commerce_enabled,
         currency=payload.currency,
-        allowed_categories=frozenset([cat.lower() for cat in payload.allowed_categories]),
+        allowed_categories=frozenset(payload.allowed_categories),
         autonomous_purchase_limit_paise=payload.autonomous_purchase_limit_paise,
         step_up_threshold_paise=payload.step_up_threshold_paise,
         max_step_up_percent=payload.max_step_up_percent,
@@ -158,6 +224,32 @@ def update_merchant_policy(merchant_id: str, payload: PolicyCreate) -> PolicyRes
         expires_at=payload.expires_at,
     )
     _MERCHANT_POLICIES[merchant_id] = updated_policy
+
+    uow = _get_uow_or_none()
+    if uow is not None:
+        import asyncio
+
+        async def _persist_policy() -> None:
+            async with uow:
+                await uow.merchants.create_policy(
+                    policy_id=updated_policy.policy_id,
+                    merchant_id=merchant_id,
+                    policy_version=str(policy_version),
+                    active=payload.ai_commerce_enabled,
+                    autonomous_limit_paise=payload.autonomous_purchase_limit_paise,
+                    step_up_threshold_paise=payload.step_up_threshold_paise,
+                    allowed_categories=list(payload.allowed_categories),
+                    allowed_operations=[op.value for op in payload.allowed_operations],
+                    blocked_operations=[op.value for op in payload.blocked_operations],
+                )
+                await uow.commit()
+
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(_persist_policy())
+        except RuntimeError:
+            asyncio.run(_persist_policy())
+
     return updated_policy
 
 
@@ -167,6 +259,44 @@ def update_merchant_policy(merchant_id: str, payload: PolicyCreate) -> PolicyRes
 )
 def get_merchant_policy(merchant_id: str) -> PolicyResponse:
     """Fetch active policy for merchant."""
+    uow = _get_uow_or_none()
+    if uow is not None:
+        import asyncio
+
+        async def _get_policy() -> PolicyResponse | None:
+            async with uow:
+                model = await uow.merchants.get_active_policy(merchant_id)
+                if model is not None:
+                    allowed_cats = json.loads(model.allowed_categories_json or "[]")
+                    allowed_ops = json.loads(model.allowed_operations_json or "[]")
+                    blocked_ops = json.loads(model.blocked_operations_json or "[]")
+                    ver_int = int(model.policy_version) if model.policy_version.isdigit() else 1
+                    return PolicyResponse(
+                        policy_id=model.id,
+                        merchant_id=model.merchant_id,
+                        policy_version=ver_int,
+                        ai_commerce_enabled=model.active,
+                        currency=Currency.INR,
+                        allowed_categories=frozenset(allowed_cats),
+                        autonomous_purchase_limit_paise=model.autonomous_limit_paise,
+                        step_up_threshold_paise=model.step_up_threshold_paise,
+                        max_step_up_percent=10,
+                        allowed_regions=frozenset([Region.IN]),
+                        allowed_operations=frozenset([McpOperation(op) for op in allowed_ops]),
+                        blocked_operations=frozenset([McpOperation(op) for op in blocked_ops]),
+                        created_at=model.created_at,
+                        expires_at=None,
+                    )
+                return None
+            return None
+
+        try:
+            res = asyncio.run(_get_policy())
+            if res is not None:
+                return res
+        except Exception:
+            pass
+
     if merchant_id not in _MERCHANTS:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

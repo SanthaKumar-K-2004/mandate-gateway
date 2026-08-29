@@ -123,8 +123,13 @@ class ReplayRepository(BaseRepository[ReplayRecordModel]):
             return False
 
         check_time = at if at is not None else _utc_now()
+        record_created = (
+            record.created_at.replace(tzinfo=timezone.utc)
+            if record.created_at.tzinfo is None
+            else record.created_at
+        )
         if ttl_seconds > 0:
-            age_seconds = (check_time - record.created_at).total_seconds()
+            age_seconds = (check_time - record_created).total_seconds()
             if age_seconds >= ttl_seconds:
                 return False  # Expired protection window
 

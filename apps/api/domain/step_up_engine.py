@@ -494,7 +494,12 @@ class StepUpEngine:
         if model.status != StepUpChallengeStatus.PENDING.value:
             raise ValueError(f"Step-up challenge {cid!r} is already {model.status}.")
 
-        if eval_time >= model.expires_at:
+        expires_at_utc = (
+            model.expires_at.replace(tzinfo=timezone.utc)
+            if model.expires_at.tzinfo is None
+            else model.expires_at
+        )
+        if eval_time >= expires_at_utc:
             await uow.step_up.reject_challenge(cid, reason="Challenge expired")
             raise ValueError(f"Step-up challenge {cid!r} has EXPIRED.")
 

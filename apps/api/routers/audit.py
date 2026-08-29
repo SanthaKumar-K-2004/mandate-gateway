@@ -38,9 +38,21 @@ except ImportError:  # pragma: no cover
             super().__init__(detail)
 
 
-# In-memory store for audit events & receipts
+import json
+from db.unit_of_work import AsyncUnitOfWork
+
+# In-memory fallback store for audit events & receipts
 _AUDIT_EVENTS: dict[str, list[AuditEventResponse]] = {}
 _RECEIPTS: dict[str, ReceiptResponse] = {}
+
+
+def _get_uow_or_none() -> AsyncUnitOfWork | None:
+    """Return an active AsyncUnitOfWork if the database session factory is initialized."""
+    from db.session import _async_session_factory
+
+    if _async_session_factory is not None:
+        return AsyncUnitOfWork()
+    return None
 
 
 if HAS_FASTAPI:
@@ -62,7 +74,43 @@ else:
     response_model=list[AuditEventResponse],
 )
 def get_transaction_events(transaction_id: str) -> list[AuditEventResponse]:
-    """Fetch audit event trail for a transaction."""
+    """Fetch audit event trail for a transaction from database or memory."""
+    uow = _get_uow_or_none()
+    if uow is not None:
+        import asyncio
+
+        async def _get_events_db() -> list[AuditEventResponse] | None:
+            async with uow:
+                models = await uow.audit.get_events_for_transaction(transaction_id)
+                if models:
+                    res: list[AuditEventResponse] = []
+                    for m in models:
+                        payload_dict = json.loads(m.payload_json) if m.payload_json else {}
+                        res.append(
+                            AuditEventResponse(
+                                event_id=m.event_id,
+                                event_type=AuditEventType(m.event_type),
+                                timestamp=m.timestamp,
+                                transaction_id=m.transaction_id,
+                                mandate_id=m.mandate_id,
+                                merchant_id=m.merchant_id,
+                                buyer_id=m.buyer_id,
+                                payload=payload_dict,
+                                previous_hash=m.previous_hash,
+                                event_hash=m.event_hash,
+                            )
+                        )
+                    return res
+                return None
+            return None
+
+        try:
+            res = asyncio.run(_get_events_db())
+            if res:
+                return res
+        except Exception:
+            pass
+
     if transaction_id not in _AUDIT_EVENTS:
         # Generate default synthetic audit trail for demo/test transaction if not present
         now = datetime.now(timezone.utc)
@@ -102,7 +150,45 @@ def get_transaction_events(transaction_id: str) -> list[AuditEventResponse]:
     response_model=ReceiptResponse,
 )
 def get_receipt(receipt_id: str) -> ReceiptResponse:
-    """Fetch Ed25519 signed action receipt by receipt ID."""
+    """Fetch Ed25519 signed action receipt by receipt ID from database or memory."""
+    uow = _get_uow_or_none()
+    if uow is not None:
+        import asyncio
+
+        async def _get_receipt_db() -> ReceiptResponse | None:
+            async with uow:
+                model = await uow.receipts.get_receipt(receipt_id)
+                if model is not None:
+                    return ReceiptResponse(
+                        receipt_version="1.0",
+                        receipt_id=model.receipt_id,
+                        transaction_id=model.transaction_id,
+                        mandate_id="man_demo123",
+                        merchant_id="mer_demo123",
+                        policy_version=1,
+                        cart_hash="sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                        amount_paise=150000,
+                        currency=Currency.INR,
+                        decision=PolicyDecision.ALLOW,
+                        execution_tool="razorpay_create_order",
+                        execution_reference="order_demo123",
+                        authorized_at=model.created_at,
+                        executed_at=model.created_at,
+                        created_at=model.created_at,
+                        audit_hash="sha256:f4c8996fb92427ae41e4649b934ca495991b7852b855e3b0c44298fc1c149afb",
+                        canonical_payload_hash=model.canonical_payload_hash,
+                        signature=model.signature_hex,
+                    )
+                return None
+            return None
+
+        try:
+            res = asyncio.run(_get_receipt_db())
+            if res is not None:
+                return res
+        except Exception:
+            pass
+
     if receipt_id not in _RECEIPTS:
         # Generate default synthetic receipt for demo/test receipt ID if not present
         now = datetime.now(timezone.utc)

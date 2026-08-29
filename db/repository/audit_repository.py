@@ -210,10 +210,16 @@ class AuditRepository(BaseRepository[AuditEventModel]):
             except Exception:
                 return False, f"Invalid event_type '{event.event_type}' at sequence {event.sequence_number}."
 
+            evt_time = (
+                event.timestamp.replace(tzinfo=timezone.utc)
+                if event.timestamp.tzinfo is None
+                else event.timestamp
+            )
+
             recomputed_hash = _compute_event_hash(
                 event_id=event.event_id,
                 event_type=event_type_enum,
-                timestamp=event.timestamp,
+                timestamp=evt_time,
                 previous_hash=event.previous_hash,
                 transaction_id=event.transaction_id,
                 mandate_id=event.mandate_id,

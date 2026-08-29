@@ -173,7 +173,12 @@ class NonceRepository(BaseRepository[NonceRecordModel]):
 
         # 3. Expiration validation
         if ttl_seconds > 0:
-            age_seconds = (eval_time - record.created_at).total_seconds()
+            rec_created = (
+                record.created_at.replace(tzinfo=timezone.utc)
+                if record.created_at.tzinfo is None
+                else record.created_at
+            )
+            age_seconds = (eval_time - rec_created).total_seconds()
             if age_seconds >= ttl_seconds:
                 raise ValueError(
                     f"Nonce '{clean_nonce}' expired: created at {record.created_at}, "

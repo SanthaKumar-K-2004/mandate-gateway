@@ -643,7 +643,6 @@ class PaymentExecutionService:
                 provider_status="SUCCESS",
                 provider_payment_id=provider_result.external_reference,
             )
-            await uow.transactions.transition_transaction_state(tx_id, TransactionState.SUCCESS)
             await uow.transactions.transition_transaction_state(tx_id, TransactionState.COMMITTED)
 
             final_res = ExecutionResult(

@@ -374,8 +374,13 @@ class NonceEngine:
                 evaluated_at=eval_time,
             )
 
+        created_at_utc = (
+            model.created_at.replace(tzinfo=timezone.utc)
+            if model.created_at.tzinfo is None
+            else model.created_at
+        )
         expires_time = datetime.fromtimestamp(
-            model.created_at.timestamp() + ttl_seconds, tz=timezone.utc
+            created_at_utc.timestamp() + ttl_seconds, tz=timezone.utc
         )
         domain_record = NonceRecord(
             nonce_value=model.nonce,

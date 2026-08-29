@@ -123,7 +123,12 @@ class StepUpRepository(BaseRepository[StepUpChallengeModel]):
             raise ValueError(f"Step-up challenge '{challenge_id}' not found.")
 
         # Expiry security check
-        if check_time >= challenge.expires_at:
+        exp_at_utc = (
+            challenge.expires_at.replace(tzinfo=timezone.utc)
+            if challenge.expires_at.tzinfo is None
+            else challenge.expires_at
+        )
+        if check_time >= exp_at_utc:
             challenge.status = StepUpChallengeStatus.EXPIRED.value
             await self._session.flush()
             raise ValueError(
