@@ -1,10 +1,10 @@
-# Mandate Gateway — Local Development Orchestration Foundation
-# Section S00.2.1 — Docker & Compose Foundation
+# Mandate Gateway — Production Compose Stack
+# Section M09 — Production Platform, Infrastructure & Worker Process Separation
 
 name: mandate-gateway
 
 services:
-  # Database Infrastructure (PostgreSQL 16)
+  # 1. Database Infrastructure (PostgreSQL 16)
   postgres:
     image: postgres:16-alpine
     container_name: mandate_gateway_postgres
@@ -13,7 +13,6 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be defined in .env}
       POSTGRES_DB: ${POSTGRES_DB:-mandate_gateway}
-    # Bound to localhost (127.0.0.1) for secure local host developer inspection
     ports:
       - "127.0.0.1:5432:5432"
     networks:
@@ -27,12 +26,11 @@ services:
       retries: 5
       start_period: 5s
 
-  # Ephemeral Cache / Rate Limiting (Redis 7)
+  # 2. Ephemeral Cache / Rate Limiting (Redis 7)
   redis:
     image: redis:7-alpine
     container_name: mandate_gateway_redis
     restart: unless-stopped
-    # Bound to localhost (127.0.0.1) for secure local host developer inspection
     ports:
       - "127.0.0.1:6379:6379"
     networks:
@@ -45,6 +43,93 @@ services:
       timeout: 5s
       retries: 5
       start_period: 3s
+
+  # 3. Mandate Gateway API Runtime (ASGI HTTP API)
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mandate_gateway_api
+    restart: unless-stopped
+    command: python -m apps.api.main
+    environment:
+      APP_ENV: production
+      PORT: 8000
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be defined}
+      POSTGRES_DB: ${POSTGRES_DB:-mandate_gateway}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_LEVEL: INFO
+    ports:
+      - "127.0.0.1:8000:8000"
+    networks:
+      - mandate-gateway-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  # 4. Outbox Worker Process
+  outbox_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mandate_gateway_outbox_worker
+    restart: unless-stopped
+    command: python -m apps.workers.outbox_worker
+    environment:
+      APP_ENV: production
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be defined}
+      POSTGRES_DB: ${POSTGRES_DB:-mandate_gateway}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_LEVEL: INFO
+    networks:
+      - mandate-gateway-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # 5. Recovery Worker Process
+  recovery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mandate_gateway_recovery_worker
+    restart: unless-stopped
+    command: python -m apps.workers.recovery_worker
+    environment:
+      APP_ENV: production
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be defined}
+      POSTGRES_DB: ${POSTGRES_DB:-mandate_gateway}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_LEVEL: INFO
+    networks:
+      - mandate-gateway-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
 networks:
   mandate-gateway-net:

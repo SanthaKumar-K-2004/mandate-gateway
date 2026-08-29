@@ -148,3 +148,9 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
         raise
     finally:
         await session.close()
+
+
+def get_async_session_factory() -> Optional[async_sessionmaker[AsyncSession]]:
+    """Return active async sessionmaker factory."""
+    return _async_session_factory
+
