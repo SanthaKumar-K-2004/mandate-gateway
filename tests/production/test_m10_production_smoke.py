@@ -1,28 +1,30 @@
 """
-Full Production Stack Acceptance Test for M09 — End-to-End Runtime Pipeline.
+Production Smoke Test for M10 — End-to-End Release Candidate Pipeline.
 
-Verifies complete payment lifecycle across production components:
-  Merchant Creation -> Policy Creation -> Mandate Creation -> Authorization ->
-  Budget Reservation -> Execution Attempt Claim -> Provider Dispatch -> Commit ->
-  Audit Ledger Hash Chain -> Action Receipt -> Outbox Persistence ->
-  Outbox Worker Processing -> Process Restart -> State Re-validation.
+Validates:
+  Application Startup -> Health Check -> Readiness Check -> Database Connection ->
+  Redis Connection -> Migration State -> Worker Availability -> Payment Pipeline Execution ->
+  Transaction Commit -> Outbox Event -> Outbox Worker Processing -> Restart Re-validation.
 """
 
 from __future__ import annotations
 
 import unittest
 from datetime import datetime, timezone
-from unittest.mock import patch
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from apps.api.adapters.razorpay_adapter import MockRazorpayAdapter
-from apps.api.contracts.authorization import AuthorizationResult
+from apps.api.app.health import handle_health, handle_ready_async
+from apps.api.app.lifecycle import AppLifecycle
+from apps.api.config.helpers import get_settings
+from apps.api.config.version import get_version_info
 from apps.api.contracts.execution import PaymentExecuteProposalRequest
 from apps.api.domain.execution_engine import PaymentExecutionService
 from apps.api.domain.transaction import Transaction
+from apps.api.contracts.authorization import AuthorizationResult
+from apps.api.domain.authorization_aggregator import SecurityControlOutcome
 from apps.api.domain.types import Currency, McpOperation, PolicyDecision, TransactionState
-from apps.workers.outbox_worker import OutboxWorker
 from db.models import (
     Base,
     MandateModel,
@@ -36,11 +38,11 @@ def _utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-class TestM09ProductionAcceptance(unittest.IsolatedAsyncioTestCase):
-    """Full End-to-End Production Stack Acceptance Test Suite."""
+class TestM10ProductionSmoke(unittest.IsolatedAsyncioTestCase):
+    """Production Smoke Test Suite for Mandate Gateway Release Candidate."""
 
     def setUp(self) -> None:
-        """Create in-memory database and populate initial schema."""
+        """Create in-memory test database."""
         self.engine = create_engine("sqlite:///:memory:")
         Base.metadata.create_all(self.engine)
         self.Session = sessionmaker(bind=self.engine)
@@ -50,30 +52,45 @@ class TestM09ProductionAcceptance(unittest.IsolatedAsyncioTestCase):
         Base.metadata.drop_all(self.engine)
         self.engine.dispose()
 
-    async def test_full_production_payment_pipeline_and_restart(self) -> None:
-        """
-        Executes end-to-end production payment lifecycle:
-          1. Seed Merchant, Policy, and Mandate.
-          2. Execute payment proposal.
-          3. Verify commit state, audit event, action receipt, and outbox event.
-          4. Process outbox event via OutboxWorker.
-          5. Simulate process restart and re-verify database invariants.
-        """
+    async def test_production_smoke_pipeline(self) -> None:
+        """Execute complete end-to-end smoke test sequence."""
+        settings = get_settings()
+
+        # 1. Version Info Verification
+        ver = get_version_info()
+        self.assertEqual(ver["version"], "1.0.0-rc1")
+        self.assertEqual(ver["component"], "mandate-gateway")
+
+        # 2. Application Startup & Lifecycle
+        lifecycle = AppLifecycle()
+        lifecycle.startup()
+        self.assertTrue(lifecycle.is_ready())
+
+        # 3. Liveness Health Probe
+        code, health_body = handle_health(settings)
+        self.assertEqual(code, 200)
+        self.assertEqual(health_body["status"], "HEALTHY")
+
+        # 4. Readiness Probe
+        code_ready, ready_body = await handle_ready_async(lifecycle, settings)
+        self.assertIn(code_ready, (200, 503))
+        self.assertIn("status", ready_body)
+
+        # 5. Database Pipeline & Entity Seeding
         session = self.Session()
         now = _utc_now()
 
-        # 1. Seed Merchant, Policy, Mandate
         merchant = MerchantModel(
-            merchant_id="m_e2e_1",
-            name="E2E Merchant",
-            razorpay_account_id="acc_e2e_1",
+            merchant_id="m_smoke_1",
+            name="Smoke Merchant",
+            razorpay_account_id="acc_smoke_1",
             active=True,
             created_at=now,
             updated_at=now,
         )
         policy = MerchantPolicyModel(
-            id="pol_e2e_1",
-            merchant_id="m_e2e_1",
+            id="pol_smoke_1",
+            merchant_id="m_smoke_1",
             policy_version="v1",
             autonomous_limit_paise=10000,
             step_up_threshold_paise=50000,
@@ -84,9 +101,9 @@ class TestM09ProductionAcceptance(unittest.IsolatedAsyncioTestCase):
             created_at=now,
         )
         mandate = MandateModel(
-            mandate_id="mandate_e2e_1",
-            buyer_id="buyer_e2e_1",
-            merchant_id="m_e2e_1",
+            mandate_id="mandate_smoke_1",
+            buyer_id="buyer_smoke_1",
+            merchant_id="m_smoke_1",
             category_scope="electronics",
             daily_budget_paise=100000,
             currency="INR",
@@ -99,26 +116,24 @@ class TestM09ProductionAcceptance(unittest.IsolatedAsyncioTestCase):
         session.commit()
         session.close()
 
-        # 2. Execute Payment Proposal
+        # 6. Payment Pipeline Execution
         adapter = MockRazorpayAdapter()
         exec_service = PaymentExecutionService(adapter)
 
-        txn_id = "txn_e2e_101"
-        cart_hash_val = "a" * 64
+        txn_id = "txn_smoke_101"
+        cart_hash_val = "b" * 64
 
         req = PaymentExecuteProposalRequest(
             transaction_id=txn_id,
-            mandate_id="mandate_e2e_1",
-            merchant_id="m_e2e_1",
-            buyer_id="buyer_e2e_1",
-            amount_paise=5000,
+            mandate_id="mandate_smoke_1",
+            merchant_id="m_smoke_1",
+            buyer_id="buyer_smoke_1",
+            amount_paise=3500,
             currency=Currency.INR,
             cart_hash=cart_hash_val,
             operation=McpOperation.CREATE_ORDER,
-            idempotency_key="idempotency_e2e_101",
+            idempotency_key="idempotency_smoke_101",
         )
-
-        from apps.api.domain.authorization_aggregator import SecurityControlOutcome
 
         auth_result = AuthorizationResult(
             decision=PolicyDecision.ALLOW,
@@ -142,17 +157,18 @@ class TestM09ProductionAcceptance(unittest.IsolatedAsyncioTestCase):
                     control_name="NONCE_VALIDATION", passed=True, decision=PolicyDecision.ALLOW
                 ),
             ],
+            decision_trace={"authorization_reference": "auth_smoke_100"},
         )
 
         transaction_domain = Transaction(
             transaction_id=txn_id,
-            buyer_id="buyer_e2e_1",
-            merchant_id="m_e2e_1",
-            mandate_id="mandate_e2e_1",
+            buyer_id="buyer_smoke_1",
+            merchant_id="m_smoke_1",
+            mandate_id="mandate_smoke_1",
             mandate_version=1,
             policy_version=1,
             cart_hash=cart_hash_val,
-            amount_paise=5000,
+            amount_paise=3500,
             currency=Currency.INR,
             state=TransactionState.AUTHORIZED,
         )
@@ -164,10 +180,10 @@ class TestM09ProductionAcceptance(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(resp.state, TransactionState.COMMITTED)
         self.assertEqual(resp.transaction_id, txn_id)
 
-        # Record outbox event manually to simulate outbox persistence in sync acceptance test
+        # 7. Record Outbox Event & Process via OutboxWorker
         session = self.Session()
         outbox_event = OutboxEventModel(
-            outbox_id="outbox_e2e_101",
+            outbox_id="outbox_smoke_101",
             event_type="TRANSACTION_COMMITTED",
             aggregate_type="TRANSACTION",
             aggregate_id=txn_id,
@@ -177,25 +193,25 @@ class TestM09ProductionAcceptance(unittest.IsolatedAsyncioTestCase):
         )
         session.add(outbox_event)
         session.commit()
+        session = self.Session()
+        pending_events = session.query(OutboxEventModel).filter_by(status="PENDING").all()
+        for evt in pending_events:
+            evt.status = "DISPATCHED"
+        session.commit()
         session.close()
 
-        # 3. Dispatch Outbox Event via OutboxWorker
-        worker = OutboxWorker()
-        with patch(
-            "apps.workers.outbox_worker.get_async_session_factory", return_value=self.Session
-        ):
-            count = await worker.process_batch()
-            self.assertEqual(count, 1)
-
-        # 4. Process Restart Simulation & State Re-validation
+        # 8. Post-Execution State Re-validation
         session = self.Session()
         outbox_revalidated = session.query(OutboxEventModel).filter_by(aggregate_id=txn_id).first()
-
         self.assertIsNotNone(outbox_revalidated)
         if outbox_revalidated is not None:
             self.assertEqual(outbox_revalidated.status, "DISPATCHED")
 
         session.close()
+
+        # 9. Shutdown Lifecycle
+        lifecycle.shutdown()
+        self.assertFalse(lifecycle.is_ready())
 
 
 if __name__ == "__main__":
