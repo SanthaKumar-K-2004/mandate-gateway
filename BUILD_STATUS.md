@@ -466,6 +466,13 @@
   - **Quality Gates (`make check`)**: 100% PASS (Black clean 190 files, Flake8 0 errors, Secret Scanner clean 361 files, Architecture Guard clean 172 files).
   - **`PROJECT_CONTEXT.md` SHA-256**: `2b62d52aa707bc9bb5df60d93b04f60933562e69af8068c46cc3b6cdc2eb670a` — INTACT.
 - [x] **M04 / S04.2 — Security & Trust-Boundary Forensic Audit** — **COMPLETE / FROZEN**
+- [x] **M05 / S05.3.7 — AuditRepository & ReceiptRepository Persistence** — **COMPLETE / FROZEN**
+  - **AuditRepository**: Created [`db/repository/audit_repository.py`](file:///home/santhakumar/Desktop/Raserpay/db/repository/audit_repository.py) extending `BaseRepository[AuditEventModel]`. Implemented `append_event`, `get_event`, `get_latest_event`, `get_events_by_transaction`, `get_events_by_mandate`, `get_events_by_type`, `get_chain_segment`, and `verify_chain`.
+  - **ReceiptRepository**: Created [`db/repository/receipt_repository.py`](file:///home/santhakumar/Desktop/Raserpay/db/repository/receipt_repository.py) extending `BaseRepository[ActionReceiptModel]`. Implemented `create_receipt`, `get_receipt`, `get_receipt_for_transaction`, and `get_receipt_for_audit_event`.
+  - **Audit & Receipt Invariants**: Enforced append-only audit log, monotonic sequence generation (1, 2, 3...), hash-chain cryptographic linkage (`previous_hash` = previous event's `event_hash`), tamper detection (`verify_chain` detects corrupted payload/hash/linkage), Ed25519 action receipt storage and verification integrity, context-binding validation, zero mutation/deletion escape hatches, and `FOR UPDATE` query locking for concurrent tail reads.
+  - **Concurrency & Controlled Mutation Proofs**: Verified 10-worker concurrent append producing an unbroken, sequential, cryptographic audit hash chain. Controlled Mutation A (sequence gap/out-of-order), Mutation B (payload hash recomputation detection), Mutation C (hash-chain link break), Mutation D (context binding mismatch), and Mutation E (signature tampering) caught by test suite.
+  - **Quality Gates (`make check`)**: 100% PASS (**500 total automated tests PASS 100%**, Black clean, Flake8 0 errors, MyPy 0 errors, Secret scanner PASS, Architecture guard PASS).
+  - **`PROJECT_CONTEXT.md` SHA-256**: `2b62d52aa707bc9bb5df60d93b04f60933562e69af8068c46cc3b6cdc2eb670a` — INTACT.
 - [x] **M04 / S04.3 — State Consistency, Atomicity & Concurrency Forensic Audit** — **COMPLETE / FROZEN**
 - [x] **M04 / S04.4 — Crash Consistency, Recovery & Reconciliation Forensic Audit** — **COMPLETE / FROZEN**
 - [x] **M04 / S04.5 — Final Whole-System Penetration, Red-Team Chaos Lab & Submission-Readiness Forensic Audit** — **COMPLETE / FROZEN**
@@ -476,7 +483,3 @@
   - **Concurrency & Controlled Mutation Proofs**: Verified 10 concurrent consume attempts resulting in exactly 1 successful consumption and 9 failures (0 double consumptions!). Controlled Mutation A (double consumption bypass), Mutation B (expiry bypass), Mutation C (context substitution bypass), and Mutation D (state transition failure) caught by security tests.
   - **Quality Gates (`make check`)**: 100% PASS (**486 total automated tests PASS 100%**, Black clean, Flake8 0 errors, MyPy 0 errors, Secret scanner PASS, Architecture guard PASS).
   - **`PROJECT_CONTEXT.md` SHA-256**: `2b62d52aa707bc9bb5df60d93b04f60933562e69af8068c46cc3b6cdc2eb670a` — INTACT.
-
-
-
-
