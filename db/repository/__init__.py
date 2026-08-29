@@ -5,5 +5,11 @@ M05.3 Repository Layer Package.
 from db.repository.base import BaseRepository
 from db.repository.mandate_repository import MandateRepository
 from db.repository.merchant_repository import MerchantRepository
+from db.repository.transaction_repository import TransactionRepository
 
-__all__ = ["BaseRepository", "MerchantRepository", "MandateRepository"]
+__all__ = [
+    "BaseRepository",
+    "MerchantRepository",
+    "MandateRepository",
+    "TransactionRepository",
+]
