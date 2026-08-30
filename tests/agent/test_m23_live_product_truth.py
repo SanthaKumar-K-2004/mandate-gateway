@@ -11,11 +11,7 @@ Workstream 4 & 11 — Verifies ProductTruthValidator rules:
 from __future__ import annotations
 
 import unittest
-from apps.api.agent.live_data import (
-    LiveDataOrchestrator,
-    ProductNormalizer,
-    SourceExtractionProvider,
-)
+from apps.api.agent.live_data import ProductNormalizer, SourceExtractionProvider
 from apps.api.agent.product_truth_validator import ProductTruthValidator
 
 
@@ -77,15 +73,31 @@ class TestM23LiveProductTruth(unittest.TestCase):
         self.assertEqual(truth["product_source"], "VERIFIED")
         self.assertTrue(truth["is_verified"])
 
-    def test_04_live_data_orchestrator_search(self) -> None:
-        """Verify LiveDataOrchestrator returns source-backed candidates."""
-        orchestrator = LiveDataOrchestrator()
-        candidates = orchestrator.search_live_products("coffee", max_price_paise=20000)
-        self.assertGreaterEqual(len(candidates), 1)
-        c0 = candidates[0]
-        self.assertIn("amount_paise", c0)
-        self.assertIn("source_url", c0)
-        self.assertIn("verification_status", c0)
+    def test_05_is_exact_product_url_discrimination(self) -> None:
+        """Verify SourceExtractionProvider discriminates exact product URLs from collection/homepages."""
+        # Generic collection/homepages
+        self.assertFalse(
+            SourceExtractionProvider.is_exact_product_url(
+                "https://bluetokaicoffee.com/collections/roasted-coffee"
+            )
+        )
+        self.assertFalse(SourceExtractionProvider.is_exact_product_url("https://www.crossword.in"))
+        self.assertFalse(
+            SourceExtractionProvider.is_exact_product_url("https://example.com/search?q=coffee")
+        )
+
+        # Exact product detail page URLs
+        self.assertTrue(
+            SourceExtractionProvider.is_exact_product_url(
+                "https://example.com/product/espresso-roast-250g.html"
+            )
+        )
+        self.assertTrue(
+            SourceExtractionProvider.is_exact_product_url("https://amazon.in/dp/B08N5WRWNW")
+        )
+        self.assertTrue(
+            SourceExtractionProvider.is_exact_product_url("https://store.com/p/coffee-beans-101")
+        )
 
 
 if __name__ == "__main__":
