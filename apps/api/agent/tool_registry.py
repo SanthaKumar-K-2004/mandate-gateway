@@ -101,50 +101,27 @@ class AIToolRegistry:
 
         # 1. search_products (SAFE_READ)
         def _search_products(query: str = "", max_price_paise: int = 50000) -> Dict[str, Any]:
-            query_lower = query.lower()
-            catalog: List[Dict[str, Any]] = [
-                {
-                    "product_id": "prod_coffee_01",
-                    "name": "Espresso Roast Coffee",
-                    "amount_paise": 18000,
-                    "merchant_id": "mer_cafe_acme",
-                },
-                {
-                    "product_id": "prod_tea_02",
-                    "name": "Earl Grey Tea",
-                    "amount_paise": 12000,
-                    "merchant_id": "mer_cafe_acme",
-                },
-                {
-                    "product_id": "prod_book_03",
-                    "name": "System Architecture Design",
-                    "amount_paise": 45000,
-                    "merchant_id": "mer_bookstore",
-                },
-                {
-                    "product_id": "prod_premium_04",
-                    "name": "Premium Luxury Machine",
-                    "amount_paise": 1500000,
-                    "merchant_id": "mer_luxury_acme",
-                },
-            ]
-            results: List[Dict[str, Any]] = []
-            for p in catalog:
-                name_str = str(p["name"]).lower()
-                pid_str = str(p["product_id"]).lower()
-                amt = int(p["amount_paise"])
-                matches_q = (
-                    not query_lower
-                    or query_lower == "general"
-                    or query_lower in name_str
-                    or query_lower in pid_str
-                )
-                if matches_q and max_price_paise >= amt:
-                    results.append(p)
+            from apps.api.agent.live_data import LiveDataOrchestrator
 
-            if not results and catalog:
-                results = [p for p in catalog if max_price_paise >= int(p["amount_paise"])]
-            return {"results": results, "count": len(results)}
+            orchestrator = LiveDataOrchestrator()
+            results = orchestrator.search_live_products(
+                query=query, max_price_paise=max_price_paise
+            )
+            if not results:
+                return {
+                    "results": [],
+                    "query": query,
+                    "max_price_paise": max_price_paise,
+                    "status": "SOURCE_UNAVAILABLE",
+                    "explanation": "No live verified products returned from real search providers.",
+                }
+            return {
+                "results": results,
+                "count": len(results),
+                "query": query,
+                "max_price_paise": max_price_paise,
+                "status": "SUCCESS",
+            }
 
         self.register(
             ToolDefinition(

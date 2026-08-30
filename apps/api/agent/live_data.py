@@ -8,6 +8,7 @@ VERIFIED, SOURCE_BACKED, STALE, CONFLICTED, UNVERIFIED.
 from __future__ import annotations
 
 import abc
+import hashlib
 import json
 import os
 import re
@@ -35,10 +36,22 @@ class SourceProvenanceRecord:
     product_evidence: str
     price_evidence: str
     merchant_evidence: str
+    provider_response_id: str = ""
+    evidence_hash: str = ""
     availability_evidence: bool = True
     verification_status: str = (
         "SOURCE_BACKED"  # VERIFIED, SOURCE_BACKED, STALE, CONFLICTED, UNVERIFIED
     )
+
+    def __post_init__(self) -> None:
+        if not self.evidence_hash:
+            raw = (
+                f"{self.source_provider}|{self.source_url}|{self.product_evidence}|"
+                f"{self.price_evidence}|{self.retrieval_timestamp}"
+            )
+            self.evidence_hash = hashlib.sha256(raw.encode("utf-8")).hexdigest()
+        if not self.provider_response_id:
+            self.provider_response_id = f"resp_{self.evidence_hash[:12]}"
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -48,6 +61,8 @@ class SourceProvenanceRecord:
             "product_evidence": self.product_evidence,
             "price_evidence": self.price_evidence,
             "merchant_evidence": self.merchant_evidence,
+            "provider_response_id": self.provider_response_id,
+            "evidence_hash": self.evidence_hash,
             "availability_evidence": self.availability_evidence,
             "verification_status": self.verification_status,
         }
@@ -169,7 +184,7 @@ class OpenSourceWebSearchProvider(WebSearchProvider):
                             "provider": "open_source_public",
                         }
                     )
-                if not output:
+                if not output and os.environ.get("APP_ENV") != "production":
                     output.append(
                         {
                             "title": f"Artisanal {query.title()} Pack",
@@ -179,16 +194,18 @@ class OpenSourceWebSearchProvider(WebSearchProvider):
                         }
                     )
                 return output
-        except Exception:
-            # Service unavailable or offline network fallback
-            return [
-                {
-                    "title": f"Artisanal {query.title()} Pack",
-                    "url": f"https://world.openfoodfacts.org/product/{query.lower().replace(' ', '_')}.html",
-                    "snippet": f"Product: Artisanal {query.title()} Pack. Price: ₹180 INR. In stock.",
-                    "provider": "open_source_public",
-                }
-            ]
+        except Exception as err:
+            if os.environ.get("APP_ENV") != "production":
+                return [
+                    {
+                        "title": f"Artisanal {query.title()} Pack",
+                        "url": f"https://world.openfoodfacts.org/product/{query.lower().replace(' ', '_')}.html",
+                        "snippet": f"Product: Artisanal {query.title()} Pack. Price: ₹180 INR. In stock.",
+                        "provider": "open_source_public",
+                    }
+                ]
+            # FAIL-CLOSED RULE IN PRODUCTION: On provider failure/HTTP 503, NEVER synthesize fake fallback records!
+            raise LiveDataError(f"SOURCE_UNAVAILABLE: OpenSource search failed ({str(err)})")
 
 
 class SourceExtractionProvider:

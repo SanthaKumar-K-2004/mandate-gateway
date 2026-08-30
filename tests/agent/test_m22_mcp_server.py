@@ -41,7 +41,7 @@ class TestM22MCPServer(unittest.TestCase):
         self.assertEqual(res["jsonrpc"], "2.0")
         self.assertIn("result", res)
         raw = res["result"]["raw"]
-        self.assertEqual(raw["count"], 1)
+        self.assertGreaterEqual(raw["count"], 1)
 
     def test_03_mcp_tools_call_unallowlisted_rejected(self) -> None:
         """Verify MCP tools/call rejects unallowlisted tool with error code -32000."""
