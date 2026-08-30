@@ -42,6 +42,9 @@ class Settings:
     redis_port: int
     redis_db: int
 
+    # Demo Mode Flag
+    demo_mode: bool = False
+
     @classmethod
     def load(cls, host_context: bool = True) -> "Settings":
         """Convenience loader for Settings."""
@@ -169,6 +172,9 @@ class Settings:
                     "REDIS_HOST cannot be 'localhost' in container environment. Use Compose DNS name 'redis'."
                 )
 
+        raw_demo_mode = get_val("DEMO_MODE", "false").lower()
+        demo_mode = raw_demo_mode in ("true", "1", "yes")
+
         return cls(
             app_env=app_env,
             app_name=app_name,
@@ -182,6 +188,7 @@ class Settings:
             redis_host=redis_host,
             redis_port=redis_port,
             redis_db=redis_db,
+            demo_mode=demo_mode,
         )
 
     def to_dict(self, redact: bool = True) -> Dict[str, Any]:
@@ -201,6 +208,7 @@ class Settings:
             "REDIS_HOST": self.redis_host,
             "REDIS_PORT": self.redis_port,
             "REDIS_DB": self.redis_db,
+            "DEMO_MODE": self.demo_mode,
         }
 
     def __repr__(self) -> str:

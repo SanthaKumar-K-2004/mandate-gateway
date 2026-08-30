@@ -66,6 +66,7 @@ else:
 
 if HAS_FASTAPI:  # noqa: C901
 
+    @operations_router.get("/health", summary="Process Liveness Probe")
     @operations_router.get("/health/live", summary="Process Liveness Probe")
     def get_liveness() -> Dict[str, Any]:
         settings = get_settings()

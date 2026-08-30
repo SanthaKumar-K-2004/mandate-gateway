@@ -516,10 +516,11 @@ def get_dashboard_html() -> str:
             <div class="brand-icon">
                 <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
             </div>
-            <span>RAZERPAY <span style="font-size: 0.8rem; opacity: 0.6; font-weight: 400;">M20 CONTROL CENTER</span></span>
+            <span>RAZERPAY <span style="font-size: 0.8rem; opacity: 0.6; font-weight: 400;">M21 CONTROL CENTER</span></span>
         </div>
 
         <div style="display: flex; align-items: center; gap: 1.5rem;">
+            <span class="badge badge-violet" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">ENVIRONMENT: PRODUCTION (DEMO MODE)</span>
             <div class="status-badge" id="system-status-indicator">
                 <div class="pulse-dot"></div>
                 <span id="system-status-text">SYSTEM HEALTHY</span>
