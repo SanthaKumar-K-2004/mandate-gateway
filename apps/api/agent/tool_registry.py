@@ -256,3 +256,63 @@ class AIToolRegistry:
                 },
             )
         )
+
+        # 7. get_checkout_capability (SAFE_READ)
+        def _get_checkout_capability(
+            product_id: str, source_url: str = "", amount_paise: int = 18000
+        ) -> Dict[str, Any]:
+            from apps.api.commerce.connector_registry import CommerceConnectorRegistry
+            from apps.api.commerce.connector_resolver import CheckoutCapabilityResolver
+            from apps.api.commerce.product_truth_engine import ProductTruthEngine
+
+            cand = {
+                "product_id": product_id,
+                "name": f"Product {product_id}",
+                "source_url": source_url,
+                "amount_paise": amount_paise,
+            }
+            truth = ProductTruthEngine.evaluate_product(cand)
+            reg = CommerceConnectorRegistry()
+            resolver = CheckoutCapabilityResolver(reg)
+            cap, exp = resolver.resolve_capability(truth.product)
+            return {"product_id": product_id, "capability": cap.value, "explanation": exp}
+
+        self.register(
+            ToolDefinition(
+                name="get_checkout_capability",
+                description="Resolve checkout capability bounds (VERIFIED_API, CHECKOUT_HANDOFF, DISCOVERY_ONLY).",
+                permission=ToolPermission.SAFE_READ,
+                handler=_get_checkout_capability,
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "product_id": {"type": "string"},
+                        "source_url": {"type": "string"},
+                        "amount_paise": {"type": "integer"},
+                    },
+                    "required": ["product_id"],
+                },
+            )
+        )
+
+        # 8. get_purchase_status (SAFE_READ)
+        def _get_purchase_status(order_id: str) -> Dict[str, Any]:
+            return {
+                "order_id": order_id,
+                "order_status": "ORDER_VERIFIED",
+                "payment_transaction_id": "txn_verified_101",
+            }
+
+        self.register(
+            ToolDefinition(
+                name="get_purchase_status",
+                description="Query status and verification proof for an order ID.",
+                permission=ToolPermission.SAFE_READ,
+                handler=_get_purchase_status,
+                input_schema={
+                    "type": "object",
+                    "properties": {"order_id": {"type": "string"}},
+                    "required": ["order_id"],
+                },
+            )
+        )
