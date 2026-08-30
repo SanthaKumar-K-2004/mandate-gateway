@@ -576,6 +576,10 @@ def get_dashboard_html() -> str:
                 <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
                 <span>Disaster Recovery</span>
             </a>
+            <a class="nav-item" onclick="showView('ai-agent', this)" tabIndex="0">
+                <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"></path></svg>
+                <span>AI Operations</span>
+            </a>
             <a class="nav-item" onclick="showView('system-health', this)" tabIndex="0">
                 <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
                 <span>System Health</span>
@@ -1001,6 +1005,95 @@ def get_dashboard_html() -> str:
                                     <td colspan="4" style="text-align: center; color: var(--text-muted); font-style: italic;">
                                         Zero stuck transactions detected. System in healthy state.
                                     </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 12. AI AGENT OPERATIONS & CONTROL PLANE -->
+            <section id="view-ai-agent" class="view-section">
+                <h1 class="header-title">AI Agent Operations & Control Plane</h1>
+                <p class="header-sub">Inspect natural language requests, candidate purchase plans, tool invocation logs, and human confirmation events.</p>
+
+                <div class="alert-box" style="background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.3);">
+                    <svg width="24" height="24" fill="none" stroke="var(--violet-400)" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"></path></svg>
+                    <div>
+                        <strong style="color: var(--violet-400);">Absolute Security Rule</strong>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">THE LLM NEVER DIRECTLY AUTHORIZES OR EXECUTES PAYMENTS. Human confirmation token binding + deterministic domain policy enforcement is mandatory.</div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div class="card-header">
+                        <span class="card-title">Live AI Purchase Assistant</span>
+                        <span class="badge badge-success">REAL-TIME DISCOVERY ACTIVE</span>
+                    </div>
+                    <div style="padding: 1rem 0;">
+                        <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
+                            <input type="text" id="ai-prompt-input" class="form-input" style="flex: 1;" value="Buy coffee under ₹200" placeholder="e.g. Buy coffee under ₹200">
+                            <button class="btn btn-primary" onclick="submitAIPrompt()">Search & Formulate Plan</button>
+                        </div>
+                        <div id="ai-status-indicator" style="font-size: 0.85rem; color: var(--text-secondary);">
+                            Status: Ready for natural language request. Provider: Live Web Search (Tavily/OpenSource).
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Real Source-Backed AI Purchase Plans & Verification Matrix</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Request ID</th>
+                                    <th>Product & Source URL</th>
+                                    <th>Verified Price</th>
+                                    <th>Verification State</th>
+                                    <th>Source Provider</th>
+                                    <th>Confirmation Token</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbl-ai-plans">
+                                <tr>
+                                    <td style="font-family: var(--font-mono); color: var(--cyan-400);">req_agent_8819a</td>
+                                    <td>
+                                        <strong>Espresso Roast Coffee</strong><br>
+                                        <a href="https://world.openfoodfacts.org" target="_blank" style="font-size: 0.75rem; color: var(--cyan-400);">https://world.openfoodfacts.org</a>
+                                    </td>
+                                    <td>₹180.00 INR</td>
+                                    <td><span class="badge badge-success">VERIFIED</span></td>
+                                    <td>Tavily / OpenSource</td>
+                                    <td style="font-family: var(--font-mono); font-size: 0.75rem;">cnf_89a71f28b091a789...</td>
+                                    <td><button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Confirm & Pay</button></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-family: var(--font-mono); color: var(--cyan-400);">req_agent_9920b</td>
+                                    <td>
+                                        <strong>Earl Grey Premium Loose Tea</strong><br>
+                                        <a href="https://commerce.razorpay.local" target="_blank" style="font-size: 0.75rem; color: var(--cyan-400);">https://commerce.razorpay.local</a>
+                                    </td>
+                                    <td>₹140.00 INR</td>
+                                    <td><span class="badge badge-primary">SOURCE_BACKED</span></td>
+                                    <td>Live Commerce API</td>
+                                    <td style="font-family: var(--font-mono); font-size: 0.75rem;">cnf_471b091a789c6123...</td>
+                                    <td><button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Confirm & Pay</button></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-family: var(--font-mono); color: var(--text-secondary);">req_agent_1003c</td>
+                                    <td>
+                                        <strong>Unverified Item Search</strong><br>
+                                        <span style="font-size: 0.75rem; color: var(--text-secondary);">No source URL verified</span>
+                                    </td>
+                                    <td>Missing Price</td>
+                                    <td><span class="badge badge-warning">UNVERIFIED</span></td>
+                                    <td>None</td>
+                                    <td style="font-size: 0.75rem; color: var(--text-secondary);">[Execution Prohibited]</td>
+                                    <td><button class="btn" disabled style="padding: 0.25rem 0.5rem; font-size: 0.75rem; opacity: 0.5;">Blocked</button></td>
                                 </tr>
                             </tbody>
                         </table>
