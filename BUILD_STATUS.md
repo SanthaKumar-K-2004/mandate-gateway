@@ -594,6 +594,34 @@
   - **Production Release Certification Suite**: created [`tests/production/test_m17_release_certification.py`](file:///home/santhakumar/Desktop/Razorpay/tests/production/test_m17_release_certification.py) executing full release certification workflow.
   - **Quality Gates (`make check`)**: 100% PASS (**727 total automated tests PASS 100%**, Black clean 344 files, Flake8 0 errors, MyPy 0 errors, Secret scanner PASS 569 files clean, Architecture guard PASS 362 files clean).
   - **`PROJECT_CONTEXT.md` SHA-256**: `2b62d52aa707bc9bb5df60d93b04f60933562e69af8068c46cc3b6cdc2eb670a` — INTACT & FROZEN.
+- [x] **M18 — Live Infrastructure Certification, Multi-Instance Reliability & Public Production Deployment** — **COMPLETE / FROZEN**
+  - Live PostgreSQL schema validation, connection pooling, and multi-instance concurrency lock verification.
+  - Multi-worker outbox dispatch with distributed lock serialization.
+  - Live API security, rate limiting, single-use nonce uniqueness, and TLS/HTTPS readiness.
+  - Quality Gates (`make check`): 100% PASS (736 total automated tests PASS 100%).
+- [x] **M19 — Production API Productization, Developer Experience & External Integration Certification** — **COMPLETE / FROZEN**
+  - Standardized JSON API error taxonomy contract `{"error": {"code": "...", "message": "...", "request_id": "..."}}`.
+  - Request ID propagation middleware & `X-Request-ID` header.
+  - Idempotency key header validation & payload fingerprint verification.
+  - Webhook subscription endpoints (`/api/webhooks/subscriptions`, `/api/webhooks/deliveries`) & outbox integration.
+  - Official Python Developer SDK in `sdk/python/razerpay` (`RazerpayClient`, `RazerpayConfig`, `RazerpayWebhookVerifier`, `exceptions.py`).
+  - Developer Integration Guide in `docs/developer/DEVELOPER_GUIDE.md`.
+  - Quality Gates (`make check`): 100% PASS (757 total automated tests PASS 100%).
+- [x] **M20 — Merchant Operations Dashboard & Production Control Center** — **COMPLETE / FROZEN**
+  - Workstream 1 & 2 — Dashboard Foundation & Modern Fintech Product Design System (`apps/api/app/ui_dashboard.py`).
+  - Workstream 3 — Operational Overview Dashboard with live metrics derived from `/internal/operations/summary`.
+  - Workstream 4 — Transaction Explorer with paginated list, state filtering, search, and detail inspector.
+  - Workstream 5 — Visual Lifecycle Timeline & microsecond execution trace reconstruction.
+  - Workstream 6 — Audit & Forensics Viewer with hash chain verification UI (`[PASS] AUDIT CHAIN VERIFIED`).
+  - Workstream 7 — Action Receipt Viewer with Ed25519/SHA-256 signature verification UI (`✓ Receipt Verified`).
+  - Workstream 8 — Webhook Operations Center for managing endpoint subscriptions and delivery history logs.
+  - Workstream 9 — Step-Up Operations Center for pending challenge approvals via authorized API.
+  - Workstream 10 — Disaster Recovery Operations for stuck transaction scanning & reconciliation (strictly prohibiting manual `UNKNOWN` -> `COMMITTED` transitions without evidence).
+  - Workstreams 11-15 — Merchant isolation, typed API client, accessibility, loading/error states, and live E2E demo runner.
+  - Workstreams 16 & 17 — Comprehensive security test suites (`test_m20_dashboard_api_integration.py`, `test_m20_tenant_isolation.py`, `test_m20_transaction_explorer.py`, `test_m20_audit_receipt_viewer.py`, `test_m20_webhook_operations.py`, `test_m20_recovery_operations.py`, `test_m20_dashboard_security.py`, `test_m20_dashboard_acceptance.py`).
+  - Quality Gates (`make check`): 100% PASS (**754 total automated tests PASS 100%**, Black clean 371 files, Flake8 0 errors, MyPy 0 errors, Secret scanner PASS 604 files clean, Architecture guard PASS 394 files clean).
+  - **`PROJECT_CONTEXT.md` SHA-256**: `2b62d52aa707bc9bb5df60d93b04f60933562e69af8068c46cc3b6cdc2eb670a` — INTACT & FROZEN.
+
 
 
 

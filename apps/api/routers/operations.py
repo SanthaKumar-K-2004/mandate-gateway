@@ -22,6 +22,7 @@ from apps.api.security.dependencies import get_operator_principal
 
 try:
     from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response, status
+    from fastapi.responses import HTMLResponse
 
     HAS_FASTAPI = True
 except ImportError:  # pragma: no cover
@@ -43,6 +44,14 @@ except ImportError:  # pragma: no cover
 
 if HAS_FASTAPI:  # noqa: C901
     operations_router: Any = APIRouter(tags=["Operational Intelligence & Control Plane"])
+
+    @operations_router.get("/ui", response_class=HTMLResponse)
+    @operations_router.get("/dashboard", response_class=HTMLResponse)
+    async def get_ui_dashboard_endpoint() -> HTMLResponse:
+        from apps.api.app.ui_dashboard import get_dashboard_html
+
+        return HTMLResponse(content=get_dashboard_html(), status_code=200)
+
 else:
 
     class DummyRouter:

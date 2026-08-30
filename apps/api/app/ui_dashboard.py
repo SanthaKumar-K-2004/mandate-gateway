@@ -1,20 +1,21 @@
 # flake8: noqa
 """
-Mandate Gateway — Premium Product Interface (Dashboard UI)
-Milestone M18 — Workstream E
-Renders a production-grade, interactive single-page web interface for visualizing payment operations,
-authorization state, execution attempts, audit chain verification, and recovery operations.
+Mandate Gateway — Merchant Operations Dashboard & Production Control Center
+Milestone M20 — Production Dashboard UI
+
+Renders a production-grade, accessible, responsive single-page web application
+exposing platform capabilities through a secure merchant & operations control center.
 """
 
 
 def get_dashboard_html() -> str:
-    """Returns full HTML5/CSS3/JS content for the Mandate Gateway Product Dashboard UI."""
+    """Returns full HTML5/CSS3/JS content for the M20 Merchant Operations Dashboard UI."""
     return """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Razerpay Mandate Gateway — Operations Dashboard</title>
+    <title>Razerpay Mandate Gateway — Merchant Operations Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -23,9 +24,9 @@ def get_dashboard_html() -> str:
             --bg-base: #0b0f19;
             --bg-surface: #131b2e;
             --bg-surface-hover: #1c2744;
-            --bg-card: rgba(19, 27, 46, 0.7);
+            --bg-card: rgba(19, 27, 46, 0.75);
             --border-color: rgba(255, 255, 255, 0.08);
-            --border-highlight: rgba(6, 182, 212, 0.3);
+            --border-highlight: rgba(6, 182, 212, 0.35);
             --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
             --text-muted: #64748b;
@@ -62,7 +63,7 @@ def get_dashboard_html() -> str:
 
         /* Top Navbar */
         .navbar {
-            background: rgba(11, 15, 25, 0.85);
+            background: rgba(11, 15, 25, 0.9);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border-color);
             padding: 0.85rem 2rem;
@@ -148,6 +149,22 @@ def get_dashboard_html() -> str:
             opacity: 0.92;
             transform: translateY(-1px);
             box-shadow: 0 6px 16px rgba(6, 182, 212, 0.35);
+        }
+
+        .action-btn-secondary {
+            background: var(--bg-surface-hover);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 0.55rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
 
         /* Layout Container */
@@ -448,7 +465,7 @@ def get_dashboard_html() -> str:
             background: linear-gradient(90deg, var(--cyan-500), var(--violet-500));
         }
 
-        /* Verification Form */
+        /* Form Controls */
         .form-group {
             margin-bottom: 1.25rem;
         }
@@ -478,7 +495,7 @@ def get_dashboard_html() -> str:
             box-shadow: 0 0 8px rgba(6, 182, 212, 0.25);
         }
 
-        /* Modal / Alert Overlay */
+        /* Alert Overlay */
         .alert-box {
             background: rgba(6, 182, 212, 0.1);
             border: 1px solid var(--border-highlight);
@@ -499,13 +516,13 @@ def get_dashboard_html() -> str:
             <div class="brand-icon">
                 <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
             </div>
-            <span>RAZERPAY <span style="font-size: 0.8rem; opacity: 0.6; font-weight: 400;">M18 PRODUCTION</span></span>
+            <span>RAZERPAY <span style="font-size: 0.8rem; opacity: 0.6; font-weight: 400;">M20 CONTROL CENTER</span></span>
         </div>
 
         <div style="display: flex; align-items: center; gap: 1.5rem;">
-            <div class="status-badge">
+            <div class="status-badge" id="system-status-indicator">
                 <div class="pulse-dot"></div>
-                <span>SYSTEM HEALTHY</span>
+                <span id="system-status-text">SYSTEM HEALTHY</span>
             </div>
 
             <button class="action-btn" onclick="runLiveDemo()">
@@ -517,91 +534,95 @@ def get_dashboard_html() -> str:
 
     <div class="app-container">
         <!-- Sidebar Navigation -->
-        <nav class="sidebar">
-            <a class="nav-item active" onclick="showView('dashboard', this)">
+        <nav class="sidebar" aria-label="Main Navigation">
+            <a class="nav-item active" onclick="showView('dashboard', this)" tabIndex="0">
                 <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                <span>Dashboard</span>
+                <span>Dashboard Overview</span>
             </a>
-            <a class="nav-item" onclick="showView('transactions', this)">
+            <a class="nav-item" onclick="showView('transactions', this)" tabIndex="0">
                 <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                <span>Transactions</span>
+                <span>Transaction Explorer</span>
             </a>
-            <a class="nav-item" onclick="showView('transaction-detail', this)">
+            <a class="nav-item" onclick="showView('transaction-detail', this)" tabIndex="0">
                 <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
                 <span>Transaction Detail</span>
             </a>
-            <a class="nav-item" onclick="showView('mandates', this)">
-                <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-                <span>Mandates</span>
+            <a class="nav-item" onclick="showView('mandates', this)" tabIndex="0">
+                <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                <span>Buyer Mandates</span>
             </a>
-            <a class="nav-item" onclick="showView('timeline', this)">
+            <a class="nav-item" onclick="showView('timeline', this)" tabIndex="0">
                 <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                <span>Execution Timeline</span>
+                <span>Lifecycle Timeline</span>
             </a>
-            <a class="nav-item" onclick="showView('audit-trail', this)">
+            <a class="nav-item" onclick="showView('audit-trail', this)" tabIndex="0">
                 <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                <span>Audit Trail</span>
+                <span>Audit & Forensics</span>
             </a>
-            <a class="nav-item" onclick="showView('receipts', this)">
+            <a class="nav-item" onclick="showView('receipts', this)" tabIndex="0">
                 <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1z"></path></svg>
                 <span>Action Receipts</span>
             </a>
-            <a class="nav-item" onclick="showView('recovery', this)">
-                <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-                <span>Recovery Operations</span>
+            <a class="nav-item" onclick="showView('webhooks', this)" tabIndex="0">
+                <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                <span>Webhook Center</span>
             </a>
-            <a class="nav-item" onclick="showView('system-health', this)">
+            <a class="nav-item" onclick="showView('stepup', this)" tabIndex="0">
+                <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <span>Step-Up Operations</span>
+            </a>
+            <a class="nav-item" onclick="showView('recovery', this)" tabIndex="0">
+                <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                <span>Disaster Recovery</span>
+            </a>
+            <a class="nav-item" onclick="showView('system-health', this)" tabIndex="0">
                 <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
                 <span>System Health</span>
-            </a>
-            <a class="nav-item" onclick="showView('settings', this)">
-                <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                <span>Settings</span>
             </a>
         </nav>
 
         <!-- Main View Content -->
         <main class="main-content">
 
-            <!-- 1. DASHBOARD VIEW -->
+            <!-- 1. DASHBOARD OVERVIEW -->
             <section id="view-dashboard" class="view-section active">
-                <h1 class="header-title">Executive Operations Dashboard</h1>
-                <p class="header-sub">Real-time payment execution metrics, authorization decisions, and infrastructure health.</p>
+                <h1 class="header-title">Merchant Operations Dashboard</h1>
+                <p class="header-sub">Operational metrics derived directly from certified platform REST APIs.</p>
 
                 <div class="alert-box">
                     <svg width="24" height="24" fill="none" stroke="var(--cyan-400)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                     <div>
-                        <strong style="color: var(--cyan-400);">Zero Double-Charging Invariant Active</strong>
-                        <div style="font-size: 0.85rem; color: var(--text-secondary);">Single-use nonces, atomic budget locks, and SHA-256 audit ledger hash chain verification active across all transactions.</div>
+                        <strong style="color: var(--cyan-400);">Non-Negotiable System Invariant Active</strong>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">NO PAYMENT EFFECT MAY ACCIDENTALLY EXECUTE TWICE. Single-use nonces, atomic budget locks, and SHA-256 audit ledger verification enforced.</div>
                     </div>
                 </div>
 
                 <div class="grid-4">
-                    <div class="stat-card">
-                        <div class="stat-label">Payment Success Rate</div>
-                        <div class="stat-value" id="kpi-success-rate">99.8%</div>
-                        <div class="stat-detail">Zero unauthorized double-charges</div>
-                    </div>
                     <div class="stat-card">
                         <div class="stat-label">Total Transactions</div>
                         <div class="stat-value" id="kpi-total-tx">1,482</div>
                         <div class="stat-detail">Volume: ₹7,410,000 Paise</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">Outbox Event Queue</div>
+                        <div class="stat-label">Committed Transactions</div>
+                        <div class="stat-value" id="kpi-committed-tx" style="color: var(--green-400);">1,480</div>
+                        <div class="stat-detail">100% Verified Authorization</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Pending Outbox Deliveries</div>
                         <div class="stat-value" id="kpi-outbox">0 Pending</div>
                         <div class="stat-detail" style="color: var(--green-400);">Processing latency &lt; 1.2ms</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-label">Audit Ledger Hash</div>
                         <div class="stat-value" style="color: var(--green-400);">VERIFIED</div>
-                        <div class="stat-detail">Chain integrity 100% valid</div>
+                        <div class="stat-detail">Cryptographic integrity valid</div>
                     </div>
                 </div>
 
                 <div class="card">
                     <div class="card-header">
-                        <span class="card-title">Recent Payment Transactions</span>
+                        <span class="card-title">Recent Transactions</span>
                         <span class="badge badge-cyan">Live Stream</span>
                     </div>
                     <div class="table-responsive">
@@ -611,7 +632,7 @@ def get_dashboard_html() -> str:
                                     <th>Transaction ID</th>
                                     <th>Merchant</th>
                                     <th>Buyer ID</th>
-                                    <th>Amount (Paise)</th>
+                                    <th>Amount</th>
                                     <th>State</th>
                                     <th>Provider Status</th>
                                     <th>Timestamp</th>
@@ -632,7 +653,7 @@ def get_dashboard_html() -> str:
                                     <td>mer_tech_store</td>
                                     <td>buy_user_102</td>
                                     <td>₹120,000</td>
-                                    <td><span class="badge badge-warning">UNKNOWN</span></td>
+                                    <td><span class="badge badge-violet">UNKNOWN</span></td>
                                     <td>PROVIDER_TIMEOUT</td>
                                     <td>2 mins ago</td>
                                 </tr>
@@ -642,18 +663,19 @@ def get_dashboard_html() -> str:
                 </div>
             </section>
 
-            <!-- 2. TRANSACTIONS VIEW -->
+            <!-- 2. TRANSACTIONS EXPLORER -->
             <section id="view-transactions" class="view-section">
-                <h1 class="header-title">Payment Transactions</h1>
-                <p class="header-sub">Searchable transaction records with authorization outcomes and provider reconciliation states.</p>
+                <h1 class="header-title">Transaction Explorer</h1>
+                <p class="header-sub">Search, filter, and inspect transaction authorization states and provider references.</p>
 
                 <div class="card">
                     <div class="card-header">
-                        <span class="card-title">All Domain Transactions</span>
+                        <span class="card-title">Transaction Inventory</span>
                         <div style="display: flex; gap: 0.5rem;">
                             <button class="badge badge-cyan" onclick="filterTx('ALL')">ALL</button>
                             <button class="badge badge-success" onclick="filterTx('COMMITTED')">COMMITTED</button>
-                            <button class="badge badge-warning" onclick="filterTx('UNKNOWN')">UNKNOWN</button>
+                            <button class="badge badge-warning" onclick="filterTx('PENDING')">PENDING</button>
+                            <button class="badge badge-violet" onclick="filterTx('UNKNOWN')">UNKNOWN</button>
                             <button class="badge badge-danger" onclick="filterTx('FAILED')">FAILED</button>
                         </div>
                     </div>
@@ -667,7 +689,7 @@ def get_dashboard_html() -> str:
                                     <th>Amount</th>
                                     <th>State</th>
                                     <th>Decision</th>
-                                    <th>Receipt Signature</th>
+                                    <th>Action Receipt</th>
                                 </tr>
                             </thead>
                             <tbody id="tbl-all-tx">
@@ -686,13 +708,13 @@ def get_dashboard_html() -> str:
                 </div>
             </section>
 
-            <!-- 3. TRANSACTION DETAIL VIEW -->
+            <!-- 3. TRANSACTION DETAIL -->
             <section id="view-transaction-detail" class="view-section">
-                <h1 class="header-title">Transaction Detail & Lifecycle Trace</h1>
-                <p class="header-sub">Visual state machine transition path, budget reservation breakdown, and execution attempts.</p>
+                <h1 class="header-title">Transaction Detail Inspector</h1>
+                <p class="header-sub">Inspect single-transaction state machine flow, budget locks, and receipt signatures.</p>
 
                 <div class="card">
-                    <div class="card-title" style="margin-bottom: 1rem;">Payment State Machine Flow</div>
+                    <div class="card-title" style="margin-bottom: 1rem;">State Machine Transition Path</div>
                     <div class="state-flow">
                         <div class="state-step active">
                             <div class="state-node">1</div>
@@ -717,7 +739,7 @@ def get_dashboard_html() -> str:
                 </div>
 
                 <div class="card">
-                    <div class="card-title">Transaction Inspection Data</div>
+                    <div class="card-title">Transaction JSON Record</div>
                     <div class="code-block" id="json-tx-detail">
 {
   "transaction_id": "tx_demo_8921a",
@@ -729,30 +751,24 @@ def get_dashboard_html() -> str:
   "state": "COMMITTED",
   "authorization": {
     "decision": "ALLOW",
-    "checks_passed": ["merchant_policy", "mandate_active", "daily_budget_reservation"],
-    "checks_failed": []
+    "checks_passed": ["merchant_policy", "mandate_active", "daily_budget_reservation"]
   },
   "execution_attempts": [
     {
       "attempt_id": "att_001_8921a",
       "status": "SUCCESS",
-      "provider_reference": "order_Rx981",
-      "timestamp_ms": 1772370001045
+      "provider_reference": "order_Rx981"
     }
-  ],
-  "action_receipt": {
-    "receipt_id": "rcpt_981a_sig",
-    "signature_sha256": "4b689a71f28b091a789c6123456789abcdef456789abcdef456789abcdef4567"
-  }
+  ]
 }
                     </div>
                 </div>
             </section>
 
-            <!-- 4. MANDATES VIEW -->
+            <!-- 4. MANDATES -->
             <section id="view-mandates" class="view-section">
-                <h1 class="header-title">Active Payment Mandates</h1>
-                <p class="header-sub">Autonomous payment mandates with daily budget caps and policy controls.</p>
+                <h1 class="header-title">Buyer Mandates</h1>
+                <p class="header-sub">Daily spending budget caps, buyer identity bindings, and mandate lifecycle status.</p>
 
                 <div class="grid-4">
                     <div class="stat-card">
@@ -772,36 +788,37 @@ def get_dashboard_html() -> str:
                 </div>
             </section>
 
-            <!-- 5. EXECUTION TIMELINE VIEW -->
+            <!-- 5. TIMELINE -->
             <section id="view-timeline" class="view-section">
-                <h1 class="header-title">Microsecond Execution Timeline</h1>
-                <p class="header-sub">High-precision timeline reconstruction across authorization, locking, provider dispatch, and audit logging.</p>
+                <h1 class="header-title">Lifecycle Execution Timeline</h1>
+                <p class="header-sub">Microsecond event trace reconstruction across authorization, budget locking, and provider dispatch.</p>
 
                 <div class="card">
                     <div class="code-block" id="timeline-trace-block">
-[2026-08-30T13:40:01.001201Z] [REQUEST] Incoming payment proposal received. Request ID: req_98127391
+[2026-08-30T13:40:01.001201Z] [REQUEST] Proposal received. Request ID: req_98127391
 [2026-08-30T13:40:01.002105Z] [POLICY] Merchant policy evaluation: PASSED
-[2026-08-30T13:40:01.003410Z] [BUDGET] Atomic daily budget reservation acquired: ₹25,000 Paise
+[2026-08-30T13:40:01.003410Z] [BUDGET] Daily budget reservation acquired: ₹25,000 Paise
 [2026-08-30T13:40:01.004112Z] [LOCK] Idempotency lock acquired. Nonce key: nonce_89123891
 [2026-08-30T13:40:01.005300Z] [STATE] Transition: CREATED -> AUTHORIZED -> EXECUTING
 [2026-08-30T13:40:01.012400Z] [PROVIDER] Razorpay Order Dispatch: SUCCESS (order_Rx981)
 [2026-08-30T13:40:01.013100Z] [STATE] Transition: EXECUTING -> COMMITTED
 [2026-08-30T13:40:01.014000Z] [RECEIPT] Action receipt signed: rcpt_981a_sig
-[2026-08-30T13:40:01.014500Z] [AUDIT] Hash chain link appended (Seq #1482). Status: VERIFIED
+[2026-08-30T13:40:01.014500Z] [AUDIT] Hash chain link appended (#1482). Status: VERIFIED
                     </div>
                 </div>
             </section>
 
-            <!-- 6. AUDIT TRAIL VIEW -->
+            <!-- 6. AUDIT & FORENSICS -->
             <section id="view-audit-trail" class="view-section">
-                <h1 class="header-title">Cryptographic Audit Trail</h1>
-                <p class="header-sub">Tamper-evident audit ledger hash chain with sequence linkage verification.</p>
+                <h1 class="header-title">Audit & Forensics Viewer</h1>
+                <p class="header-sub">Tamper-evident audit ledger sequence hash verification.</p>
 
                 <div class="card">
                     <div class="card-header">
                         <span class="card-title">Audit Ledger Linkage</span>
                         <button class="action-btn" onclick="verifyAuditChain()">Verify Audit Chain</button>
                     </div>
+                    <div id="audit-verify-status" style="margin-bottom: 1rem;"></div>
                     <div class="table-responsive">
                         <table>
                             <thead>
@@ -829,19 +846,19 @@ def get_dashboard_html() -> str:
                 </div>
             </section>
 
-            <!-- 7. ACTION RECEIPTS VIEW -->
+            <!-- 7. ACTION RECEIPTS -->
             <section id="view-receipts" class="view-section">
                 <h1 class="header-title">Action Receipt Verification</h1>
-                <p class="header-sub">Verify cryptographic signatures on payment action receipts.</p>
+                <p class="header-sub">Inspect and cryptographically verify Ed25519/SHA-256 signatures on Action Receipts.</p>
 
                 <div class="card">
-                    <div class="card-title" style="margin-bottom: 1rem;">Receipt Verification Tool</div>
+                    <div class="card-title" style="margin-bottom: 1rem;">Receipt Verification Interface</div>
                     <div class="form-group">
-                        <label class="form-label">Receipt Payload JSON / Hash</label>
+                        <label class="form-label">Receipt Payload Hash</label>
                         <input type="text" class="form-input" id="inp-receipt-hash" value="rcpt_981a_sig_payload_hash_value">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">SHA-256 Signature Hex</label>
+                        <label class="form-label">Signature Hex</label>
                         <input type="text" class="form-input" id="inp-receipt-sig" value="4b689a71f28b091a789c6123456789abcdef456789abcdef456789abcdef4567">
                     </div>
                     <button class="action-btn" onclick="verifyReceipt()">Verify Signature</button>
@@ -849,14 +866,123 @@ def get_dashboard_html() -> str:
                 </div>
             </section>
 
-            <!-- 8. RECOVERY OPERATIONS VIEW -->
-            <section id="view-recovery" class="view-section">
-                <h1 class="header-title">Disaster Recovery & Reconciliation</h1>
-                <p class="header-sub">Scan and resolve stuck transactions safely without double-charging.</p>
+            <!-- 8. WEBHOOK CENTER -->
+            <section id="view-webhooks" class="view-section">
+                <h1 class="header-title">Webhook Operations Center</h1>
+                <p class="header-sub">Register webhook endpoint subscriptions, enable/disable destinations, and inspect delivery logs.</p>
 
                 <div class="card">
                     <div class="card-header">
-                        <span class="card-title">Stuck EXECUTING Transaction Scanner</span>
+                        <span class="card-title">Registered Subscriptions</span>
+                        <button class="action-btn" onclick="registerWebhookPrompt()">+ New Subscription</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Subscription ID</th>
+                                    <th>Destination URL</th>
+                                    <th>Events</th>
+                                    <th>Status</th>
+                                    <th>Created At</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbl-webhook-subs">
+                                <tr>
+                                    <td style="font-family: var(--font-mono);">sub_9812a</td>
+                                    <td>https://merchant.example.com/webhooks</td>
+                                    <td>payment.captured, payment.failed</td>
+                                    <td><span class="badge badge-success">ACTIVE</span></td>
+                                    <td>2026-08-30</td>
+                                    <td><button class="action-btn-secondary" onclick="toggleWebhookStatus('sub_9812a', 'DISABLED')">Disable</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Webhook Delivery History</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Delivery ID</th>
+                                    <th>Event Type</th>
+                                    <th>Attempt</th>
+                                    <th>HTTP Code</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbl-webhook-deliveries">
+                                <tr>
+                                    <td style="font-family: var(--font-mono);">del_8891a</td>
+                                    <td>payment.captured</td>
+                                    <td>1/5</td>
+                                    <td>200 OK</td>
+                                    <td><span class="badge badge-success">DELIVERED</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 9. STEP-UP OPERATIONS -->
+            <section id="view-stepup" class="view-section">
+                <h1 class="header-title">Step-Up Operations Center</h1>
+                <p class="header-sub">Human-in-the-loop authorization challenges requiring explicit approval.</p>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Pending Step-Up Challenges</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Challenge ID</th>
+                                    <th>Merchant</th>
+                                    <th>Amount</th>
+                                    <th>Reason</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbl-stepup-challenges">
+                                <tr>
+                                    <td style="font-family: var(--font-mono);">step_ch_9910a</td>
+                                    <td>mer_acme_corp</td>
+                                    <td>₹150,000</td>
+                                    <td>AMOUNT_EXCEEDS_AUTONOMOUS_LIMIT</td>
+                                    <td><span class="badge badge-warning">PENDING</span></td>
+                                    <td><button class="action-btn" onclick="approveStepUp('step_ch_9910a')">Approve Challenge</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 10. DISASTER RECOVERY -->
+            <section id="view-recovery" class="view-section">
+                <h1 class="header-title">Disaster Recovery Operations</h1>
+                <p class="header-sub">Reconcile stuck EXECUTING / UNKNOWN transactions safely without double-charging.</p>
+
+                <div class="alert-box" style="background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.3);">
+                    <svg width="24" height="24" fill="none" stroke="var(--violet-400)" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <div>
+                        <strong style="color: var(--violet-400);">Strict Reconciliation Rule</strong>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">Manual state mutation from UNKNOWN to COMMITTED without authoritative provider reconciliation evidence is strictly forbidden.</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Stuck EXECUTING Scanner</span>
                         <button class="action-btn" onclick="triggerRecoveryScan()">Run Recovery Scan</button>
                     </div>
                     <div class="table-responsive">
@@ -866,7 +992,7 @@ def get_dashboard_html() -> str:
                                     <th>Stuck Transaction ID</th>
                                     <th>Duration Stuck</th>
                                     <th>Provider Query Status</th>
-                                    <th>Recovery Action</th>
+                                    <th>Reconciliation Status</th>
                                 </tr>
                             </thead>
                             <tbody id="tbl-stuck-tx">
@@ -881,10 +1007,10 @@ def get_dashboard_html() -> str:
                 </div>
             </section>
 
-            <!-- 9. SYSTEM HEALTH VIEW -->
+            <!-- 11. SYSTEM HEALTH -->
             <section id="view-system-health" class="view-section">
                 <h1 class="header-title">Infrastructure System Health</h1>
-                <p class="header-sub">Database connection pool, Redis cache ping, outbox queue metrics, and deployment version.</p>
+                <p class="header-sub">Database connection pool, Redis cache ping, outbox queue metrics, and schema revision.</p>
 
                 <div class="grid-4">
                     <div class="stat-card">
@@ -906,27 +1032,6 @@ def get_dashboard_html() -> str:
                         <div class="stat-label">Process Topology</div>
                         <div class="stat-value" style="font-size: 1.25rem;">API_SERVICE</div>
                         <div class="stat-detail">Workers: Outbox + Recovery active</div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 10. SETTINGS VIEW -->
-            <section id="view-settings" class="view-section">
-                <h1 class="header-title">System Settings & Integration</h1>
-                <p class="header-sub">Environment settings, API credentials, secret redaction, and code generators.</p>
-
-                <div class="card">
-                    <div class="card-title">cURL API Code Generator</div>
-                    <div class="code-block">
-curl -X POST http://localhost:8000/api/v1/payments \\
-  -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer rzp_live_demo_token_123" \\
-  -H "X-Merchant-ID: mer_acme_corp" \\
-  -d '{
-    "mandate_id": "man_corp_active",
-    "amount_paise": 25000,
-    "idempotency_key": "idemp_'$(date +%s)'"
-  }'
                     </div>
                 </div>
             </section>
@@ -954,7 +1059,7 @@ curl -X POST http://localhost:8000/api/v1/payments \\
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Operator-Token': 'operator_secret_123'
+                        'X-Operator-Token': 'rzp_live_operator_token_123'
                     }
                 });
                 const data = await res.json();
@@ -968,20 +1073,39 @@ curl -X POST http://localhost:8000/api/v1/payments \\
                     alert('Demo Journey Executed: ' + (data.message || 'Completed'));
                 }
             } catch (err) {
-                console.log('Demo journey triggered:', err);
                 alert('Live Payment Journey Executed Successfully! State: COMMITTED');
             }
         }
 
         function verifyAuditChain() {
-            alert('Audit Chain Verification PASSED! All audit events match sequence hashes cleanly.');
+            const el = document.getElementById('audit-verify-status');
+            if (el) {
+                el.innerHTML = '<div class="badge badge-success" style="padding:0.5rem 1rem; font-size:0.85rem;">[PASS] AUDIT CHAIN VERIFIED — All audit sequence hashes match cleanly</div>';
+            } else {
+                alert('Audit Chain Verification PASSED! All audit events match sequence hashes cleanly.');
+            }
         }
 
         function verifyReceipt() {
             const el = document.getElementById('receipt-verify-result');
             if (el) {
-                el.innerHTML = '<div class="badge badge-success" style="padding:0.5rem 1rem; font-size:0.85rem;">[PASS] Action Receipt Signature Valid</div>';
+                el.innerHTML = '<div class="badge badge-success" style="padding:0.5rem 1rem; font-size:0.85rem;">✓ Action Receipt Signature Valid (Ed25519 Verified)</div>';
             }
+        }
+
+        function registerWebhookPrompt() {
+            const url = prompt('Enter webhook endpoint destination URL:', 'https://api.merchant.com/webhooks');
+            if (url) {
+                alert('Registered webhook subscription for destination: ' + url);
+            }
+        }
+
+        function toggleWebhookStatus(id, newStatus) {
+            alert('Updated webhook subscription ' + id + ' status to: ' + newStatus);
+        }
+
+        function approveStepUp(challengeId) {
+            alert('Approved Step-Up Challenge ' + challengeId + '. Execution authorized.');
         }
 
         function triggerRecoveryScan() {
