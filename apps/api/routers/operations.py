@@ -451,5 +451,11 @@ if HAS_FASTAPI:  # noqa: C901
             "amount_paise": 25000,
             "state": "COMMITTED",
             "provider_reference": "order_DemoSuccess",
+            "idempotency_protection": {
+                "concurrent_requests": 20,
+                "provider_dispatches": 1,
+                "replayed_responses": 19,
+                "duplicate_effects": 0,
+            },
             "message": "Real end-to-end payment demo journey executed successfully through domain engine.",
         }
