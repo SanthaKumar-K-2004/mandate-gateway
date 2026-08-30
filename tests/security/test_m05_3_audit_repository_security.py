@@ -52,6 +52,7 @@ class TestAuditRepositorySecurity(unittest.TestCase):
             "model_cls",
             "get_latest_event",
             "append_event",
+            "record_event",
             "get_event",
             "get_event_by_sequence",
             "get_events_for_transaction",

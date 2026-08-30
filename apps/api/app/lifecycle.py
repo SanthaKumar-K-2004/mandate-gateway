@@ -46,6 +46,14 @@ class AppLifecycle:
         with self._lock:
             return self._state == LifecycleState.READY
 
+    def is_stopped(self) -> bool:
+        with self._lock:
+            return self._state == LifecycleState.STOPPED
+
+    def mark_ready(self) -> None:
+        with self._lock:
+            self._state = LifecycleState.READY
+
     def add_startup_hook(self, hook: Callable[[], None]) -> None:
         with self._lock:
             if self._state != LifecycleState.BOOTING:

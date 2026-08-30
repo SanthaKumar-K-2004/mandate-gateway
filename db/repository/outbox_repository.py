@@ -35,6 +35,23 @@ class OutboxRepository(BaseRepository[OutboxEventModel]):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(OutboxEventModel, session)
 
+    async def record_event(
+        self,
+        event_type: str,
+        aggregate_id: str,
+        payload: dict[str, Any],
+        aggregate_type: str = "transaction",
+        outbox_id: str | None = None,
+    ) -> OutboxEventModel:
+        """Alias for create_event."""
+        return await self.create_event(
+            event_type=event_type,
+            aggregate_type=aggregate_type,
+            aggregate_id=aggregate_id,
+            payload=payload,
+            outbox_id=outbox_id,
+        )
+
     async def create_event(
         self,
         event_type: str,

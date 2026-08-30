@@ -43,6 +43,8 @@ class TestTransactionRepositorySecurity(unittest.TestCase):
             "get_transaction_for_buyer",
             "get_transaction_for_context",
             "get_transaction_by_idempotency_key",
+            "get_transaction_by_idempotency",
+            "get_stuck_executing_transactions",
             "lock_transaction_for_update",
             "transition_transaction_state",
             "mark_provider_dispatch_started",

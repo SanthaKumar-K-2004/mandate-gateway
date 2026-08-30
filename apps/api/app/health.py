@@ -55,18 +55,30 @@ async def handle_ready_async(
     is_ready = lifecycle.is_ready()
     state = lifecycle.state.value
 
+    from apps.api.deployment.migration_guard import migration_guard
     from db.redis import check_redis_health
     from db.session import check_database_health
+    from db.unit_of_work import AsyncUnitOfWork, UnitOfWorkError
 
     db_health = await check_database_health()
     redis_health = await check_redis_health()
 
+    mig_ok = True
+    try:
+        async with AsyncUnitOfWork() as uow:
+            mig_status = await migration_guard.check_migration_status(uow.session)
+            mig_ok = mig_status.get("is_ready", False)
+    except UnitOfWorkError:
+        mig_ok = True
+    except Exception:
+        mig_ok = False
+
     if settings.app_env == Environment.PRODUCTION:
         db_ok = db_health.get("status") == "CONNECTED"
         redis_ok = redis_health.get("status") == "CONNECTED"
-        overall_ready = is_ready and db_ok and redis_ok
+        overall_ready = is_ready and db_ok and redis_ok and mig_ok
     else:
-        overall_ready = is_ready
+        overall_ready = is_ready and mig_ok
 
     payload = {
         "status": "READY" if overall_ready else "NOT_READY",
@@ -76,6 +88,7 @@ async def handle_ready_async(
         "dependencies": {
             "database": db_health.get("status", "UNAVAILABLE"),
             "cache": redis_health.get("status", "UNAVAILABLE"),
+            "migration": "UP_TO_DATE" if mig_ok else "PENDING_OR_MISMATCH",
         },
     }
 

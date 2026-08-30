@@ -43,10 +43,16 @@ class Settings:
     redis_db: int
 
     @classmethod
+    def load(cls, host_context: bool = True) -> "Settings":
+        """Convenience loader for Settings."""
+        return cls.from_env(host_context=host_context)
+
+    @classmethod
     def from_env(
         cls,
         env_dict: Optional[Dict[str, str]] = None,
         env_file: Optional[str] = None,
+        host_context: Optional[bool] = None,
     ) -> "Settings":
         """
         Loads and validates configuration following explicit precedence:
@@ -215,7 +221,14 @@ def validate_production_config(settings: Settings) -> None:
         return
 
     pwd = settings.postgres_password.get_secret_value()
-    if not pwd or pwd.lower() in ("postgres", "password", "secret", "change_me", "admin"):
+    if not pwd or pwd.lower() in (
+        "postgres",
+        "password",
+        "secret",
+        "change_me",
+        "change_me_local_only",
+        "admin",
+    ):
         raise ConfigurationError(
             "Insecure or default POSTGRES_PASSWORD prohibited in production mode."
         )
@@ -228,3 +241,27 @@ def validate_production_config(settings: Settings) -> None:
 
     if settings.log_level == LogLevel.DEBUG:
         raise ConfigurationError("LOG_LEVEL=DEBUG is prohibited in production mode.")
+
+    import os
+
+    provider_secret = os.environ.get("PROVIDER_API_KEY")
+    if provider_secret and provider_secret.lower() in (
+        "default",
+        "secret",
+        "test_key",
+        "change_me",
+    ):
+        raise ConfigurationError(
+            "Insecure or default PROVIDER_API_KEY prohibited in production mode."
+        )
+
+    webhook_secret = os.environ.get("WEBHOOK_SECRET")
+    if webhook_secret and webhook_secret.lower() in (
+        "default",
+        "secret",
+        "test_secret",
+        "change_me",
+    ):
+        raise ConfigurationError(
+            "Insecure or default WEBHOOK_SECRET prohibited in production mode."
+        )

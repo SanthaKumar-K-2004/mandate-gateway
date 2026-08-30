@@ -77,6 +77,26 @@ class AuditRepository(BaseRepository[AuditEventModel]):
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def record_event(
+        self,
+        event_type: str,
+        actor: str = "",
+        component: str = "",
+        payload: dict[str, Any] | None = None,
+        transaction_id: str | None = None,
+    ) -> AuditEventModel:
+        """Alias method for appending an audit event."""
+        p = payload or {}
+        if actor:
+            p["actor"] = actor
+        if component:
+            p["component"] = component
+        return await self.append_event(
+            event_type=event_type,
+            transaction_id=transaction_id,
+            payload=p,
+        )
+
     async def append_event(
         self,
         event_type: str | AuditEventType,

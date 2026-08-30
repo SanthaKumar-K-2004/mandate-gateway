@@ -79,8 +79,6 @@ class AsyncUnitOfWork:
         self._committed = False
         self._rolled_back = False
         self._closed = False
-        self._owns_session = True
-
         # Cached repository instances bound to active session
         self._merchant_repo: Optional[MerchantRepository] = None
         self._mandate_repo: Optional[MandateRepository] = None
@@ -96,6 +94,13 @@ class AsyncUnitOfWork:
         self._outbox_repo: Optional[OutboxRepository] = None
         self._execution_attempt_repo: Optional[ExecutionAttemptRepository] = None
         self._forensic_repo: Optional[ForensicRepository] = None
+
+    @property
+    def session(self) -> AsyncSession:
+        """Returns active AsyncSession bound to this UnitOfWork."""
+        self._assert_active()
+        assert self._session is not None
+        return self._session
 
     async def __aenter__(self) -> AsyncUnitOfWork:
         if self._is_active or self._closed:

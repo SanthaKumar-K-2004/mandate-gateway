@@ -134,6 +134,25 @@ class TransactionRepository(BaseRepository[TransactionModel]):
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def get_transaction_by_idempotency(
+        self, merchant_id: str, idempotency_key: str
+    ) -> TransactionModel | None:
+        """Retrieve a transaction by merchant ID and idempotency key."""
+        stmt = select(TransactionModel).where(
+            TransactionModel.merchant_id == merchant_id,
+            TransactionModel.idempotency_key == idempotency_key,
+        )
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def get_stuck_executing_transactions(
+        self, stuck_threshold_seconds: int = 30
+    ) -> Sequence[TransactionModel]:
+        """Retrieve transactions stuck in EXECUTING state."""
+        from datetime import datetime, timedelta, timezone
+        cutoff = datetime.now(timezone.utc) - timedelta(seconds=stuck_threshold_seconds)
+        return await self.list_transactions_requiring_reconciliation(cutoff=cutoff)
+
     async def lock_transaction_for_update(self, transaction_id: str) -> TransactionModel | None:
         """
         Lock a transaction row using SELECT ... FOR UPDATE.

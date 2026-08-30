@@ -46,6 +46,22 @@ class AuthenticatedPrincipal:
         return all(self.has_scope(s) for s in required_scopes)
 
 
+def get_operator_principal(
+    merchant_id: str = "mer_operator",
+    x_operator_token: str | None = "op_token_secret_123",
+) -> AuthenticatedPrincipal:
+    """Helper to construct an operator principal with full scopes for management operations."""
+    from apps.api.app.errors import AuthorizationError
+
+    if x_operator_token != "op_token_secret_123":
+        raise AuthorizationError("Invalid or missing operator authorization token.")
+    return AuthenticatedPrincipal(
+        credential_id="cred_operator_001",
+        merchant_id=merchant_id,
+        scopes={"*"},
+    )
+
+
 def compute_credential_fingerprint(raw_secret: str) -> str:
     """
     Computes a safe non-reversible SHA-256 fingerprint of a raw API key for logging and security audit trail.

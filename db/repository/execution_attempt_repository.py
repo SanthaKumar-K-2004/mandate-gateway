@@ -43,6 +43,26 @@ class ExecutionAttemptRepository(BaseRepository[ExecutionAttemptModel]):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(ExecutionAttemptModel, session)
 
+    async def create_attempt(
+        self,
+        attempt_id: str,
+        transaction_id: str,
+        provider_name: str = "Razorpay",
+        merchant_id: str = "mer_default",
+        idempotency_key: str | None = None,
+        payload_fingerprint: str = "fp_default",
+    ) -> ExecutionAttemptModel:
+        """Alias method for claiming an execution attempt."""
+        key = idempotency_key or f"ik_{attempt_id}"
+        record, _ = await self.claim_attempt(
+            transaction_id=transaction_id,
+            merchant_id=merchant_id,
+            idempotency_key=key,
+            payload_fingerprint=payload_fingerprint,
+            attempt_id=attempt_id,
+        )
+        return record
+
     async def claim_attempt(
         self,
         transaction_id: str,
