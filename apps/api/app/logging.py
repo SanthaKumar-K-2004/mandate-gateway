@@ -75,6 +75,10 @@ def redact_value(obj: Any) -> Any:
     return obj
 
 
+# Alias for backwards compatibility and test clarity
+redact_sensitive_data = redact_value
+
+
 class SecretRedactionFilter(logging.Filter):
     """Logging filter that redacts SecretString instances or sensitive text patterns."""
 

@@ -92,5 +92,20 @@ class RecoveryTracker:
             "environment_type": record.environment_type,
         }
 
+    def get_timing_evidence(self) -> Dict[str, Any]:
+        """Returns summary of all tracked disaster recovery session records."""
+        return {
+            "total_recovery_sessions": len(self._active_sessions),
+            "sessions": [
+                {
+                    "session_id": rec.session_id,
+                    "duration_seconds": rec.duration_seconds,
+                    "reconciled": rec.transactions_reconciled,
+                    "audit_passed": rec.audit_verification_passed,
+                }
+                for rec in self._active_sessions.values()
+            ],
+        }
+
 
 recovery_tracker = RecoveryTracker()

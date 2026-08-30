@@ -238,6 +238,11 @@ class MandateGatewayApp:
             status_code, body = await handle_diagnostics_async(self.settings)
             return status_code, body, False
 
+        if path in ("/", "/ui", "/dashboard") and method == "GET":
+            from apps.api.app.ui_dashboard import get_dashboard_html
+
+            return 200, get_dashboard_html(), True
+
         if path == "/metrics" and method == "GET":
             return 200, metrics_registry.to_prometheus_text(), True
 

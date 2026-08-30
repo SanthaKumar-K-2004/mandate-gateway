@@ -22,6 +22,8 @@ ALLOWED_LABEL_KEYS = {
     "environment",
     "service",
     "decision",
+    "component",
+    "outcome",
 }
 
 
