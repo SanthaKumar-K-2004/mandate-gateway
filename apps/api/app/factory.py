@@ -434,6 +434,7 @@ def create_fastapi_app(settings: Optional[Settings] = None) -> Any:
         from apps.api.routers.security import security_router
         from apps.api.routers.submission import submission_router
         from apps.api.routers.transactions import transactions_router
+        from apps.api.routers.webhooks import webhooks_router
 
         app_settings = settings or get_settings()
         api_app = FastAPI(
@@ -444,6 +445,13 @@ def create_fastapi_app(settings: Optional[Settings] = None) -> Any:
 
         @api_app.middleware("http")
         async def security_pipeline_middleware(request: Request, call_next: Callable) -> Any:
+            req_id = request.headers.get("x-request-id") or request.headers.get("request-id")
+            if not req_id or len(req_id) > 128:
+                import uuid
+
+                req_id = f"req_{uuid.uuid4().hex[:12]}"
+            request.state.request_id = req_id
+
             content_length = request.headers.get("content-length")
             if content_length:
                 try:
@@ -455,17 +463,29 @@ def create_fastapi_app(settings: Optional[Settings] = None) -> Any:
                                 "error": {
                                     "code": "PAYLOAD_TOO_LARGE",
                                     "message": msg,
+                                    "request_id": req_id,
                                 }
                             },
+                            headers={"X-Request-ID": req_id},
                         )
                 except ValueError:
                     pass
 
             response = await call_next(request)
+            response.headers["X-Request-ID"] = req_id
             return response
 
-        @api_app.exception_handler(HTTPException)
-        async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+        from starlette.exceptions import HTTPException as StarletteHTTPException
+
+        @api_app.exception_handler(StarletteHTTPException)
+        async def starlette_http_exception_handler(
+            request: Request, exc: StarletteHTTPException
+        ) -> JSONResponse:
+            req_id = (
+                getattr(request.state, "request_id", None)
+                or request.headers.get("x-request-id")
+                or "req_unknown"
+            )
             code_map = {
                 401: "UNAUTHORIZED",
                 403: "FORBIDDEN",
@@ -478,33 +498,75 @@ def create_fastapi_app(settings: Optional[Settings] = None) -> Any:
             code_str = code_map.get(
                 exc.status_code, "BAD_REQUEST" if exc.status_code < 500 else "INTERNAL_SERVER_ERROR"
             )
+            resp_headers = dict(exc.headers or {})
+            resp_headers["X-Request-ID"] = req_id
             return JSONResponse(
                 status_code=exc.status_code,
-                content={"error": {"code": code_str, "message": str(exc.detail)}},
-                headers=exc.headers,
+                content={
+                    "error": {"code": code_str, "message": str(exc.detail), "request_id": req_id}
+                },
+                headers=resp_headers,
+            )
+
+        @api_app.exception_handler(HTTPException)
+        async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+            req_id = (
+                getattr(request.state, "request_id", None)
+                or request.headers.get("x-request-id")
+                or "req_unknown"
+            )
+            code_map = {
+                401: "UNAUTHORIZED",
+                403: "FORBIDDEN",
+                404: "NOT_FOUND",
+                409: "CONFLICT",
+                413: "PAYLOAD_TOO_LARGE",
+                415: "UNSUPPORTED_MEDIA_TYPE",
+                429: "TOO_MANY_REQUESTS",
+            }
+            code_str = code_map.get(
+                exc.status_code, "BAD_REQUEST" if exc.status_code < 500 else "INTERNAL_SERVER_ERROR"
+            )
+            resp_headers = dict(exc.headers or {})
+            resp_headers["X-Request-ID"] = req_id
+            return JSONResponse(
+                status_code=exc.status_code,
+                content={
+                    "error": {"code": code_str, "message": str(exc.detail), "request_id": req_id}
+                },
+                headers=resp_headers,
             )
 
         @api_app.exception_handler(RequestValidationError)
         async def validation_exception_handler(
             request: Request, exc: RequestValidationError
         ) -> JSONResponse:
+            req_id = getattr(request.state, "request_id", None) or "req_unknown"
             return JSONResponse(
                 status_code=400,
                 content={
-                    "error": {"code": "INVALID_REQUEST", "message": "Malformed request payload."}
+                    "error": {
+                        "code": "INVALID_REQUEST",
+                        "message": "Malformed request payload.",
+                        "request_id": req_id,
+                    }
                 },
+                headers={"X-Request-ID": req_id},
             )
 
         @api_app.exception_handler(Exception)
         async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+            req_id = getattr(request.state, "request_id", None) or "req_unknown"
             return JSONResponse(
                 status_code=500,
                 content={
                     "error": {
                         "code": "INTERNAL_SERVER_ERROR",
                         "message": "An internal server error occurred.",
+                        "request_id": req_id,
                     }
                 },
+                headers={"X-Request-ID": req_id},
             )
 
         # Register all REST API routers
@@ -520,6 +582,7 @@ def create_fastapi_app(settings: Optional[Settings] = None) -> Any:
         api_app.include_router(submission_router)
         api_app.include_router(hardening_router)
         api_app.include_router(operations_router)
+        api_app.include_router(webhooks_router)
 
         return api_app
     except ImportError:  # pragma: no cover

@@ -101,3 +101,106 @@ async def handle_razorpay_webhook(
         status_code=400,
         detail="Webhook execution failed.",
     )
+
+
+# --- Public Developer Webhook Management Endpoints (Workstream 4 & 5) ---
+
+_in_memory_subscriptions: dict[str, dict[str, Any]] = {}
+_in_memory_deliveries: list[dict[str, Any]] = []
+
+
+@webhooks_router.post("/subscriptions", status_code=201, summary="Register Webhook Subscription")
+async def create_webhook_subscription(
+    payload: dict[str, Any],
+) -> dict[str, Any]:
+    """Registers an external webhook endpoint subscription for a merchant."""
+    import uuid
+    from datetime import datetime, timezone
+
+    url = payload.get("url")
+    if not url or not (url.startswith("http://") or url.startswith("https://")):
+        raise HTTPException(
+            status_code=400, detail="Invalid webhook URL. Must begin with http:// or https://"
+        )
+
+    sub_id = f"sub_{uuid.uuid4().hex[:12]}"
+    secret = payload.get("secret") or f"whsec_{uuid.uuid4().hex[:16]}"
+    events = payload.get("events") or ["payment.captured", "payment.failed", "mandate.created"]
+
+    record = {
+        "subscription_id": sub_id,
+        "merchant_id": payload.get("merchant_id", "mer_default"),
+        "url": url,
+        "events": events,
+        "secret": secret,
+        "status": "ACTIVE",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    _in_memory_subscriptions[sub_id] = record
+
+    return {
+        "subscription_id": sub_id,
+        "merchant_id": record["merchant_id"],
+        "url": url,
+        "events": events,
+        "secret": secret,
+        "status": "ACTIVE",
+        "created_at": record["created_at"],
+    }
+
+
+@webhooks_router.get("/subscriptions", status_code=200, summary="List Webhook Subscriptions")
+async def list_webhook_subscriptions(
+    merchant_id: str | None = None,
+) -> dict[str, Any]:
+    """Lists registered webhook subscriptions."""
+    subs = list(_in_memory_subscriptions.values())
+    if merchant_id:
+        subs = [s for s in subs if s.get("merchant_id") == merchant_id]
+    return {
+        "count": len(subs),
+        "subscriptions": [
+            {
+                "subscription_id": s["subscription_id"],
+                "merchant_id": s["merchant_id"],
+                "url": s["url"],
+                "events": s["events"],
+                "status": s["status"],
+                "created_at": s["created_at"],
+            }
+            for s in subs
+        ],
+    }
+
+
+@webhooks_router.patch(
+    "/subscriptions/{subscription_id}", status_code=200, summary="Update Subscription Status"
+)
+async def update_webhook_subscription(
+    subscription_id: str,
+    payload: dict[str, Any],
+) -> dict[str, Any]:
+    """Updates webhook subscription status (ACTIVE / DISABLED)."""
+    sub = _in_memory_subscriptions.get(subscription_id)
+    if not sub:
+        raise HTTPException(status_code=404, detail=f"Subscription '{subscription_id}' not found.")
+
+    new_status = payload.get("status", "ACTIVE").upper()
+    if new_status not in ("ACTIVE", "DISABLED"):
+        raise HTTPException(status_code=400, detail="Status must be 'ACTIVE' or 'DISABLED'.")
+
+    sub["status"] = new_status
+    return {
+        "subscription_id": subscription_id,
+        "status": sub["status"],
+        "updated_at": sub["created_at"],
+    }
+
+
+@webhooks_router.get("/deliveries", status_code=200, summary="List Webhook Delivery Records")
+async def list_webhook_deliveries() -> dict[str, Any]:
+    """Lists webhook delivery logs and retry statuses."""
+    return {
+        "count": len(_in_memory_deliveries),
+        "deliveries": _in_memory_deliveries,
+    }
