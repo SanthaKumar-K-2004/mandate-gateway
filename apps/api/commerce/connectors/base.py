@@ -11,6 +11,7 @@ import abc
 from apps.api.commerce.models import (
     CheckoutCapability,
     CommerceConnectorResult,
+    ConnectorEnvironment,
     VerifiedProduct,
 )
 
@@ -34,6 +35,12 @@ class CommerceConnector(abc.ABC):
     @abc.abstractmethod
     def capability(self) -> CheckoutCapability:
         """Explicit checkout capability declared by connector."""
+        pass
+
+    @property
+    @abc.abstractmethod
+    def environment(self) -> ConnectorEnvironment:
+        """Explicit environment mode declared by connector (LIVE, SANDBOX, DEMO, DISABLED)."""
         pass
 
     @abc.abstractmethod

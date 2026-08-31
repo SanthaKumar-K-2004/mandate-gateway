@@ -392,3 +392,52 @@ class AIToolRegistry:
                 input_schema={"type": "object", "properties": {}},
             )
         )
+
+        # 11. reconcile_commerce_operation (SAFE_READ)
+        def _reconcile_commerce_operation(
+            purchase_request_id: str,
+            payment_transaction_id: str,
+            merchant_id: str,
+            buyer_id: str,
+            amount_paise: int,
+            merchant_order_id: str = "",
+        ) -> Dict[str, Any]:
+            from apps.api.commerce.reconciliation import CommerceReconciliationEngine
+
+            engine = CommerceReconciliationEngine()
+            record = engine.reconcile_transaction(
+                purchase_request_id=purchase_request_id,
+                payment_transaction_id=payment_transaction_id,
+                merchant_id=merchant_id,
+                buyer_id=buyer_id,
+                amount_paise=amount_paise,
+                merchant_order_id=merchant_order_id or None,
+            )
+            return record.to_dict()
+
+        self.register(
+            ToolDefinition(
+                name="reconcile_commerce_operation",
+                description="Perform automated reconciliation for uncertain payment or merchant order operations.",
+                permission=ToolPermission.SAFE_READ,
+                handler=_reconcile_commerce_operation,
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "purchase_request_id": {"type": "string"},
+                        "payment_transaction_id": {"type": "string"},
+                        "merchant_id": {"type": "string"},
+                        "buyer_id": {"type": "string"},
+                        "amount_paise": {"type": "integer"},
+                        "merchant_order_id": {"type": "string"},
+                    },
+                    "required": [
+                        "purchase_request_id",
+                        "payment_transaction_id",
+                        "merchant_id",
+                        "buyer_id",
+                        "amount_paise",
+                    ],
+                },
+            )
+        )

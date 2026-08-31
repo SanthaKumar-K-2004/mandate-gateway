@@ -13,6 +13,7 @@ from apps.api.commerce.connectors.generic_web import GenericWebCheckoutConnector
 from apps.api.commerce.models import (
     CheckoutCapability,
     CommerceConnectorResult,
+    ConnectorEnvironment,
     VerifiedProduct,
 )
 from apps.api.commerce.product_truth_engine import ProductTruthEngine
@@ -26,6 +27,10 @@ class MockApiConnector(CommerceConnector):
     @property
     def capability(self) -> CheckoutCapability:
         return CheckoutCapability.VERIFIED_API
+
+    @property
+    def environment(self) -> ConnectorEnvironment:
+        return ConnectorEnvironment.SANDBOX
 
     def supports_domain(self, domain: str) -> bool:
         return domain == "cafeacme.local"

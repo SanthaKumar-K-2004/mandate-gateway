@@ -22,7 +22,9 @@ from apps.api.commerce.models import ProductVerificationStatus
 from apps.api.commerce.order_binding import CommerceOrderBinder
 from apps.api.commerce.order_verification import OrderVerificationEngine
 from apps.api.commerce.price_revalidation import LivePriceRevalidator
+from apps.api.commerce.connector_config import CommerceConnectorConfigManager
 from apps.api.commerce.product_truth_engine import ProductTruthEngine
+from apps.api.commerce.reconciliation import CommerceReconciliationEngine
 from apps.api.commerce.transaction_binding import CommerceTransactionBindingManager
 
 router = APIRouter(prefix="/api/v1/commerce", tags=["Commerce Truth & Checkout"])
@@ -43,6 +45,8 @@ _order_verifier = OrderVerificationEngine()
 _order_binder = CommerceOrderBinder()
 _tx_binder_mgr = CommerceTransactionBindingManager()
 _health_monitor = CommerceConnectorHealthMonitor()
+_config_mgr = CommerceConnectorConfigManager()
+_reconciliation_engine = CommerceReconciliationEngine()
 
 
 class VerifyProductRequest(BaseModel):
@@ -277,4 +281,70 @@ async def get_order_status(order_id: str) -> Dict[str, Any]:
     return {
         "status": "SUCCESS",
         "outcome": outcome.to_dict(),
+    }
+
+
+@router.get(
+    "/connectors/config",
+    summary="Get Safe Redacted Connector Configurations",
+    status_code=status.HTTP_200_OK,
+)
+async def get_connector_config() -> Dict[str, Any]:
+    """Retrieve safe redacted connector configurations for all active connectors."""
+    return {
+        "status": "SUCCESS",
+        "connectors_enabled": _config_mgr.connectors_enabled,
+        "app_env": _config_mgr.app_env,
+        "configurations": _config_mgr.get_all_safe_settings(),
+    }
+
+
+class ReconcileTransactionRequest(BaseModel):
+    purchase_request_id: str = Field(..., description="Purchase request ID")
+    payment_transaction_id: str = Field(..., description="Payment transaction ID")
+    merchant_id: str = Field(..., description="Merchant ID")
+    buyer_id: str = Field(..., description="Buyer ID")
+    amount_paise: int = Field(..., description="Payment amount in Paise")
+    currency: str = Field("INR", description="Currency code")
+    merchant_order_id: Optional[str] = Field(None, description="Merchant order ID")
+    payment_ledger_status: Optional[str] = Field("CAPTURED", description="Payment ledger status")
+    merchant_ledger_status: Optional[str] = Field(None, description="Merchant ledger status")
+
+
+@router.post(
+    "/reconcile",
+    summary="Perform Commerce Reconciliation Query",
+    status_code=status.HTTP_200_OK,
+)
+async def reconcile_transaction(req: ReconcileTransactionRequest) -> Dict[str, Any]:
+    """Execute automated reconciliation across payment and merchant ledgers."""
+    record = _reconciliation_engine.reconcile_transaction(
+        purchase_request_id=req.purchase_request_id,
+        payment_transaction_id=req.payment_transaction_id,
+        merchant_id=req.merchant_id,
+        buyer_id=req.buyer_id,
+        amount_paise=req.amount_paise,
+        currency=req.currency,
+        merchant_order_id=req.merchant_order_id,
+        payment_ledger_status=req.payment_ledger_status,
+        merchant_ledger_status=req.merchant_ledger_status,
+    )
+
+    return {
+        "status": "SUCCESS",
+        "message": "Transaction reconciliation completed.",
+        "reconciliation_record": record.to_dict(),
+    }
+
+
+@router.get(
+    "/reconciliation/status",
+    summary="Get All Reconciliation Records",
+    status_code=status.HTTP_200_OK,
+)
+async def get_reconciliation_status() -> Dict[str, Any]:
+    """Retrieve all transaction reconciliation records."""
+    return {
+        "status": "SUCCESS",
+        "records": _reconciliation_engine.get_all_records(),
     }

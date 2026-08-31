@@ -13,6 +13,7 @@ from apps.api.commerce.connectors.base import CommerceConnector, CommerceConnect
 from apps.api.commerce.models import (
     CheckoutCapability,
     CommerceConnectorResult,
+    ConnectorEnvironment,
     VerifiedProduct,
 )
 
@@ -27,6 +28,10 @@ class GenericWebCheckoutConnector(CommerceConnector):
     @property
     def capability(self) -> CheckoutCapability:
         return CheckoutCapability.CHECKOUT_HANDOFF
+
+    @property
+    def environment(self) -> ConnectorEnvironment:
+        return ConnectorEnvironment.LIVE
 
     def supports_domain(self, domain: str) -> bool:
         """Generic web connector handles any valid public web domain."""

@@ -38,6 +38,28 @@ class OrderStatus(str, Enum):
     ORDER_FAILED = "ORDER_FAILED"
 
 
+class ConnectorEnvironment(str, Enum):
+    """Execution environment mode for commerce connectors."""
+
+    LIVE = "LIVE"
+    SANDBOX = "SANDBOX"
+    DEMO = "DEMO"
+    DISABLED = "DISABLED"
+
+
+class ReconciliationState(str, Enum):
+    """Reconciliation state machine values for commerce transactions."""
+
+    RECONCILIATION_REQUIRED = "RECONCILIATION_REQUIRED"
+    PAYMENT_FOUND = "PAYMENT_FOUND"
+    ORDER_FOUND = "ORDER_FOUND"
+    BOTH_CONFIRMED = "BOTH_CONFIRMED"
+    PAYMENT_ONLY = "PAYMENT_ONLY"
+    ORDER_ONLY = "ORDER_ONLY"
+    UNRESOLVED = "UNRESOLVED"
+    MANUAL_REVIEW_REQUIRED = "MANUAL_REVIEW_REQUIRED"
+
+
 @dataclass
 class PriceEvidence:
     """Evidence record for a verified live product price."""

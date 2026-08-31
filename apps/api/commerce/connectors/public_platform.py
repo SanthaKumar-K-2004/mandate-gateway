@@ -17,6 +17,7 @@ from apps.api.commerce.connectors.base import CommerceConnector, CommerceConnect
 from apps.api.commerce.models import (
     CheckoutCapability,
     CommerceConnectorResult,
+    ConnectorEnvironment,
     VerifiedProduct,
 )
 
@@ -37,6 +38,10 @@ class PublicPlatformConnector(CommerceConnector):
     @property
     def capability(self) -> CheckoutCapability:
         return CheckoutCapability.VERIFIED_API
+
+    @property
+    def environment(self) -> ConnectorEnvironment:
+        return ConnectorEnvironment.LIVE
 
     def supports_domain(self, domain: str) -> bool:
         """Connector supports world.openfoodfacts.org and api.openfoodfacts.org public domains."""

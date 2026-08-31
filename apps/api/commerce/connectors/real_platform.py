@@ -23,6 +23,7 @@ from apps.api.commerce.connectors.base import CommerceConnector, CommerceConnect
 from apps.api.commerce.models import (
     CheckoutCapability,
     CommerceConnectorResult,
+    ConnectorEnvironment,
     VerifiedProduct,
 )
 
@@ -49,6 +50,10 @@ class RealPlatformConnector(CommerceConnector):
     @property
     def capability(self) -> CheckoutCapability:
         return CheckoutCapability.VERIFIED_API
+
+    @property
+    def environment(self) -> ConnectorEnvironment:
+        return ConnectorEnvironment.SANDBOX
 
     def supports_domain(self, domain: str) -> bool:
         """Connector supports cafeacme.local and designated test platform domains."""
