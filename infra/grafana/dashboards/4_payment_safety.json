@@ -1,0 +1,22 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "id": 4,
+  "panels": [
+    {
+      "title": "Payment Duplicate Rejections & Idempotency Conflicts",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        { "expr": "rate(payment_duplicate_rejections_total[5m])", "legendFormat": "Duplicate Rejections" },
+        { "expr": "rate(payment_idempotency_conflicts_total[5m])", "legendFormat": "Idempotency Conflicts" }
+      ]
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["payment-safety", "production"],
+  "time": { "from": "now-1h", "to": "now" },
+  "title": "4. Payment Safety"
+}

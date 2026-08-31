@@ -572,6 +572,8 @@ def create_fastapi_app(settings: Optional[Settings] = None) -> Any:
                 headers={"X-Request-ID": req_id},
             )
 
+        from apps.api.routers.observability import router as observability_router
+
         # Register all REST API routers
         api_app.include_router(agent_router)
         api_app.include_router(commerce_router)
@@ -589,6 +591,7 @@ def create_fastapi_app(settings: Optional[Settings] = None) -> Any:
         api_app.include_router(hardening_router)
         api_app.include_router(operations_router)
         api_app.include_router(webhooks_router)
+        api_app.include_router(observability_router)
 
         return api_app
     except ImportError:  # pragma: no cover

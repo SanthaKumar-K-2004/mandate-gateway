@@ -1,0 +1,19 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "id": 5,
+  "panels": [
+    {
+      "title": "Payment Order Mismatch Rejections",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [{ "expr": "rate(payment_order_mismatch_rejections_total[5m])", "legendFormat": "Mismatches" }]
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["reconciliation", "production"],
+  "time": { "from": "now-1h", "to": "now" },
+  "title": "5. Reconciliation Operations"
+}

@@ -1,0 +1,19 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "id": 3,
+  "panels": [
+    {
+      "title": "Commerce Connector Call Rates",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [{ "expr": "rate(commerce_connector_requests_total[5m])", "legendFormat": "{{connector}}" }]
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["commerce", "production"],
+  "time": { "from": "now-1h", "to": "now" },
+  "title": "3. Commerce Connector Health"
+}
