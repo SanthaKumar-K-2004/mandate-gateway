@@ -22,6 +22,9 @@ from apps.api.commerce.models import ProductVerificationStatus
 from apps.api.commerce.order_binding import CommerceOrderBinder
 from apps.api.commerce.order_verification import OrderVerificationEngine
 from apps.api.commerce.price_revalidation import LivePriceRevalidator
+from apps.api.commerce.cart_intent import MultiItemIntentExtractor
+from apps.api.commerce.cart_optimizer import CartOptimizer
+from apps.api.commerce.cart_research import CartResearchEngine
 from apps.api.commerce.connector_config import CommerceConnectorConfigManager
 from apps.api.commerce.multi_source_discovery import MultiSourceDiscoveryEngine
 from apps.api.commerce.product_comparison import ProductComparisonEngine
@@ -55,6 +58,8 @@ _discovery_engine = MultiSourceDiscoveryEngine(registry=_registry)
 _deduplicator = ProductDeduplicator()
 _comparison_engine = ProductComparisonEngine()
 _recommendation_engine = DeterministicRecommendationEngine()
+_cart_research_engine = CartResearchEngine(discovery_engine=_discovery_engine)
+_cart_optimizer = CartOptimizer()
 
 
 class VerifyProductRequest(BaseModel):
@@ -495,4 +500,57 @@ async def get_connector_details(connector_id: str) -> Dict[str, Any]:
             "health_status": conn.health_status,
             "supported_operations": conn.supported_operations,
         },
+    }
+
+
+class ShoppingResearchRequestModel(BaseModel):
+    prompt: str = Field(
+        ..., description="Multi-item prompt e.g., 'Find coffee and biscuits under ₹300'"
+    )
+    total_budget_paise: Optional[int] = Field(
+        None, description="Optional total budget limit in Paise"
+    )
+
+
+@router.post(
+    "/shopping/research",
+    summary="Multi-Item Parallel Live Shopping Research",
+    status_code=status.HTTP_200_OK,
+)
+async def research_shopping_request(req: ShoppingResearchRequestModel) -> Dict[str, Any]:
+    """Execute live product research across all item intents in shopping request."""
+    budget = req.total_budget_paise or 50000
+    shop_req = MultiItemIntentExtractor.parse_prompt(req.prompt, default_budget_paise=budget)
+    res = _cart_research_engine.research_shopping_request(shop_req)
+    return {
+        "status": "SUCCESS",
+        "shopping_request": shop_req.to_dict(),
+        "research_result": res.to_dict(),
+    }
+
+
+@router.post(
+    "/shopping/optimize",
+    summary="Multi-Item Bounded Cart Optimization",
+    status_code=status.HTTP_200_OK,
+)
+async def optimize_shopping_cart(req: ShoppingResearchRequestModel) -> Dict[str, Any]:
+    """Evaluate multi-item cart combinations and compute deterministic recommendation ranking."""
+    budget = req.total_budget_paise or 50000
+    shop_req = MultiItemIntentExtractor.parse_prompt(req.prompt, default_budget_paise=budget)
+    research_res = _cart_research_engine.research_shopping_request(shop_req)
+    opt_res = _cart_optimizer.optimize_cart(shop_req, research_res)
+
+    best_cart = opt_res.best_recommended_cart
+    explanation: list[str] = []
+    if best_cart:
+        explanation = _recommendation_engine.explain_cart_recommendation(
+            best_cart, shop_req.total_budget_paise
+        )
+
+    return {
+        "status": "SUCCESS" if best_cart else "NO_VERIFIED_LIVE_CART_FOUND",
+        "shopping_request": shop_req.to_dict(),
+        "optimization_result": opt_res.to_dict(),
+        "explanation": explanation,
     }

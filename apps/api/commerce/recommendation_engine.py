@@ -176,3 +176,45 @@ class DeterministicRecommendationEngine:
             connector_health_score=connector_health_score,
             explanation=explanation,
         )
+
+    def explain_cart_recommendation(self, cart: Any, total_budget_paise: int) -> List[str]:
+        """Generate human-readable explainability bullet points for recommended cart candidate."""
+        points: List[str] = []
+
+        # Items & Verification
+        item_count = len(cart.items)
+        points.append(f"All {item_count} requested items have verified live product evidence")
+
+        # Cost & Savings
+        cost_inr = cart.cost_summary.total_known_cost_paise / 100.0
+        budget_inr = total_budget_paise / 100.0
+        savings_inr = budget_inr - cost_inr
+        points.append(
+            f"Total known product cost is ₹{cost_inr:.2f} "
+            f"(₹{savings_inr:.2f} remaining within budget ₹{budget_inr:.2f})"
+        )
+
+        # Merchant Count
+        if cart.merchant_count == 1:
+            points.append(
+                f"Requires only 1 merchant ({cart.merchant_domains[0]}) for streamlined checkout"
+            )
+        else:
+            points.append(
+                f"Optimized across {cart.merchant_count} merchants ({', '.join(cart.merchant_domains)})"
+            )
+
+        # Capability
+        cap_val = cart.checkout_capability.value
+        if cap_val == "VERIFIED_API":
+            points.append("Supports direct API order creation and cryptographic binding")
+        elif cap_val == "CHECKOUT_HANDOFF":
+            points.append("Supports secure signed checkout handoff")
+
+        # Unknown Cost Warning
+        if cart.cost_summary.unknown_cost_components:
+            points.append(
+                "⚠️ Delivery or additional merchant charges may apply and are not included in the known total"
+            )
+
+        return points

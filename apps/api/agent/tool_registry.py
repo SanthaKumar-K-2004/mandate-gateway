@@ -512,3 +512,86 @@ class AIToolRegistry:
                 },
             )
         )
+
+        # 14. research_shopping_request (SAFE_READ)
+        def _research_shopping_request(
+            prompt: str, total_budget_paise: int = 50000
+        ) -> Dict[str, Any]:
+            from apps.api.commerce.cart_intent import MultiItemIntentExtractor
+            from apps.api.commerce.cart_research import CartResearchEngine
+
+            shop_req = MultiItemIntentExtractor.parse_prompt(
+                prompt, default_budget_paise=total_budget_paise
+            )
+            research_eng = CartResearchEngine()
+            res = research_eng.research_shopping_request(shop_req)
+            return {
+                "status": "SUCCESS",
+                "shopping_request": shop_req.to_dict(),
+                "research_result": res.to_dict(),
+            }
+
+        self.register(
+            ToolDefinition(
+                name="research_shopping_request",
+                description="Execute parallel live product research across multi-item shopping intent.",
+                permission=ToolPermission.SAFE_READ,
+                handler=_research_shopping_request,
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "prompt": {"type": "string"},
+                        "total_budget_paise": {"type": "integer"},
+                    },
+                    "required": ["prompt"],
+                },
+            )
+        )
+
+        # 15. optimize_cart (SAFE_READ)
+        def _optimize_cart(prompt: str, total_budget_paise: int = 50000) -> Dict[str, Any]:
+            from apps.api.commerce.cart_intent import MultiItemIntentExtractor
+            from apps.api.commerce.cart_optimizer import CartOptimizer
+            from apps.api.commerce.cart_research import CartResearchEngine
+            from apps.api.commerce.recommendation_engine import DeterministicRecommendationEngine
+
+            shop_req = MultiItemIntentExtractor.parse_prompt(
+                prompt, default_budget_paise=total_budget_paise
+            )
+            research_eng = CartResearchEngine()
+            cart_opt = CartOptimizer()
+            rec_eng = DeterministicRecommendationEngine()
+
+            research_res = research_eng.research_shopping_request(shop_req)
+            opt_res = cart_opt.optimize_cart(shop_req, research_res)
+
+            best_cart = opt_res.best_recommended_cart
+            explanation: list[str] = []
+            if best_cart:
+                explanation = rec_eng.explain_cart_recommendation(
+                    best_cart, shop_req.total_budget_paise
+                )
+
+            return {
+                "status": "SUCCESS" if best_cart else "NO_VERIFIED_LIVE_CART_FOUND",
+                "shopping_request": shop_req.to_dict(),
+                "optimization_result": opt_res.to_dict(),
+                "explanation": explanation,
+            }
+
+        self.register(
+            ToolDefinition(
+                name="optimize_cart",
+                description="Evaluate multi-item cart combinations and compute optimal evidence-backed recommendation.",
+                permission=ToolPermission.SAFE_READ,
+                handler=_optimize_cart,
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "prompt": {"type": "string"},
+                        "total_budget_paise": {"type": "integer"},
+                    },
+                    "required": ["prompt"],
+                },
+            )
+        )

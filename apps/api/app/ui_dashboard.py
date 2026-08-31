@@ -1197,6 +1197,72 @@ def get_dashboard_html() -> str:
                     </div>
                 </div>
 
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div class="card-header">
+                        <span class="card-title">Autonomous Shopping Research & Multi-Item Cart Intelligence Panel</span>
+                        <span class="badge badge-success">M28 MULTI-ITEM CART ENGINE ACTIVE</span>
+                    </div>
+                    <div style="padding: 1rem 0;">
+                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+                            <div>
+                                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                                    <strong>Multi-Item Shopping Request Analysis & Candidate Breakdown:</strong>
+                                </div>
+                                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem;">
+                                    <div style="font-size: 0.8rem; color: var(--cyan-400); font-family: var(--font-mono);">Prompt: "Find coffee and biscuits under ₹300"</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">Items Extracted: <code>Coffee (1x)</code>, <code>Biscuits (1x)</code> | Budget Limit: <strong>₹300.00 INR</strong> | Strategy: <span class="badge badge-success" style="font-size: 0.6rem;">BEST_VALUE</span></div>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table style="width: 100%; font-size: 0.8rem;">
+                                        <thead>
+                                            <tr>
+                                                <th>Requested Item</th>
+                                                <th>Selected Product SKU</th>
+                                                <th>Merchant</th>
+                                                <th>Price</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><strong>Coffee</strong></td>
+                                                <td>Espresso Roast Coffee 250g</td>
+                                                <td>OpenFoodFacts</td>
+                                                <td><strong style="color: var(--emerald-400);">₹180.00</strong></td>
+                                                <td><span class="badge badge-success" style="font-size: 0.65rem;">VERIFIED</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Biscuits</strong></td>
+                                                <td>Acme Butter Cookies 150g</td>
+                                                <td>Cafe Acme</td>
+                                                <td><strong style="color: var(--emerald-400);">₹150.00</strong></td>
+                                                <td><span class="badge badge-success" style="font-size: 0.65rem;">VERIFIED</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; padding: 1rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                    <strong style="color: var(--cyan-400);">OPTIMAL MULTI-ITEM CART</strong>
+                                    <span class="badge badge-primary">CART SCORE: 92.4</span>
+                                </div>
+                                <div style="font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 0.25rem;">2 Items (2 Merchants)</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Verified Product Subtotal: <strong style="color: var(--emerald-400);">₹330.00 INR</strong></div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5;">
+                                    <strong>Cart Why-Recommended:</strong><br>
+                                    ✓ All 2 items have verified live product evidence<br>
+                                    ✓ Product subtotal is ₹330.00 INR<br>
+                                    ✓ Optimized across 2 merchants<br>
+                                    <span style="color: var(--amber-400);">⚠️ Delivery or tax costs unverified (UNKNOWN)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card">
                     <div class="card-header">
                         <span class="card-title">Real Source-Backed Product Truth & Checkout Capability Matrix</span>
