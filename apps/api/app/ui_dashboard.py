@@ -1125,6 +1125,76 @@ def get_dashboard_html() -> str:
                             </div>
                         </div>
                     </div>
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div class="card-header">
+                        <span class="card-title">Multi-Merchant Commerce Intelligence & Deterministic Recommendation Panel</span>
+                        <span class="badge badge-success">M27 MULTI-MERCHANT ENGINE ACTIVE</span>
+                    </div>
+                    <div style="padding: 1rem 0;">
+                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+                            <div>
+                                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                                    <strong>Evidence-Backed Cross-Merchant Comparison Table:</strong>
+                                </div>
+                                <div class="table-responsive">
+                                    <table style="width: 100%; font-size: 0.8rem;">
+                                        <thead>
+                                            <tr>
+                                                <th>Product</th>
+                                                <th>Merchant</th>
+                                                <th>Price</th>
+                                                <th>Availability</th>
+                                                <th>Capability</th>
+                                                <th>Score</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><strong>Espresso Roast Coffee 250g</strong></td>
+                                                <td>OpenFoodFacts</td>
+                                                <td><strong style="color: var(--emerald-400);">₹180.00</strong></td>
+                                                <td><span class="badge badge-success" style="font-size: 0.65rem;">AVAILABLE</span></td>
+                                                <td><span class="badge badge-success" style="font-size: 0.65rem;">VERIFIED_API</span></td>
+                                                <td><strong style="color: var(--emerald-400);">95.0 / 100</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Acme Artisan Espresso 250g</strong></td>
+                                                <td>Cafe Acme</td>
+                                                <td><strong style="color: var(--emerald-400);">₹190.00</strong></td>
+                                                <td><span class="badge badge-success" style="font-size: 0.65rem;">AVAILABLE</span></td>
+                                                <td><span class="badge badge-warning" style="font-size: 0.65rem;">SANDBOX_API</span></td>
+                                                <td><strong style="color: var(--cyan-400);">88.0 / 100</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Filter Coffee Powder 250g</strong></td>
+                                                <td>Coffee Roasters</td>
+                                                <td><strong style="color: var(--emerald-400);">₹150.00</strong></td>
+                                                <td><span class="badge badge-success" style="font-size: 0.65rem;">AVAILABLE</span></td>
+                                                <td><span class="badge badge-primary" style="font-size: 0.65rem;">HANDOFF</span></td>
+                                                <td><strong style="color: var(--violet-400);">84.0 / 100</strong></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 1rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                    <strong style="color: var(--emerald-400);">BEST MATCH RECOMMENDATION</strong>
+                                    <span class="badge badge-success">TOP SCORE: 95.0</span>
+                                </div>
+                                <div style="font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 0.25rem;">Espresso Roast Coffee 250g</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Merchant: <code>world.openfoodfacts.org</code> | Price: <strong>₹180.00 INR</strong></div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5;">
+                                    <strong>Why Recommended:</strong><br>
+                                    ✓ Verified exact product page and SKU details<br>
+                                    ✓ Price ₹180.00 is within budget limit ₹200.00<br>
+                                    ✓ Stock available for immediate order<br>
+                                    ✓ Supports direct API order creation and binding
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="card">

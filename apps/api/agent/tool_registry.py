@@ -441,3 +441,74 @@ class AIToolRegistry:
                 },
             )
         )
+
+        # 12. compare_products (SAFE_READ)
+        def _compare_products(query: str, max_price_paise: int) -> Dict[str, Any]:
+            from apps.api.commerce.multi_source_discovery import MultiSourceDiscoveryEngine
+            from apps.api.commerce.product_comparison import ProductComparisonEngine
+            from apps.api.commerce.product_deduplication import ProductDeduplicator
+
+            disc = MultiSourceDiscoveryEngine()
+            dedup = ProductDeduplicator()
+            cmp_eng = ProductComparisonEngine()
+
+            raw, status = disc.discover_candidates(query, max_price_paise)
+            deduped = dedup.deduplicate(raw)
+            res = cmp_eng.compare_candidates(query, max_price_paise, deduped)
+            return res.to_dict()
+
+        self.register(
+            ToolDefinition(
+                name="compare_products",
+                description="Perform evidence-backed comparison across candidate products from multiple merchants.",
+                permission=ToolPermission.SAFE_READ,
+                handler=_compare_products,
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "query": {"type": "string"},
+                        "max_price_paise": {"type": "integer"},
+                    },
+                    "required": ["query", "max_price_paise"],
+                },
+            )
+        )
+
+        # 13. recommend_product (SAFE_READ)
+        def _recommend_product(query: str, max_price_paise: int) -> Dict[str, Any]:
+            from apps.api.commerce.multi_source_discovery import MultiSourceDiscoveryEngine
+            from apps.api.commerce.product_deduplication import ProductDeduplicator
+            from apps.api.commerce.recommendation_engine import DeterministicRecommendationEngine
+
+            disc = MultiSourceDiscoveryEngine()
+            dedup = ProductDeduplicator()
+            rec_eng = DeterministicRecommendationEngine()
+
+            raw, status = disc.discover_candidates(query, max_price_paise)
+            deduped = dedup.deduplicate(raw)
+            best_rec, scored, rec_status = rec_eng.rank_candidates(deduped, max_price_paise)
+
+            if not best_rec:
+                return {"status": "NO_RECOMMENDATION_FOUND", "message": rec_status}
+
+            return {
+                "status": "SUCCESS",
+                "recommended_candidate": best_rec.to_dict(),
+            }
+
+        self.register(
+            ToolDefinition(
+                name="recommend_product",
+                description="Compute evidence-backed deterministic recommendation ranking across merchants.",
+                permission=ToolPermission.SAFE_READ,
+                handler=_recommend_product,
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "query": {"type": "string"},
+                        "max_price_paise": {"type": "integer"},
+                    },
+                    "required": ["query", "max_price_paise"],
+                },
+            )
+        )

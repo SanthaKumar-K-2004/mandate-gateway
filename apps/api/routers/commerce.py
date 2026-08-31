@@ -23,7 +23,11 @@ from apps.api.commerce.order_binding import CommerceOrderBinder
 from apps.api.commerce.order_verification import OrderVerificationEngine
 from apps.api.commerce.price_revalidation import LivePriceRevalidator
 from apps.api.commerce.connector_config import CommerceConnectorConfigManager
+from apps.api.commerce.multi_source_discovery import MultiSourceDiscoveryEngine
+from apps.api.commerce.product_comparison import ProductComparisonEngine
+from apps.api.commerce.product_deduplication import ProductDeduplicator
 from apps.api.commerce.product_truth_engine import ProductTruthEngine
+from apps.api.commerce.recommendation_engine import DeterministicRecommendationEngine
 from apps.api.commerce.reconciliation import CommerceReconciliationEngine
 from apps.api.commerce.transaction_binding import CommerceTransactionBindingManager
 
@@ -47,6 +51,10 @@ _tx_binder_mgr = CommerceTransactionBindingManager()
 _health_monitor = CommerceConnectorHealthMonitor()
 _config_mgr = CommerceConnectorConfigManager()
 _reconciliation_engine = CommerceReconciliationEngine()
+_discovery_engine = MultiSourceDiscoveryEngine(registry=_registry)
+_deduplicator = ProductDeduplicator()
+_comparison_engine = ProductComparisonEngine()
+_recommendation_engine = DeterministicRecommendationEngine()
 
 
 class VerifyProductRequest(BaseModel):
@@ -347,4 +355,144 @@ async def get_reconciliation_status() -> Dict[str, Any]:
     return {
         "status": "SUCCESS",
         "records": _reconciliation_engine.get_all_records(),
+    }
+
+
+class CommerceSearchRequest(BaseModel):
+    query: str = Field(..., description="Search query")
+    max_price_paise: int = Field(..., description="Max price limit in Paise")
+
+
+@router.post(
+    "/search",
+    summary="Multi-Merchant Product Search & Discovery",
+    status_code=status.HTTP_200_OK,
+)
+async def search_commerce_products(req: CommerceSearchRequest) -> Dict[str, Any]:
+    """Search products across all active connectors and return normalized candidates."""
+    raw_candidates, disc_status = _discovery_engine.discover_candidates(
+        req.query, req.max_price_paise
+    )
+    candidates = _deduplicator.deduplicate(raw_candidates)
+
+    return {
+        "status": disc_status,
+        "query": req.query,
+        "max_price_paise": req.max_price_paise,
+        "candidates_count": len(candidates),
+        "candidates": [c.to_dict() for c in candidates],
+    }
+
+
+@router.post(
+    "/compare",
+    summary="Cross-Merchant Product Comparison",
+    status_code=status.HTTP_200_OK,
+)
+async def compare_commerce_products(req: CommerceSearchRequest) -> Dict[str, Any]:
+    """Perform evidence-backed comparison across candidate products."""
+    raw_candidates, disc_status = _discovery_engine.discover_candidates(
+        req.query, req.max_price_paise
+    )
+    candidates = _deduplicator.deduplicate(raw_candidates)
+
+    best_rec, scored, rec_status = _recommendation_engine.rank_candidates(
+        candidates, req.max_price_paise
+    )
+    rec_id = best_rec.product.product_id if best_rec else None
+
+    cmp_res = _comparison_engine.compare_candidates(
+        req.query, req.max_price_paise, candidates, recommended_id=rec_id
+    )
+
+    return {
+        "status": disc_status,
+        "comparison": cmp_res.to_dict(),
+        "candidates": [c.to_dict() for c in candidates],
+    }
+
+
+@router.post(
+    "/recommend",
+    summary="Deterministic Product Recommendation Engine",
+    status_code=status.HTTP_200_OK,
+)
+async def recommend_commerce_product(req: CommerceSearchRequest) -> Dict[str, Any]:
+    """Compute evidence-backed deterministic recommendation ranking."""
+    raw_candidates, disc_status = _discovery_engine.discover_candidates(
+        req.query, req.max_price_paise
+    )
+    candidates = _deduplicator.deduplicate(raw_candidates)
+
+    best_rec, scored, rec_status = _recommendation_engine.rank_candidates(
+        candidates, req.max_price_paise
+    )
+
+    if not best_rec:
+        return {
+            "status": "NO_RECOMMENDATION_FOUND",
+            "message": rec_status,
+            "candidates_count": len(candidates),
+        }
+
+    return {
+        "status": "SUCCESS",
+        "recommended_candidate": best_rec.to_dict(),
+        "all_ranked_candidates": [s.to_dict() for s in scored],
+    }
+
+
+@router.get(
+    "/connectors",
+    summary="List Registered Commerce Connectors",
+    status_code=status.HTTP_200_OK,
+)
+async def list_connectors() -> Dict[str, Any]:
+    """Retrieve details of all registered commerce connectors."""
+    connectors = _registry.list_active_connectors()
+    res = []
+    for c in connectors:
+        res.append(
+            {
+                "connector_id": c.connector_id,
+                "connector_name": c.connector_name,
+                "merchant_identity": c.merchant_identity,
+                "environment": c.environment.value,
+                "capability": c.capability.value,
+                "base_domain": c.base_domain,
+                "enabled": c.enabled,
+                "health_status": c.health_status,
+                "supported_operations": c.supported_operations,
+            }
+        )
+    return {"status": "SUCCESS", "connectors_count": len(res), "connectors": res}
+
+
+@router.get(
+    "/connectors/{connector_id}",
+    summary="Get Connector Details by ID",
+    status_code=status.HTTP_200_OK,
+)
+async def get_connector_details(connector_id: str) -> Dict[str, Any]:
+    """Retrieve configuration and health details for a specific connector."""
+    conn = _registry.get_connector(connector_id)
+    if not conn:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Connector '{connector_id}' not found.",
+        )
+
+    return {
+        "status": "SUCCESS",
+        "connector": {
+            "connector_id": conn.connector_id,
+            "connector_name": conn.connector_name,
+            "merchant_identity": conn.merchant_identity,
+            "environment": conn.environment.value,
+            "capability": conn.capability.value,
+            "base_domain": conn.base_domain,
+            "enabled": conn.enabled,
+            "health_status": conn.health_status,
+            "supported_operations": conn.supported_operations,
+        },
     }

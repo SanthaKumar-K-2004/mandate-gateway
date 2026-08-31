@@ -61,6 +61,14 @@ class CommerceConnectorRegistry:
         """Fetch connector by ID."""
         return self._connectors.get(connector_id)
 
+    def list_active_connectors(self) -> List[CommerceConnector]:
+        """List active CommerceConnector objects registered."""
+        result: List[CommerceConnector] = [self._generic_fallback]
+        for conn in self._connectors.values():
+            if conn not in result:
+                result.append(conn)
+        return result
+
     def list_connectors(self) -> List[Dict[str, str]]:
         """List metadata for all registered connectors."""
         output = [

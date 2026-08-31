@@ -39,22 +39,56 @@ def run_live_commerce_pilot() -> int:
         f" -> Parsed Intent: Prompt='{user_prompt}', Item='{target_item}', Max Budget=₹{max_budget_paise/100:.2f} INR"
     )
 
-    # 2. Live Web Product Discovery
-    print("\n[Stage 2/10] Live Web Search Discovery...")
+    # 2. Multi-Merchant Product Discovery & Deduplication
+    print("\n[Stage 2/10] Multi-Source Product Discovery & Deduplication...")
+    from apps.api.commerce.multi_source_discovery import MultiSourceDiscoveryEngine
+    from apps.api.commerce.product_deduplication import ProductDeduplicator
+    from apps.api.commerce.product_comparison import ProductComparisonEngine
+    from apps.api.commerce.recommendation_engine import DeterministicRecommendationEngine
+
+    discovery_engine = MultiSourceDiscoveryEngine()
+    deduplicator = ProductDeduplicator()
+    comparison_engine = ProductComparisonEngine()
+    recommendation_engine = DeterministicRecommendationEngine()
+
+    raw_candidates, disc_status = discovery_engine.discover_candidates(
+        target_item, max_budget_paise
+    )
+    candidates = deduplicator.deduplicate(raw_candidates)
+    print(f" -> Discovered Candidates Count: {len(candidates)} across multiple merchant sources")
+
+    # 3. Deterministic Comparison & Recommendation Scoring
+    print("\n[Stage 3/10] Cross-Merchant Comparison & Deterministic Recommendation...")
+    best_rec, scored, rec_status = recommendation_engine.rank_candidates(
+        candidates, max_budget_paise
+    )
+    assert best_rec is not None, f"Recommendation failed: {rec_status}"
+
+    cmp_res = comparison_engine.compare_candidates(
+        target_item, max_budget_paise, candidates, recommended_id=best_rec.product.product_id
+    )
+    print(f" -> Evaluated Comparison Matrix Across {cmp_res.candidates_count} Candidates")
+
+    print(
+        f" -> Recommended Product: '{best_rec.product.title}' @ ₹{best_rec.product.price_paise/100:.2f}"
+    )
+    print(
+        f" -> Merchant Source: {best_rec.product.merchant_name} ({best_rec.product.merchant_domain})"
+    )
+    print(f" -> Recommendation Score: {best_rec.total_score:.1f} / 100")
+    print(" -> Explanation Highlights:")
+    for point in best_rec.explanation[:3]:
+        print(f"    • {point}")
+
     raw_search_candidate = {
-        "product_id": "prod_off_espresso_250",
-        "name": "Espresso Roast Coffee Beans 250g",
-        "description": "Authentic dark roast coffee beans",
-        "source_url": "https://world.openfoodfacts.org/product/espresso_coffee.html",
-        "amount_paise": 18000,
+        "product_id": best_rec.product.product_id,
+        "name": best_rec.product.title,
+        "description": best_rec.product.description,
+        "source_url": best_rec.product.product_url,
+        "amount_paise": best_rec.product.price_paise,
         "currency": "INR",
         "availability": True,
     }
-    amt_paise = int(str(raw_search_candidate["amount_paise"]))
-    print(f" -> Discovered Candidate: '{raw_search_candidate['name']}' @ ₹{amt_paise/100:.2f}")
-
-    # 3. Product Truth Evaluation
-    print("\n[Stage 3/10] Product Truth Verification...")
     truth = ProductTruthEngine.evaluate_product(raw_search_candidate)
     product = truth.product
     print(f" -> Exact SKU Verified: {truth.is_sku_verified}")
