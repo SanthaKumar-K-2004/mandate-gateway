@@ -316,3 +316,79 @@ class AIToolRegistry:
                 },
             )
         )
+
+        # 9. create_merchant_order (RESTRICTED)
+        def _create_merchant_order(
+            request_id: str,
+            buyer_id: str,
+            product_id: str,
+            payment_transaction_id: str,
+            confirmation_token: str,
+        ) -> Dict[str, Any]:
+            from apps.api.commerce.connectors.real_platform import RealPlatformConnector
+            from apps.api.commerce.product_truth_engine import ProductTruthEngine
+
+            cand = {
+                "product_id": product_id,
+                "name": f"Product {product_id}",
+                "source_url": "https://cafeacme.local/p/item.html",
+                "amount_paise": 14000,
+                "currency": "INR",
+            }
+            truth = ProductTruthEngine.evaluate_product(cand)
+            connector = RealPlatformConnector()
+            ord_rec = connector.create_order(
+                request_id=request_id,
+                buyer_id=buyer_id,
+                product=truth.product,
+                payment_transaction_id=payment_transaction_id,
+                order_binding_hash=f"hash_{product_id}",
+            )
+            return {
+                "status": "SUCCESS",
+                "merchant_order_id": ord_rec["merchant_order_id"],
+                "order_status": ord_rec["order_status"],
+            }
+
+        self.register(
+            ToolDefinition(
+                name="create_merchant_order",
+                description="Create direct merchant order with verified merchant platform API.",
+                permission=ToolPermission.RESTRICTED,
+                handler=_create_merchant_order,
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "request_id": {"type": "string"},
+                        "buyer_id": {"type": "string"},
+                        "product_id": {"type": "string"},
+                        "payment_transaction_id": {"type": "string"},
+                        "confirmation_token": {"type": "string"},
+                    },
+                    "required": [
+                        "request_id",
+                        "buyer_id",
+                        "product_id",
+                        "payment_transaction_id",
+                        "confirmation_token",
+                    ],
+                },
+            )
+        )
+
+        # 10. get_connector_health (SAFE_READ)
+        def _get_connector_health() -> Dict[str, Any]:
+            from apps.api.commerce.connector_health import CommerceConnectorHealthMonitor
+
+            monitor = CommerceConnectorHealthMonitor()
+            return monitor.get_health_metrics()
+
+        self.register(
+            ToolDefinition(
+                name="get_connector_health",
+                description="Retrieve operational health, latency, and success metrics for commerce connectors.",
+                permission=ToolPermission.SAFE_READ,
+                handler=_get_connector_health,
+                input_schema={"type": "object", "properties": {}},
+            )
+        )

@@ -425,6 +425,7 @@ def create_fastapi_app(settings: Optional[Settings] = None) -> Any:
         from apps.api.routers.agent import agent_router
         from apps.api.routers.audit import audit_router
         from apps.api.routers.commerce import router as commerce_router
+        from apps.api.routers.commerce_webhooks import router as commerce_webhooks_router
         from apps.api.routers.explainability import explainability_router
         from apps.api.routers.hardening import router as hardening_router
         from apps.api.routers.mandates import mandates_router
@@ -574,6 +575,7 @@ def create_fastapi_app(settings: Optional[Settings] = None) -> Any:
         # Register all REST API routers
         api_app.include_router(agent_router)
         api_app.include_router(commerce_router)
+        api_app.include_router(commerce_webhooks_router)
         api_app.include_router(merchants_router)
         api_app.include_router(products_router)
         api_app.include_router(mandates_router)
