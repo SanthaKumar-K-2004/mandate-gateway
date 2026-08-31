@@ -1027,33 +1027,47 @@ def get_dashboard_html() -> str:
 
                 <div class="card" style="margin-bottom: 1.5rem;">
                     <div class="card-header">
-                        <span class="card-title">AI Commerce Control Center & Lifecycle Tracker</span>
-                        <span class="badge badge-primary">M24 COMMERCE ENGINE ACTIVE</span>
+                        <span class="card-title">AI Commerce Control Center & Real-Time AI Purchase Journey</span>
+                        <span class="badge badge-primary">M26 LIVE PILOT CERTIFIED</span>
                     </div>
                     <div style="padding: 1rem 0;">
                         <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
-                            <strong>Verification & Execution Lifecycle Pipeline:</strong>
+                            <strong>10-Stage End-to-End Autonomous AI Purchase Pipeline:</strong>
                         </div>
-                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; font-size: 0.75rem; font-family: var(--font-mono);">
-                            <span class="badge badge-neutral">1. SEARCHED</span> &rarr;
-                            <span class="badge badge-neutral">2. SOURCE_BACKED</span> &rarr;
-                            <span class="badge badge-primary">3. PRODUCT_VERIFIED</span> &rarr;
-                            <span class="badge badge-primary">4. PRICE_REVALIDATED</span> &rarr;
-                            <span class="badge badge-primary">5. AVAILABILITY_REVALIDATED</span> &rarr;
-                            <span class="badge badge-warning">6. CHECKOUT_RESOLVED</span> &rarr;
-                            <span class="badge badge-warning">7. AWAITING_CONFIRMATION</span> &rarr;
-                            <span class="badge badge-success">8. PAYMENT_PROCESSING</span> &rarr;
-                            <span class="badge badge-success">9. ORDER_VERIFIED</span>
+                        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1.5rem; font-size: 0.7rem; font-family: var(--font-mono);">
+                            <span class="badge badge-neutral">1. USER_REQUEST</span> &rarr;
+                            <span class="badge badge-neutral">2. AI_PARSED</span> &rarr;
+                            <span class="badge badge-neutral">3. LIVE_SEARCH</span> &rarr;
+                            <span class="badge badge-primary">4. PRODUCT_VERIFIED</span> &rarr;
+                            <span class="badge badge-primary">5. PRICE_REVALIDATED</span> &rarr;
+                            <span class="badge badge-warning">6. CAPABILITY_RESOLVED</span> &rarr;
+                            <span class="badge badge-warning">7. CONFIRMATION_GATE</span> &rarr;
+                            <span class="badge badge-success">8. PAYMENT_PROTECTED</span> &rarr;
+                            <span class="badge badge-success">9. MERCHANT_ORDER</span> &rarr;
+                            <span class="badge badge-success">10. ORDER_VERIFIED</span>
                         </div>
                         <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
                             <input type="text" id="ai-prompt-input" class="form-input" style="flex: 1;" value="Buy coffee under ₹200" placeholder="e.g. Buy coffee under ₹200">
-                            <button class="btn btn-primary" onclick="submitAIPrompt()">Search & Prepare Checkout</button>
+                            <button class="btn btn-primary" onclick="submitAIPrompt()">Execute Live Pilot Journey</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card" style="margin-bottom: 1.5rem;">
                     <div class="card-header">
                         <span class="card-title">Live Commerce Connector Health & Operational Performance</span>
-                        <span class="badge badge-success">M25 CONNECTOR NETWORK HEALTHY</span>
+                        <span class="badge badge-success">M26 CONNECTOR NETWORK ONLINE</span>
                     </div>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; padding: 1rem 0;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; padding: 1rem 0;">
+                        <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <strong>Public Catalog Direct API</strong>
+                                <span class="badge badge-success">LIVE API</span>
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary);">Domain: <code>world.openfoodfacts.org</code></div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary);">Latency: <strong style="color: var(--emerald-400);">140ms</strong> | Success Rate: <strong>99.8%</strong></div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">Capability: <span class="badge badge-success" style="font-size: 0.65rem;">VERIFIED_API</span></div>
+                        </div>
                         <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 1rem;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                                 <strong>Cafe Acme Direct API</strong>

@@ -16,6 +16,7 @@ from apps.api.commerce.checkout_orchestrator import CheckoutOrchestrator
 from apps.api.commerce.connector_health import CommerceConnectorHealthMonitor
 from apps.api.commerce.connector_registry import CommerceConnectorRegistry
 from apps.api.commerce.connector_resolver import CheckoutCapabilityResolver
+from apps.api.commerce.connectors.public_platform import PublicPlatformConnector
 from apps.api.commerce.connectors.real_platform import RealPlatformConnector
 from apps.api.commerce.models import ProductVerificationStatus
 from apps.api.commerce.order_binding import CommerceOrderBinder
@@ -28,8 +29,13 @@ router = APIRouter(prefix="/api/v1/commerce", tags=["Commerce Truth & Checkout"]
 
 _registry = CommerceConnectorRegistry()
 _real_connector = RealPlatformConnector()
+_public_connector = PublicPlatformConnector()
 _registry.register_connector(
     _real_connector, target_domains=["cafeacme.local", "api.cafeacme.local"]
+)
+_registry.register_connector(
+    _public_connector,
+    target_domains=["world.openfoodfacts.org", "api.openfoodfacts.org", "openfoodfacts.org"],
 )
 
 _orchestrator = CheckoutOrchestrator(registry=_registry)
