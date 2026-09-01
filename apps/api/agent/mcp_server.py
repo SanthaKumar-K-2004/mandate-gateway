@@ -37,7 +37,12 @@ class RazerpayMCPServer:
                     "inputSchema": t["input_schema"],
                 }
                 for t in tools_list
-                if t["name"] not in ("execute_payment", "execute_confirmed_purchase")
+                if t["name"]
+                not in (
+                    "execute_payment",
+                    "execute_confirmed_purchase",
+                    "create_merchant_order",  # Direct order creation MUST NOT be exposed to autonomous MCP clients
+                )
             ]
             return {
                 "jsonrpc": "2.0",

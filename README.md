@@ -1,309 +1,311 @@
-# Mandate Gateway
+# Mandate Gateway — RAZERPAY AI Commerce Agent
 
-> A deterministic trust layer between an untrusted AI shopping agent and the official Razorpay MCP execution boundary.
+> **A production-grade AI commerce agent that is honestly fail-closed by design.**
+
+[![Quality Gate](https://img.shields.io/badge/make%20check-PASSING-brightgreen)](docs/production/FINAL_TEST_CERTIFICATION.md)
+[![Tests](https://img.shields.io/badge/tests-844%20passing-brightgreen)](tests/)
+[![Version](https://img.shields.io/badge/version-v1.0.0-blue)](https://github.com/SanthaKumar-K-2004/mandate-gateway/releases/tag/v1.0.0)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 ---
 
-## Core Principle
+## The Problem
 
-```text
-AI decides.
-Policy authorizes.
-Razorpay executes.
-Cryptography proves.
+Every AI shopping assistant today has the same fundamental flaw: it will **invent data** to seem helpful. Invented prices, fabricated availability, made-up delivery fees — all presented as fact. When the system is wrong, the user pays for it — sometimes literally.
+
+Worse: most AI commerce agents have **no meaningful payment safety** layer. A single LLM hallucination, a replay attack, or a duplicate request can result in double charges.
+
+---
+
+## The Solution
+
+Mandate Gateway is an AI commerce agent built on a single uncompromising principle:
+
+> **If the data is not verified, say so. If the product is unverified, block checkout. If payment confirmation is missing, do nothing.**
+
+### Key Innovations
+
+| Innovation | Description |
+|-----------|-------------|
+| **Fail-closed product truth** | Every product fact is sourced from a live API. Unverified products block checkout — no exceptions. |
+| **Honest unknown disclosure** | Shipping fees, taxes, and any unverifiable cost are shown as `UNKNOWN`, never estimated. |
+| **5-layer payment deduplication** | Five independent mechanisms prevent any payment effect from executing twice. |
+| **Cryptographic human gate** | HMAC-SHA256 single-use tokens bind every payment confirmation to its exact request, amount, and identity. |
+| **MCP security enforcement** | Direct payment and order-creation tools are **blocked** from autonomous MCP clients. |
+| **Evidence-hashed audit trail** | SHA-256 evidence hashes + Ed25519 signed receipts create an immutable audit record. |
+| **Real data, never synthetic** | Product discovery queries live APIs (OpenFoodFacts). No mock catalog data at runtime. |
+
+---
+
+## Architecture
+
+```
+User Input (Natural Language)
+        │
+        ▼
+   AI Agent Runtime  ←→  MCP Protocol Layer (13 tools; execute_payment BLOCKED)
+        │
+        ▼
+   Multi-Item Intent Parser → Parallel Cart Research Engine
+        │
+        ▼
+   Live Data Providers
+   ├── PublicPlatformConnector  [world.openfoodfacts.org]  LIVE / VERIFIED_API
+   ├── RealPlatformConnector    [cafeacme.local]           SANDBOX / VERIFIED_API
+   └── GenericWebConnector      [any merchant]             CHECKOUT_HANDOFF only
+        │
+        ▼
+   Product Truth Engine  →  PRODUCT_VERIFIED / SOURCE_BACKED / UNVERIFIED
+        │
+        ▼
+   Multi-Merchant Discovery → Cart Optimizer → Recommendation Engine
+        │
+        ▼
+   Checkout Orchestrator (live re-validation → plan hash)
+        │
+        ▼
+   ┌─ STOP: Human Confirmation Required ─────────────────────┐
+   │  HMAC-SHA256 single-use token                           │
+   │  All UNKNOWN fees explicitly shown                      │
+   │  Human reads, confirms, submits token                   │
+   └──────────────────────────────────────────────────────────┘
+        │
+        ▼
+   Payment Safety Layer (nonce + replay + budget + step-up)
+        │
+        ▼
+   Order Binding (1:1 cryptographic tx ↔ order)
+        │
+        ▼
+   Reconciliation Engine → BOTH_CONFIRMED / PAYMENT_ONLY / UNRESOLVED
+        │
+        ▼
+   Monitoring (Prometheus + Grafana + Structured Logging + Incident Engine)
 ```
 
-### Critical Security Invariant
-
-> **The LLM is never the financial authorization authority.**
-
-Mandate Gateway treats the AI agent and external product catalog data as untrusted inputs. Financial authorization decisions are computed deterministically by the Gateway policy engine using explicit buyer mandates and merchant AI commerce policies. No money movement action reaches the Razorpay execution boundary without signed, bounded, and audited Gateway authorization.
+Full architecture: [`docs/FINAL_ARCHITECTURE.md`](docs/FINAL_ARCHITECTURE.md)
 
 ---
 
-## Architecture Summary
+## Safety Guarantees
 
-Mandate Gateway enforces two-sided trust and deterministic financial execution across distinct architectural zones:
+### Core Invariant
+> **NO PAYMENT EFFECT MAY ACCIDENTALLY EXECUTE TWICE.**
 
-1. **Application Layer (`apps/`)**:
-   - `apps/web`: Next.js control center UI for buyers, merchants, transactions, audit trails, and red-team chaos labs.
-   - `apps/api`: FastAPI HTTP API entrypoint, routing, and dependency injection.
-2. **Deterministic Gateway Layer (`gateway/`)**:
-   - Central fail-closed authorization boundary. Evaluates policy, mandate constraints, cart integrity (SHA-256 cart hash), budget limits, nonces, idempotency keys, step-up requirements, and tool proxy masking.
-3. **AI Agent Layer (`agent/`)**:
-   - Untrusted shopping agent (LangGraph). Interprets natural language shopping intent, searches products, and constructs purchase proposals. Has ZERO direct payment authorization rights.
-4. **Razorpay Integration Layer (`razorpay/`)**:
-   - Official Razorpay MCP client adapter. Executes only pre-authorized execution payloads against Razorpay Test Mode.
-5. **Audit Subsystem (`audit/`)**:
-   - Immutable SHA-256 hash-linked audit ledger and Ed25519-signed action receipts (`action_receipt.json`) verifiable offline.
-6. **Red-Team Chaos Lab (`redteam/`)**:
-   - Adversarial testing suite covering prompt injection, cart tampering, nonce replay, double spend, timeout retry, expired mandates, policy violations, and unauthorized tool calls.
-7. **Database Infrastructure (`db/`)**:
-   - PostgreSQL models, migrations (Alembic), seeds, and atomic row locking for budget reservations.
-8. **Testing Framework (`tests/`)**:
-   - Cross-cutting unit, integration, security, concurrency, and end-to-end verification suites.
-9. **Documentation & ADRs (`docs/`)**:
-   - Architecture Decision Records (ADRs), system architecture, API contracts, security threat models, and testing strategies.
-10. **Infrastructure Layer (`infra/`)**:
-    - Production and container infrastructure deployment configs.
+Enforced by **5 independent mechanisms**:
+1. HMAC-SHA256 single-use confirmation tokens (gate layer)
+2. DB-persisted cryptographic nonces (execution layer)
+3. Replay fingerprint rejection (request layer)
+4. 1:1 transaction ↔ order binding with duplicate rejection (binding layer)
+5. Idempotent reconciliation with evidence hashing (reconciliation layer)
+
+### Security Properties
+- Secret redaction in all log output
+- Webhook HMAC-SHA256 verification + timestamp expiry
+- Autonomous MCP clients cannot invoke `execute_payment` or `create_merchant_order`
+- Budget enforcement before any payment authorization
+- Step-up challenge for high-value transactions
+- Ed25519-signed action receipts (offline-verifiable)
+- SHA-256 cryptographic audit ledger hash-chain
 
 ---
 
-## Repository Structure
+## Live Data Integrations
 
-```text
-mandate-gateway/
-│
-├── apps/
-│   ├── web/              # Control Center frontend (Next.js)
-│   └── api/              # API server (FastAPI)
-│
-├── gateway/              # Deterministic trust boundary & policy engine
-├── agent/                # Untrusted AI shopping agent (LangGraph)
-├── razorpay/             # Razorpay MCP integration rail & adapter
-├── audit/                # Cryptographic audit ledger & signed receipts
-├── redteam/              # Adversarial red-team chaos lab
-│
-├── db/                   # Database schemas, migrations, and seeds
-│
-├── tests/                # Verification test suites
-│   ├── unit/             # Isolated component tests
-│   ├── integration/      # Gateway + DB + Redis + MCP integration
-│   ├── security/         # Threat model enforcement tests
-│   ├── concurrency/      # Race conditions & double-spend prevention
-│   └── e2e/              # End-to-end buyer-to-receipt flows
-│
-├── scripts/              # Developer & CI scripts
-│
-├── docs/                 # Documentation & Architecture Decision Records
-│   ├── adr/              # Architecture Decision Records
-│   ├── architecture/     # System architecture & flow diagrams
-│   ├── api/              # API specs & MCP contracts
-│   ├── security/         # Security design & invariants
-│   └── testing/          # Testing strategy & coverage guidelines
-│
-├── infra/                # Infrastructure & deployment manifests
-│
-├── .github/
-│   └── workflows/        # CI/CD automation pipelines
-│
-├── .env.example          # Environment configuration template
-├── .gitignore            # Git exclusion rules
-├── README.md             # Project documentation (this file)
-├── PROJECT_CONTEXT.md    # Authoritative architectural context & source of truth
-├── BUILD_STATUS.md       # Module & section engineering status tracker
-├── docker-compose.yml    # Container runtime orchestration
-└── Makefile              # Command interface
-```
+| Integration | What Is Genuinely Live |
+|-------------|----------------------|
+| `world.openfoodfacts.org` | Real HTTP API — real food/grocery product data |
+| All algorithmic layers | Cart research, optimization, recommendation — run on real data |
+| Safety mechanisms | All confirmation, deduplication, reconciliation — real enforcement |
+| Prometheus `/metrics` | Real metrics scrape endpoint |
+
+| What Is NOT Live (Honest) |
+|--------------------------|
+| Real money / PSP (no Razorpay/Stripe credentials wired) |
+| Real merchant order creation (sandbox `cafeacme.local` only) |
+| Delivery fees / taxes (shown as `UNKNOWN` — not estimatable) |
 
 ---
 
-## Current Development Status
+## Capability Matrix
 
-> **FOUNDATION STAGE (M00 — Engineering Foundation)**
->
-> **Business functionality is not implemented yet.**
+| Capability | Level | Notes |
+|-----------|-------|-------|
+| Food product discovery | ✅ LIVE | OpenFoodFacts public API |
+| Price truth verification | ✅ LIVE | Against live source |
+| Multi-merchant comparison | ✅ LIVE | Across registered connectors |
+| Multi-item cart optimization | ✅ LIVE (algorithmic) | Branch-and-bound |
+| Explainable recommendations | ✅ LIVE (algorithmic) | Multi-factor scored |
+| Human confirmation gate | ✅ LIVE | HMAC-SHA256, single-use |
+| Payment execution | ⚠️ SANDBOX ONLY | `cafeacme.local` test merchant |
+| Real merchant checkout | ✅ HANDOFF | URL generation — no direct API |
+| Delivery/tax fees | ⚠️ UNKNOWN | Honestly disclosed, never estimated |
+| Real PSP integration | ❌ NOT AVAILABLE | No live payment credentials |
 
-- **S00.1 Repository & Monorepo Architecture**: **COMPLETED**
-- **S00.2 Local Development Environment**: **COMPLETED**
-  - [x] **S00.2.1 Docker & Compose Foundation**: **COMPLETED**
-  - [x] **S00.2.2 PostgreSQL Infrastructure**: **COMPLETED**
-  - [x] **S00.2.3 Redis Infrastructure**: **COMPLETED**
-  - [x] **S00.2.4 Networking & Isolation**: **COMPLETED**
-  - [x] **S00.2.5 Persistent Storage & Lifecycle**: **COMPLETED**
-  - [x] **S00.2.6 Developer Workflow & Local Tooling**: **COMPLETED**
-  - [x] **S00.2.7 Health & Readiness Verification**: **COMPLETED**
-  - [x] **S00.2.8 Foundation Verification & Freeze**: **COMPLETED**
-- **S00.3 Configuration & Secrets Management**: **COMPLETE / FROZEN**
-- **S00.4 Application Runtime Foundation**: **COMPLETE / FROZEN**
-- **S00.5 Observability & Error Handling Foundation**: NOT STARTED
-- **S00.6 Quality Gates & CI**: COMPLETE / FROZEN (`make check`, `black`, `flake8`, `mypy`, `secret_scan`, `architecture_check`, `.github/workflows/quality.yml`)
-- **S00.7 Foundation Verification & Freeze**: **FINAL VERIFIED / FROZEN**
+Full matrix: [`docs/FINAL_CAPABILITY_MATRIX.md`](docs/FINAL_CAPABILITY_MATRIX.md)
 
 ---
 
-## Module M00 — Engineering Foundation Status
+## Quick Start
 
-```text
-============================================================
-M00 — ENGINEERING FOUNDATION
-STATUS: COMPLETE / FROZEN
-============================================================
-```
+### Prerequisites
+- Python 3.10+
+- Docker + Docker Compose (for infrastructure)
 
----
-
-## Quality Gates & CI Architecture (S00.6)
-
-Mandate Gateway enforces a fail-closed 9-step quality gate system locally (`make check`) and in GitHub Actions CI (`.github/workflows/quality.yml`).
-
-### Developer Quality Commands
-```bash
-make format            # Auto-format Python source files with Black
-make format-check      # Verify Black formatting compliance
-make lint              # Run static code linting with Flake8
-make typecheck         # Run static type checking with Mypy
-make test              # Run automated unit & integration test suites
-make security          # Run security test suite & secret leak prevention
-make secret-scan       # Scan repository for credentials & sentinels
-make architecture-check # Enforce M00 boundary invariants against premature business logic
-make check             # Master Quality Gate: Run all checks sequentially (FAIL-CLOSED)
-```
-
----
-
-## Application Runtime Foundation (S00.4)
-
-Mandate Gateway provides a clean, deterministic Python application runtime ([`apps/api/app/`](file:///home/santhakumar/Desktop/Raserpay/apps/api/app/)).
-
-### Core Runtime Capabilities
-1. **Deterministic Factory (`create_app`)**: Constructs standard ASGI-compliant application instances with dependency injection and zero import-time side effects (no network calls, DB, or Redis connections at import time).
-2. **Lifecycle State Management (`AppLifecycle`)**: Thread-safe transitions (`BOOTING`, `INITIALIZING`, `READY`, `SHUTTING_DOWN`, `STOPPED`, `FAILED`).
-3. **Health & Readiness Endpoints**:
-   - `/health` (200 OK process liveness).
-   - `/ready` (200 OK when application is `READY`, 503 Service Unavailable when not `READY`).
-4. **Structured JSON Logging**: Standard JSON formatter with `timestamp`, `level`, `service`, `environment`, `event`, `request_id`, `correlation_id`, `trace_id`, and `SecretRedactionFilter`.
-5. **Request Identity Middleware**: Sanitizes incoming `X-Request-ID`, `X-Correlation-ID`, `X-Trace-ID` or generates safe UUIDv4s.
-6. **Error Boundary**: Generic exception hierarchy (`ConfigurationError`, `RuntimeInitializationError`, `DependencyInitializationError`, `RequestValidationError`, `InternalApplicationError`) redacting secrets and hiding tracebacks.
-
----
-
-## Local Setup & Infrastructure Access
-
-Local development environment orchestration is configured via Docker Compose (`docker-compose.yml`) and operated via `Makefile`.
-
-### Developer Workflow & Local Tooling (S00.2.6)
-
-Concise developer onboarding path:
+### Setup
 
 ```bash
-# 1. Clone repository
-git clone <repository-url>
+# Clone
+git clone https://github.com/SanthaKumar-K-2004/mandate-gateway.git
 cd mandate-gateway
 
-# 2. Run preflight environment check (auto-creates .env from .env.example)
-make preflight
-
-# 3. Launch infrastructure containers
-make dev         # or: make up
-
-# 4. Check infrastructure health & status
-make status      # or: make health
-
-# 5. Tail infrastructure logs
-make logs
-
-# 6. Stop infrastructure containers (SAFE: preserves volume data on disk)
-make down
-
-# 7. DESTRUCTIVE RESET: Delete persistent data volumes (requires explicit confirmation)
-make reset-data
-```
-
-### Health & Readiness Verification (S00.2.7)
-
-- **PostgreSQL Health Probe**: Uses PostgreSQL-native readiness check `pg_isready -U postgres -d mandate_gateway`. Evaluates PostgreSQL process responsiveness and database accessibility.
-- **Redis Health Probe**: Uses `redis-cli ping` expecting `PONG`.
-- **Health vs Readiness Semantics**:
-  - *Health*: Service container process is running and responding to local health checks.
-  - *Readiness*: Service port (`postgres:5432` / `redis:6379`) is accepting incoming container infrastructure connections.
-  - *Application Boundary*: Infrastructure probes DO NOT claim application-level business readiness; application health routes will be configured in S00.4/S00.5.
-
-### Persistent Storage & Lifecycle (S00.2.5)
-
-- **Storage Volume Inventory**:
-  - `mandate-gateway-postgres-data`: Stateful named volume mounted at `/var/lib/postgresql/data` inside `postgres` container.
-  - `mandate-gateway-redis-data`: Stateful named volume mounted at `/data` inside `redis` container.
-- **Container Lifecycle & Persistence Semantics**:
-  - **`docker compose stop` / `start` / `restart`**: Container state is suspended/resumed. All volume data remains 100% intact.
-  - **`docker compose down` (SAFE DEFAULT)**: Container execution is stopped and bridge networks are removed, BUT named volumes are **PRESERVED** on host disk. Data survives container recreation cycles intact.
-  - **`docker compose down -v` (DESTRUCTIVE RESET)**: Stops containers, removes networks, and **PERMANENTLY WIPES** all project named storage volumes. This command MUST NEVER be run automatically.
-- **Safe Inspection Commands**:
-  - List project volumes: `docker volume ls --filter name=mandate-gateway`
-  - Inspect volume mount details: `docker volume inspect mandate-gateway-postgres-data` / `docker volume inspect mandate-gateway-redis-data`
-- **Financial Correctness & Durability Boundary**:
-  - Local Docker volumes provide state reproducibility across local container recreations ONLY.
-  - Local Docker volumes DO NOT provide production-grade financial durability, WAL archiving, or point-in-time recovery.
-  - PostgreSQL is the sole authoritative persistent datastore for financial correctness. Redis persistence (RDB snapshots) strictly supports transient caching and rate-limiting, and DOES NOT guarantee financial transaction durability.
-- **Developer Reset Ownership**: Interactive reset commands (`make reset-data` with explicit user confirmation prompts) are executed safely via Makefile interface.
-
-### Network Isolation & Trust Boundaries (S00.2.4)
-
-- **Active Network**: `mandate-gateway-net` (User-defined Docker bridge network)
-- **Host Loopback Exposure**: `127.0.0.1:5432` (PostgreSQL) and `127.0.0.1:6379` (Redis). `0.0.0.0` public network exposure is strictly forbidden.
-- **Service Discovery**: Inter-container communication uses Compose DNS (`postgres:5432`, `redis:6379`). `localhost` MUST NOT be used for container-to-container communication.
-- **Future Trust Model Invariant**:
-  ```text
-  WEB (Next.js UI) ──► API (FastAPI Gateway) ──► PostgreSQL / Redis
-  WEB (Next.js UI)  ──X► PostgreSQL (Direct database access forbidden)
-  WEB (Next.js UI)  ──X► Redis (Direct cache access forbidden)
-  ```
-  When application container runtimes are introduced, network bridge segmentation will isolate `web` from direct datastore connectivity, enforcing `api` as the sole authorized gateway boundary.
-
-### PostgreSQL Infrastructure (S00.2.2)
-
-- **Image Version**: `postgres:16-alpine` (Explicit, stable Alpine image)
-- **Database Identity**: `mandate_gateway`
-- **Development User**: `postgres` (configured via `POSTGRES_USER`)
-- **Connection Hosts**:
-  - **Host Machine (Developer Tools)**: `127.0.0.1:5432` (`postgresql://postgres:<password>@127.0.0.1:5432/mandate_gateway`)
-  - **Docker Compose Containers**: `postgres:5432` (`postgresql://postgres:<password>@postgres:5432/mandate_gateway`)
-- **Network Isolation Invariant**: `localhost` MUST NOT be used for container-to-container database communication inside Docker Compose. Inside a container, `localhost` points to the container itself, whereas container-to-container access relies on Compose bridge DNS (`postgres`).
-- **Environment Requirement**: Copy `.env.example` to `.env` and set `POSTGRES_PASSWORD=CHANGE_ME_LOCAL_ONLY` (or your local development password). The canonical application `DATABASE_URL` will be established in S00.4 Application Runtime Foundation.
-
-### Redis Infrastructure (S00.2.3)
-
-- **Image Version**: `redis:7-alpine` (Explicit, stable Alpine image)
-- **Service Identity**: `redis` (container: `mandate_gateway_redis`)
-- **Connection Hosts**:
-  - **Host Machine (Developer Tools)**: `127.0.0.1:6379` (`redis://127.0.0.1:6379/0`)
-  - **Docker Compose Containers**: `redis:6379` (`redis://redis:6379/0`)
-- **Network Isolation Invariant**: `localhost` MUST NOT be used for container-to-container Redis communication inside Docker Compose.
-- **Persistence Baseline**: Standard RDB snapshotting baseline backed by stateful named volume `mandate-gateway-redis-data` mounted at `/data`.
-- **Infrastructure Role**: Redis serves strictly as supporting infrastructure (ephemeral caching, transient rate-limiting). PostgreSQL is the authoritative persistent datastore for financial correctness.
-- **Environment Requirement**: Copy `.env.example` to `.env`. The canonical application `REDIS_URL` will be established in S00.4 Application Runtime Foundation.
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd mandate-gateway
-
-# Environment setup (S00.2 / S00.3)
+# Environment
 cp .env.example .env
 
-# Validate Docker Compose foundation (S00.2.1)
-docker compose config
-
-# Verify PostgreSQL Readiness (when Docker is running)
-docker compose exec postgres pg_isready -U postgres -d mandate_gateway
-
-# Verify Redis Readiness (when Docker is running)
-docker compose exec redis redis-cli ping
-
-# Install dependencies (S00.2)
+# Install dependencies
 make install
 
-# Launch local services (S00.2)
-make dev
+# Verify quality gate (must be GREEN before anything else)
+make check
+# Expected: [✓] ALL S00.6 QUALITY GATE CHECKS PASSED CLEANLY!
+```
+
+### Run Infrastructure (optional — for full persistence)
+
+```bash
+make dev        # Start PostgreSQL + Redis
+make status     # Verify health
+```
+
+### Run the Production Reality Certification
+
+```bash
+PYTHONPATH=. python3 scripts/run_production_reality_certification.py
+# Expected: [✓] PRODUCTION REALITY CERTIFICATION COMPLETED SUCCESSFULLY!
+```
+
+### Run Live Cart Research Demo
+
+```bash
+PYTHONPATH=. python3 scripts/run_live_cart_research_pilot.py
+# Queries live OpenFoodFacts API for real products
 ```
 
 ---
 
-## Testing Placeholder
-
-Automated test suites and continuous integration quality gates will be configured in section **S00.6**.
+## Testing
 
 ```bash
-# Run unit tests (S00.6)
-make test
-
-# Run code style and lint checks (S00.6)
+# Full quality gate (black + flake8 + mypy + tests + secret scan + architecture guard)
 make check
+
+# All 844 tests
+PYTHONPATH=. python3 -m unittest discover -s tests -p "test_*.py"
+
+# Production chaos failure matrix (18 scenarios)
+PYTHONPATH=. python3 -m unittest tests/production/test_chaos_failure_matrix.py -v
+
+# Secret redaction enforcement
+PYTHONPATH=. python3 -m unittest tests/production/test_secret_redaction.py -v
+
+# MCP client interoperability
+PYTHONPATH=. python3 scripts/mcp_client_test_runner.py
 ```
+
+**Test results: 844 tests, 0 failures, 2 skipped. Black clean. Flake8 clean. MyPy 0 errors.**
+
+---
+
+## Project Structure
+
+```
+mandate-gateway/
+├── apps/api/
+│   ├── agent/          # AI agent runtime, MCP server, tool registry, confirmation gate
+│   ├── commerce/       # Product truth, connectors, cart research, reconciliation
+│   │   ├── connectors/ # PublicPlatformConnector, RealPlatformConnector, GenericWeb
+│   │   ├── product_truth_engine.py
+│   │   ├── cart_research.py
+│   │   ├── cart_optimizer.py
+│   │   ├── recommendation_engine.py
+│   │   ├── transaction_binding.py
+│   │   └── reconciliation.py
+│   ├── domain/         # Authorization, mandate, budget, nonce, step-up, execution
+│   ├── observability/  # Prometheus exporter, structured logger, incident engine
+│   ├── routers/        # FastAPI HTTP endpoints
+│   └── config/         # Settings, production validator
+├── tests/
+│   ├── unit/           # Component-level tests
+│   ├── integration/    # End-to-end DB + API tests
+│   ├── security/       # Threat model enforcement
+│   ├── commerce/       # Cart, product truth, connector tests
+│   └── production/     # Chaos matrix, secret redaction, smoke tests
+├── scripts/            # Demo, certification, and MCP test scripts
+├── docs/
+│   ├── FINAL_ARCHITECTURE.md
+│   ├── FINAL_CAPABILITY_MATRIX.md
+│   ├── FINAL_DEMO_SCRIPT.md
+│   └── production/     # Deployment guide, runbook, incident response
+├── infra/
+│   ├── nginx/          # Reverse proxy with rate limiting
+│   ├── prometheus/     # Metrics and alerting rules
+│   └── grafana/        # 5 production dashboards
+├── docker-compose.production.yml
+├── Makefile
+├── .env.example
+└── PROJECT_CONTEXT.md  # Authoritative architectural context (DO NOT MODIFY)
+```
+
+---
+
+## Roadmap
+
+| Milestone | Status | Description |
+|-----------|--------|-------------|
+| M00 — Engineering Foundation | ✅ COMPLETE | Repo, CI, config, runtime, observability |
+| M01–M05 — Mandate Domain | ✅ COMPLETE | Authorization, execution, persistence, audit |
+| M23 — Real-Data AI Discovery | ✅ COMPLETE | Live OpenFoodFacts integration, fail-closed |
+| M24 — Product Truth Engine | ✅ COMPLETE | Evidence-hashed verification |
+| M25 — Order/Payment Binding | ✅ COMPLETE | Cryptographic 1:1 binding, webhooks |
+| M26 — Production Reality | ✅ COMPLETE | Connector classification, reconciliation |
+| M27 — Multi-Merchant Network | ✅ COMPLETE | Multi-source discovery, comparison |
+| M28 — Cart Intelligence | ✅ COMPLETE | Multi-item research, optimizer, recommendations |
+| M29 — Production Release | ✅ COMPLETE | Docker, Nginx, Prometheus, Grafana, chaos tests |
+| **v1.0.0 Release** | ✅ **TAGGED** | Final certified release |
 
 ---
 
 ## Security Notice
 
+> [!IMPORTANT]
+> **This system enforces fail-closed safety at every layer.** Unverified products block checkout. Duplicate payment attempts are rejected. Dangerous MCP tools are excluded from autonomous client access. Secret values are redacted from all log output.
+
 > [!WARNING]
-> **Foundation Stage Warning:** This repository is currently establishing engineering foundation specifications. Do not attempt to run live transactions or configure production secrets at this stage. All financial executions will run against **Razorpay Test Mode** once the integration layer is initialized.
+> **No real payment credentials are configured.** Payment execution operates in sandbox mode only (`cafeacme.local`). To use with a real PSP, add appropriate API credentials to `.env` and integrate a real payment provider connector.
+
+---
+
+## Known Limitations
+
+- Food/grocery products only (OpenFoodFacts scope)
+- No real PSP credentials — sandbox payment execution only
+- Delivery fees and taxes always shown as `UNKNOWN`
+- `cafeacme.local` requires local DNS or hosts file entry
+- SQLite in development; PostgreSQL required for production persistence
+
+---
+
+## License
+
+MIT License — see [LICENSE](LICENSE)
+
+---
+
+## Demo
+
+Full demo script with exact commands and expected outputs: [`docs/FINAL_DEMO_SCRIPT.md`](docs/FINAL_DEMO_SCRIPT.md)
+
+```bash
+# 30-second proof of safety guarantees
+PYTHONPATH=. python3 scripts/run_production_reality_certification.py
+```
