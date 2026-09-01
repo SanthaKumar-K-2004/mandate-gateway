@@ -4,7 +4,7 @@
 
 [![CI Quality Gate](https://github.com/SanthaKumar-K-2004/mandate-gateway/actions/workflows/ci.yml/badge.svg)](https://github.com/SanthaKumar-K-2004/mandate-gateway/actions/workflows/ci.yml)
 [![Master Quality Gate](https://img.shields.io/badge/make%20check-PASSING-brightgreen)](docs/RELEASE_READINESS.md)
-[![Test Suite](https://img.shields.io/badge/tests-844%20passing-brightgreen)](tests/)
+[![Test Suite](https://img.shields.io/badge/tests-842%20passed%2C%202%20skipped-brightgreen)](tests/)
 [![Version](https://img.shields.io/badge/version-v1.0.0-blue)](https://github.com/SanthaKumar-K-2004/mandate-gateway/releases/tag/v1.0.0)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
