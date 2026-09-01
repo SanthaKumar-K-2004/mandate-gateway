@@ -1,5 +1,7 @@
 .PHONY: help install dev up stop start restart down status health logs preflight config-check reset-data test security secret-scan architecture-check lint format format-check typecheck check clean
 
+PYTHON ?= python3
+
 # Default target
 help:
 	@echo "============================================================"
@@ -50,11 +52,11 @@ preflight:
 	@echo "[✓] Preflight check completed."
 
 config-check: preflight
-	@PYTHONPATH=. python3 -c "from apps.api.config import config_check_summary; print(config_check_summary())"
+	@PYTHONPATH=. $(PYTHON) -c "from apps.api.config import config_check_summary; print(config_check_summary())"
 
 install:
 	@echo "Installing local quality gate toolchain dependencies..."
-	@pip3 install --quiet --break-system-packages black flake8 mypy 2>/dev/null || pip3 install --quiet black flake8 mypy
+	@$(PYTHON) -m pip install --quiet --break-system-packages black flake8 mypy 2>/dev/null || $(PYTHON) -m pip install --quiet black flake8 mypy
 	@echo "[✓] Toolchain dependencies (black, flake8, mypy) installed successfully."
 
 dev: up
@@ -139,35 +141,35 @@ reset-data:
 
 format:
 	@echo "Running code auto-formatter (black)..."
-	@PYTHONPATH=. python3 -m black apps/ tests/ scripts/
+	@PYTHONPATH=. $(PYTHON) -m black apps/ tests/ scripts/
 
 format-check:
 	@echo "Running formatting compliance check (black --check)..."
-	@PYTHONPATH=. python3 -m black --check apps/ tests/ scripts/
+	@PYTHONPATH=. $(PYTHON) -m black --check apps/ tests/ scripts/
 
 lint:
 	@echo "Running static code linter (flake8)..."
-	@python3 -m flake8 apps/ scripts/ tests/
+	@PYTHONPATH=. $(PYTHON) -m flake8 apps/ scripts/ tests/
 
 typecheck:
 	@echo "Running static type checker (mypy)..."
-	@PYTHONPATH=. python3 -m mypy apps/ scripts/ tests/
+	@PYTHONPATH=. $(PYTHON) -m mypy apps/ scripts/ tests/
 
 test:
 	@echo "Running automated test suites..."
-	@PYTHONPATH=. python3 -m unittest discover -s tests -p "test_*.py" -v
+	@PYTHONPATH=. $(PYTHON) -m unittest discover -s tests -p "test_*.py" -v
 
 security:
 	@echo "Running security test suite..."
-	@PYTHONPATH=. python3 -m unittest discover -s tests/security -p "test_*.py" -v
+	@PYTHONPATH=. $(PYTHON) -m unittest discover -s tests/security -p "test_*.py" -v
 
 secret-scan:
-	@echo "Running repository secret scanner..."
-	@python3 scripts/secret_scan.py
+	@echo "Running repository security secret scanner..."
+	@PYTHONPATH=. $(PYTHON) scripts/secret_scan.py
 
 architecture-check:
 	@echo "Running architecture regression guard..."
-	@python3 scripts/architecture_check.py
+	@PYTHONPATH=. $(PYTHON) scripts/architecture_check.py
 
 check: preflight config-check format-check lint typecheck test security secret-scan architecture-check
 	@echo "============================================================"
