@@ -96,6 +96,24 @@ def run_mcp_client_interoperability_suite() -> int:
     assert "result" in call_resp3
     print(f" -> Connector Health Result: {call_resp3['result']['content'][0]['text'][:80]}...")
 
+    # Step 5: Verify direct execution barrier rejection for restricted tool invocation via 'tools/call'
+    print("\n[Step 5] Testing direct 'tools/call' for restricted tool 'execute_payment'...")
+    call_req4: Dict[str, Any] = {
+        "jsonrpc": "2.0",
+        "id": 105,
+        "method": "tools/call",
+        "params": {
+            "name": "execute_payment",
+            "arguments": {"payment_proposal_id": "prop_123", "confirmation_token": "token_123"},
+        },
+    }
+    call_resp4 = server.handle_mcp_request(call_req4)
+    assert (
+        "error" in call_resp4
+    ), "CRITICAL SECURITY FAILURE: execute_payment direct invocation was not blocked!"
+    assert "Security Rejection" in call_resp4["error"]["message"]
+    print(" -> Direct Restricted Call Rejection verified:", call_resp4["error"]["message"])
+
     print("\n============================================================")
     print(" [✓] EXTERNAL MCP CLIENT INTEROPERABILITY SUITE PASSED CLEANLY!")
     print("============================================================")

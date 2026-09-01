@@ -43,7 +43,8 @@ class GenericWebCheckoutConnector(CommerceConnector):
     def validate_handoff_url(url: str) -> str:
         """
         Strict URL security validator:
-        Blocks open redirects, javascript:, data:, file: schemes, and malformed URLs.
+        Blocks open redirects, javascript:, data:, file: schemes, userinfo credentials,
+        internal IP ranges (SSRF prevention), and malformed URLs.
         """
         if not url:
             raise CommerceConnectorError("Handoff URL is empty.")
@@ -54,7 +55,7 @@ class GenericWebCheckoutConnector(CommerceConnector):
         # Reject dangerous non-HTTP schemes
         if any(
             url_lower.startswith(scheme)
-            for scheme in ("javascript:", "data:", "file:", "vbscript:", "about:")
+            for scheme in ("javascript:", "data:", "file:", "vbscript:", "about:", "blob:")
         ):
             raise CommerceConnectorError(
                 f"Security Rejection: Malicious URL scheme detected in '{url_str[:30]}'."
@@ -77,14 +78,21 @@ class GenericWebCheckoutConnector(CommerceConnector):
                 "Security Rejection: Missing network location / domain in URL."
             )
 
+        # Reject credentials in URL to prevent userinfo confusion or token leakage
+        if parsed.username or parsed.password:
+            raise CommerceConnectorError(
+                "Security Rejection: URL contains credentials (userinfo), which is forbidden."
+            )
+
         # Reject localhost/internal IP SSRF targets
-        netloc_lower = parsed.netloc.lower().split(":")[0]
-        if netloc_lower in (
-            "localhost",
-            "127.0.0.1",
-            "0.0.0.0",
-            "169.254.169.254",
-        ) or netloc_lower.startswith("192.168."):
+        netloc_lower = parsed.netloc.lower().split("@")[-1].split(":")[0]
+        if (
+            netloc_lower in ("localhost", "127.0.0.1", "0.0.0.0", "169.254.169.254", "::1")
+            or netloc_lower.startswith("192.168.")
+            or netloc_lower.startswith("10.")
+            or netloc_lower.startswith("127.")
+            or any(netloc_lower.startswith(f"172.{b}.") for b in range(16, 32))
+        ):
             raise CommerceConnectorError(
                 f"Security Rejection: Internal / Loopback address blocked '{netloc_lower}'."
             )
