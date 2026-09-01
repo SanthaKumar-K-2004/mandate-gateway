@@ -45,14 +45,18 @@ def initialize_database(settings: Optional[Settings] = None) -> None:
     """
     Initialize SQLAlchemy async engine and session factory using configured Settings.
     Configures pool size, max overflow, timeout, recycle, and connection pre-ping.
+    Falls back to SQLite in-memory for development/test environments when Postgres
+    is unavailable (e.g. standalone host run without Docker Compose).
     """
     global _async_engine, _async_session_factory
 
     app_settings = settings or get_settings()
-    uri = get_postgres_uri(app_settings)
 
-    # Use SQLite in-memory async engine when running in explicit TEST environment if Postgres unavailable
+    # Production always requires real Postgres
+    is_production = app_settings.app_env == Environment.PRODUCTION
     is_test_mode = app_settings.app_env == Environment.TEST
+
+    uri = get_postgres_uri(app_settings)
 
     try:
         _async_engine = create_async_engine(
@@ -63,7 +67,7 @@ def initialize_database(settings: Optional[Settings] = None) -> None:
             pool_recycle=1800,
             pool_pre_ping=True,
             echo=False,
-            connect_args={"connect_timeout": 3},
+            connect_args={"timeout": 3},
         )
         _async_session_factory = async_sessionmaker(
             bind=_async_engine,
@@ -77,10 +81,64 @@ def initialize_database(settings: Optional[Settings] = None) -> None:
         )
     except Exception as exc:
         logger.error("Failed to initialize database engine: %s", exc)
-        if not is_test_mode:
+        if is_production:
             raise RuntimeError(
                 f"Database initialization failed in production environment: {exc}"
             ) from exc
+        # Non-production fallback: SQLite in-memory for standalone/demo mode
+        logger.warning(
+            "Postgres unavailable — falling back to SQLite in-memory for standalone demo mode."
+        )
+        try:
+            _async_engine = create_async_engine(
+                "sqlite+aiosqlite:///:memory:",
+                connect_args={"check_same_thread": False},
+                echo=False,
+            )
+            _async_session_factory = async_sessionmaker(
+                bind=_async_engine,
+                class_=AsyncSession,
+                expire_on_commit=False,
+                autoflush=False,
+            )
+            _sqlite_fallback_active = True
+        except Exception as sqlite_exc:
+            logger.error("SQLite fallback also failed: %s", sqlite_exc)
+            if not is_test_mode:
+                raise RuntimeError(
+                    f"Database initialization failed (both Postgres and SQLite fallback): {sqlite_exc}"
+                ) from sqlite_exc
+
+
+_sqlite_fallback_active: bool = False
+
+
+async def ensure_sqlite_tables() -> None:
+    """Create all schema tables when running with SQLite in-memory fallback.
+    Must be called once before any DB operations when the fallback is active.
+    """
+    global _sqlite_fallback_active
+    if not _sqlite_fallback_active or _async_engine is None:
+        return
+    from db.models.base import Base
+    # Import all models so their metadata is registered
+    import db.models.merchant  # noqa: F401
+    import db.models.mandate  # noqa: F401
+    import db.models.policy  # noqa: F401
+    import db.models.transaction  # noqa: F401
+    import db.models.outbox  # noqa: F401
+    import db.models.audit  # noqa: F401
+    import db.models.budget  # noqa: F401
+    import db.models.product  # noqa: F401
+    import db.models.credential  # noqa: F401
+    import db.models.replay  # noqa: F401
+    import db.models.step_up  # noqa: F401
+    import db.models.webhook  # noqa: F401
+    import db.models.receipt  # noqa: F401
+    async with _async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    _sqlite_fallback_active = False  # Tables created, no need to re-run
+    logger.info("SQLite in-memory schema created successfully (standalone demo mode).")
 
 
 async def close_database() -> None:
