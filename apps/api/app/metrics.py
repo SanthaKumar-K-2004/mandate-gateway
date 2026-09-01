@@ -109,17 +109,20 @@ class MetricsRegistry:
             self._gauges.clear()
             self._latencies.clear()
 
+    @staticmethod
+    def _format_metric_key(name: str, labels: Tuple[Tuple[str, str], ...]) -> str:
+        if not labels:
+            return name
+        formatted_labels = ",".join(f'{lk}="{lv}"' for lk, lv in labels)
+        return f"{name}{{{formatted_labels}}}"
+
     def get_metrics_summary(self) -> Dict[str, Any]:
         """Returns structured summary of all counters, gauges, and latencies."""
         with self._lock:
             counters_out = {
-                f"{k[0]}{{{','.join(f'{lk}=\"{lv}\"' for lk, lv in k[1])}}}": v
-                for k, v in self._counters.items()
+                self._format_metric_key(k[0], k[1]): v for k, v in self._counters.items()
             }
-            gauges_out = {
-                f"{k[0]}{{{','.join(f'{lk}=\"{lv}\"' for lk, lv in k[1])}}}": v
-                for k, v in self._gauges.items()
-            }
+            gauges_out = {self._format_metric_key(k[0], k[1]): v for k, v in self._gauges.items()}
             return {
                 "counters": counters_out,
                 "gauges": gauges_out,
