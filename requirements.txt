@@ -1,0 +1,10 @@
+# Mandate Gateway — Dependencies
+fastapi>=0.100.0
+uvicorn>=0.22.0
+pydantic>=2.0.0
+httpx>=0.24.0
+prometheus-client>=0.17.0
+cryptography>=41.0.0
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.4.0
