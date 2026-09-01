@@ -69,7 +69,9 @@ def check_architecture(root_dir: str = ".") -> bool:
 
     # 2. Check source & test files for prohibited imports/symbols
     for dirpath, dirnames, filenames in os.walk(root_dir):
-        dirnames[:] = [d for d in dirnames if d not in ignored_dirs]
+        dirnames[:] = [
+            d for d in dirnames if d not in ignored_dirs and not d.startswith((".venv", "venv"))
+        ]
 
         for filename in filenames:
             if not filename.endswith((".py", ".sh")):

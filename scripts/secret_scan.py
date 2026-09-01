@@ -76,7 +76,9 @@ def scan_repository(root_dir: str = ".") -> bool:
 
     for dirpath, dirnames, filenames in os.walk(root_dir):
         # Filter ignored directories in-place
-        dirnames[:] = [d for d in dirnames if d not in ignored_dirs]
+        dirnames[:] = [
+            d for d in dirnames if d not in ignored_dirs and not d.startswith((".venv", "venv"))
+        ]
 
         for filename in filenames:
             rel_path = os.path.relpath(os.path.join(dirpath, filename), root_dir)

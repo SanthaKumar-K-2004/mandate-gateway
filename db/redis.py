@@ -12,7 +12,12 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, Optional
 
-import redis.asyncio as aioredis
+try:
+    import redis.asyncio as aioredis
+    HAS_REDIS = True
+except ImportError:
+    aioredis = None  # type: ignore[assignment]
+    HAS_REDIS = False
 
 from apps.api.config.helpers import get_settings
 from apps.api.config.settings import Settings
@@ -20,7 +25,7 @@ from apps.api.config.types import Environment
 
 logger = logging.getLogger("mandate_gateway.redis")
 
-_redis_client: Optional[aioredis.Redis] = None
+_redis_client: Optional[Any] = None
 
 
 def initialize_redis(settings: Optional[Settings] = None) -> None:
@@ -29,6 +34,10 @@ def initialize_redis(settings: Optional[Settings] = None) -> None:
 
     app_settings = settings or get_settings()
     is_test_mode = app_settings.app_env == Environment.TEST
+
+    if not HAS_REDIS or aioredis is None:
+        logger.warning("redis package not installed; skipping Redis client initialization")
+        return
 
     try:
         _redis_client = aioredis.Redis(
@@ -80,6 +89,10 @@ async def check_redis_health(settings: Optional[Settings] = None) -> Dict[str, A
         "db": app_settings.redis_db,
         "error": None,
     }
+
+    if not HAS_REDIS or aioredis is None:
+        health_status["error"] = "redis package not installed"
+        return health_status
 
     if _redis_client is None:
         health_status["error"] = "Redis client not initialized"
