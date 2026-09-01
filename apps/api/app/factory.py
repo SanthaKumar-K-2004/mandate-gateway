@@ -326,7 +326,10 @@ class MandateGatewayApp:
         try:
             if is_text_response:
                 response_bytes = str(body).encode("utf-8")
-                content_type = b"text/plain; version=0.0.4"
+                if path in ("/", "/ui", "/dashboard"):
+                    content_type = b"text/html; charset=utf-8"
+                else:
+                    content_type = b"text/plain; version=0.0.4"
             else:
                 response_bytes = json.dumps(body).encode("utf-8")
                 content_type = b"application/json"
