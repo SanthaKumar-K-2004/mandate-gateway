@@ -29,14 +29,24 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Preflight & Environment Init
+        run: |
+          cp .env.example .env
+
       - name: Run Master Quality Gate (make check)
+        env:
+          PYTHONPATH: .
         run: |
           make check
 
       - name: Run Production Reality Certification Script
+        env:
+          PYTHONPATH: .
         run: |
-          PYTHONPATH=. python3 scripts/run_production_reality_certification.py
+          python3 scripts/run_production_reality_certification.py
 
       - name: Run External MCP Interoperability Suite
+        env:
+          PYTHONPATH: .
         run: |
-          PYTHONPATH=. python3 scripts/mcp_client_test_runner.py
+          python3 scripts/mcp_client_test_runner.py

@@ -1,8 +1,12 @@
-# Mandate Gateway — Dependencies
+# Mandate Gateway — Authoritative Dependencies Specification
 fastapi>=0.100.0
 uvicorn>=0.22.0
 pydantic>=2.0.0
 httpx>=0.24.0
+sqlalchemy>=2.0.0
+alembic>=1.10.0
+aiosqlite>=0.19.0
+asyncpg>=0.28.0
 prometheus-client>=0.17.0
 cryptography>=41.0.0
 black>=23.0.0
