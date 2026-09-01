@@ -56,7 +56,7 @@ class SecretString:
     Redacts content in str(), repr(), logs, and exception tracebacks to prevent secret leakage.
     """
 
-    def __init__(self, secret_value: str | "SecretString" | None):
+    def __init__(self, secret_value: "str | SecretString | None"):
         if secret_value is None:
             self._value: str = ""
         elif isinstance(secret_value, SecretString):
