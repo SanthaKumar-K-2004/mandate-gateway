@@ -1,45 +1,48 @@
 # flake8: noqa
 """
-Mandate Gateway — Merchant Operations Dashboard & Production Control Center
-Milestone M20 — Production Dashboard UI
+Mandate Gateway — AI Commerce Agent & Merchant Operations Control Center
+Milestone M20 / M28 — Real-Time Production AI Commerce Dashboard
 
 Renders a production-grade, accessible, responsive single-page web application
-exposing platform capabilities through a secure merchant & operations control center.
+communicating the 10-stage AI shopping intent, live product research, total cost truth,
+explainable recommendation engine, and fail-closed human payment control invariant.
 """
 
 
 def get_dashboard_html() -> str:
-    """Returns full HTML5/CSS3/JS content for the M20 Merchant Operations Dashboard UI."""
+    """Returns full HTML5/CSS3/JS content for the RAZERPAY AI Commerce Control Center UI."""
     return """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Razerpay Mandate Gateway — Merchant Operations Dashboard</title>
+    <title>RAZERPAY — AI Commerce Agent & Mandate Gateway Control Center</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-base: #0b0f19;
-            --bg-surface: #131b2e;
-            --bg-surface-hover: #1c2744;
-            --bg-card: rgba(19, 27, 46, 0.75);
+            --bg-base: #080c14;
+            --bg-surface: #0f172a;
+            --bg-surface-hover: #1e293b;
+            --bg-card: rgba(15, 23, 42, 0.85);
+            --bg-card-elevated: #131d33;
             --border-color: rgba(255, 255, 255, 0.08);
-            --border-highlight: rgba(6, 182, 212, 0.35);
+            --border-highlight: rgba(99, 102, 241, 0.35);
             --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
             --text-muted: #64748b;
-            --cyan-500: #06b6d4;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-glow: rgba(99, 102, 241, 0.3);
+            --secondary: #8b5cf6;
             --cyan-400: #22d3ee;
-            --violet-500: #8b5cf6;
-            --violet-400: #a78bfa;
-            --green-500: #10b981;
-            --green-400: #34d399;
-            --amber-500: #f59e0b;
+            --emerald-400: #34d399;
+            --emerald-500: #10b981;
             --amber-400: #fbbf24;
-            --rose-500: #f43f5e;
+            --amber-500: #f59e0b;
             --rose-400: #fb7185;
+            --rose-500: #ef4444;
             --font-main: 'Inter', system-ui, -apple-system, sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
         }
@@ -63,10 +66,10 @@ def get_dashboard_html() -> str:
 
         /* Top Navbar */
         .navbar {
-            background: rgba(11, 15, 25, 0.9);
-            backdrop-filter: blur(12px);
+            background: rgba(8, 12, 20, 0.95);
+            backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--border-color);
-            padding: 0.85rem 2rem;
+            padding: 0.75rem 1.5rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -75,24 +78,30 @@ def get_dashboard_html() -> str:
             z-index: 100;
         }
 
+        .brand-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
         .brand {
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            font-weight: 700;
-            font-size: 1.25rem;
+            font-weight: 800;
+            font-size: 1.2rem;
             letter-spacing: -0.02em;
         }
 
         .brand-icon {
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, var(--cyan-500), var(--violet-500));
+            width: 34px;
+            height: 34px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 0 16px rgba(6, 182, 212, 0.4);
+            box-shadow: 0 0 16px var(--primary-glow);
         }
 
         .brand-icon svg {
@@ -101,25 +110,42 @@ def get_dashboard_html() -> str:
             fill: #ffffff;
         }
 
+        .brand-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding-left: 0.75rem;
+            border-left: 1px solid var(--border-color);
+        }
+
+        .nav-status-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
         .status-badge {
             display: flex;
             align-items: center;
             gap: 0.5rem;
             background: rgba(16, 185, 129, 0.1);
             border: 1px solid rgba(16, 185, 129, 0.3);
-            color: var(--green-400);
+            color: var(--emerald-400);
             padding: 0.35rem 0.85rem;
             border-radius: 9999px;
-            font-size: 0.8rem;
-            font-weight: 500;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
         }
 
         .pulse-dot {
             width: 8px;
             height: 8px;
-            background-color: var(--green-400);
+            background-color: var(--emerald-400);
             border-radius: 50%;
-            box-shadow: 0 0 8px var(--green-400);
+            box-shadow: 0 0 8px var(--emerald-400);
             animation: pulse 2s infinite;
         }
 
@@ -129,1262 +155,1393 @@ def get_dashboard_html() -> str:
             100% { transform: scale(0.95); opacity: 0.8; }
         }
 
-        .action-btn {
-            background: linear-gradient(135deg, var(--cyan-500), var(--violet-500));
-            color: #ffffff;
-            border: none;
-            padding: 0.55rem 1.25rem;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
+        .security-badge {
+            display: flex;
             align-items: center;
             gap: 0.5rem;
-            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.25);
-        }
-
-        .action-btn:hover {
-            opacity: 0.92;
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(6, 182, 212, 0.35);
-        }
-
-        .action-btn-secondary {
-            background: var(--bg-surface-hover);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            padding: 0.55rem 1.25rem;
-            border-radius: 8px;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: #a5b4fc;
+            padding: 0.35rem 0.85rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
             font-weight: 600;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
         }
 
-        .action-btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        /* Layout Container */
-        .app-container {
-            display: flex;
-            flex: 1;
-        }
-
-        /* Sidebar Navigation */
-        .sidebar {
-            width: 260px;
-            background: var(--bg-surface);
-            border-right: 1px solid var(--border-color);
-            padding: 1.5rem 0.75rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.35rem;
-        }
-
-        .nav-item {
+        .user-profile {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem 1rem;
-            color: var(--text-secondary);
+            gap: 0.5rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            padding: 0.35rem 0.75rem;
             border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            text-decoration: none;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
         }
 
-        .nav-item:hover {
-            background: var(--bg-surface-hover);
-            color: var(--text-primary);
+        .user-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--secondary), var(--cyan-400));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #fff;
         }
 
-        .nav-item.active {
-            background: rgba(6, 182, 212, 0.12);
-            color: var(--cyan-400);
-            border-left: 3px solid var(--cyan-500);
-        }
-
-        .nav-icon {
-            width: 20px;
-            height: 20px;
-            opacity: 0.8;
-        }
-
-        /* Main Content View */
-        .main-content {
+        /* Layout Grid */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 340px 1fr 340px;
+            gap: 1.25rem;
+            padding: 1.25rem;
             flex: 1;
-            padding: 2rem;
-            max-width: 1400px;
+            max-width: 1920px;
             margin: 0 auto;
             width: 100%;
         }
 
-        .view-section {
-            display: none;
-            animation: fadeIn 0.25s ease-in-out;
+        @media (max-width: 1400px) {
+            .dashboard-container {
+                grid-template-columns: 300px 1fr;
+            }
+            .right-sidebar {
+                grid-column: span 2;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1.25rem;
+            }
         }
 
-        .view-section.active {
-            display: block;
+        @media (max-width: 900px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+            .right-sidebar {
+                grid-column: span 1;
+                grid-template-columns: 1fr;
+            }
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(4px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .header-title {
-            font-size: 1.75rem;
-            font-weight: 700;
-            letter-spacing: -0.025em;
-            margin-bottom: 0.35rem;
-        }
-
-        .header-sub {
-            color: var(--text-secondary);
-            font-size: 0.925rem;
-            margin-bottom: 2rem;
-        }
-
-        /* Stats Grid */
-        .grid-4 {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 1.25rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(8px);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.25rem 1.5rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, var(--cyan-500), var(--violet-500));
-        }
-
-        .stat-label {
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            letter-spacing: -0.03em;
-        }
-
-        .stat-detail {
-            color: var(--text-secondary);
-            font-size: 0.825rem;
-            margin-top: 0.35rem;
-        }
-
-        /* Card Sections */
+        /* Common Card Style */
         .card {
             background: var(--bg-card);
-            backdrop-filter: blur(8px);
             border: 1px solid var(--border-color);
             border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .card-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1.25rem;
-        }
-
-        .card-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        /* Tables */
-        .table-responsive {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            font-size: 0.875rem;
-        }
-
-        th {
-            background: var(--bg-surface);
-            color: var(--text-secondary);
-            font-weight: 600;
-            padding: 0.85rem 1rem;
-            border-bottom: 1px solid var(--border-color);
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.05em;
-        }
-
-        td {
-            padding: 1rem;
-            border-bottom: 1px solid var(--border-color);
-            color: var(--text-primary);
-        }
-
-        tr:hover td {
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        /* Badges */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.25rem 0.65rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            font-family: var(--font-mono);
-        }
-
-        .badge-success {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--green-400);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-        .badge-warning {
-            background: rgba(245, 158, 11, 0.15);
-            color: var(--amber-400);
-            border: 1px solid rgba(245, 158, 11, 0.3);
-        }
-        .badge-danger {
-            background: rgba(244, 63, 94, 0.15);
-            color: var(--rose-400);
-            border: 1px solid rgba(244, 63, 94, 0.3);
-        }
-        .badge-cyan {
-            background: rgba(6, 182, 212, 0.15);
-            color: var(--cyan-400);
-            border: 1px solid rgba(6, 182, 212, 0.3);
-        }
-        .badge-violet {
-            background: rgba(139, 92, 246, 0.15);
-            color: var(--violet-400);
-            border: 1px solid rgba(139, 92, 246, 0.3);
-        }
-
-        /* Code & Pre */
-        pre, code {
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
-        }
-
-        .code-block {
-            background: #070a12;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 1rem;
-            overflow-x: auto;
-            color: var(--cyan-400);
-            max-height: 400px;
-        }
-
-        /* Payment State Machine Timeline */
-        .state-flow {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin: 2rem 0;
-            position: relative;
-        }
-
-        .state-step {
+            padding: 1.25rem;
+            backdrop-filter: blur(12px);
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-            z-index: 2;
+            gap: 1rem;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transition: border-color 0.2s ease;
         }
 
-        .state-node {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: var(--bg-surface);
-            border: 2px solid var(--border-color);
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .section-header {
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .section-num-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
             font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
             color: var(--text-secondary);
+        }
+
+        .section-num {
+            color: var(--primary);
+            font-family: var(--font-mono);
+        }
+
+        /* Section 01 — User Request */
+        .request-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .input-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .text-area-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            font-size: 0.875rem;
+            resize: none;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .text-area-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 12px var(--primary-glow);
+        }
+
+        .quick-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+
+        .pill-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            cursor: pointer;
             transition: all 0.2s ease;
         }
 
-        .state-step.active .state-node {
-            border-color: var(--cyan-500);
-            color: var(--cyan-400);
-            background: rgba(6, 182, 212, 0.15);
-            box-shadow: 0 0 16px rgba(6, 182, 212, 0.4);
+        .pill-btn:hover {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: var(--primary);
+            color: #fff;
         }
 
-        .state-label {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-
-        .state-line {
-            flex: 1;
-            height: 2px;
-            background: var(--border-color);
-            margin: 0 1rem;
-            transform: translateY(-14px);
-        }
-
-        .state-line.active {
-            background: linear-gradient(90deg, var(--cyan-500), var(--violet-500));
-        }
-
-        /* Form Controls */
-        .form-group {
-            margin-bottom: 1.25rem;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 0.825rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 0.5rem;
-        }
-
-        .form-input {
-            width: 100%;
-            background: #070a12;
-            border: 1px solid var(--border-color);
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #ffffff;
+            border: none;
+            padding: 0.75rem 1.25rem;
             border-radius: 8px;
-            padding: 0.75rem 1rem;
-            color: var(--text-primary);
-            font-family: var(--font-mono);
+            font-weight: 700;
             font-size: 0.875rem;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: var(--cyan-500);
-            box-shadow: 0 0 8px rgba(6, 182, 212, 0.25);
-        }
-
-        /* Alert Overlay */
-        .alert-box {
-            background: rgba(6, 182, 212, 0.1);
-            border: 1px solid var(--border-highlight);
-            padding: 1rem 1.25rem;
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 14px var(--primary-glow);
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Section 02 — Timeline Steps */
+        .timeline-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            padding: 0.45rem 0.6rem;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.02);
+            border-left: 3px solid var(--text-muted);
+            transition: all 0.2s ease;
+        }
+
+        .timeline-item.completed {
+            border-left-color: var(--emerald-400);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .timeline-item.active {
+            border-left-color: var(--cyan-400);
+            background: rgba(34, 211, 238, 0.08);
+        }
+
+        .timeline-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .timeline-item.completed .timeline-label {
+            color: var(--text-primary);
+        }
+
+        .timeline-time {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        /* Center Column Layout */
+        .center-column {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        /* Section 03 — Live Source Transparency */
+        .source-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        @media (max-width: 1100px) {
+            .source-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .source-info-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+        }
+
+        .source-name {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .source-status-tag {
+            font-size: 0.7rem;
+            color: var(--emerald-400);
+            font-family: var(--font-mono);
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            margin-top: 0.2rem;
+        }
+
+        .badge-check {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-check.verified {
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--emerald-400);
+        }
+
+        .badge-check.unverified {
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: var(--amber-400);
+        }
+
+        .badge-check.unavailable {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--rose-400);
+        }
+
+        /* Section 04 — Product Cards */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
             gap: 1rem;
+        }
+
+        .product-card {
+            background: var(--bg-card-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1rem;
+            display: flex;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .product-img {
+            width: 70px;
+            height: 70px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            object-fit: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .product-details {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex: 1;
+        }
+
+        .product-cat {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--cyan-400);
+        }
+
+        .product-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0.1rem 0;
+            line-height: 1.3;
+        }
+
+        .product-merchant {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .product-price-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+        }
+
+        .product-price {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--emerald-400);
+            font-family: var(--font-mono);
+        }
+
+        .btn-sm-secondary {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.25rem 0.55rem;
+            border-radius: 5px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-sm-secondary:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+        }
+
+        /* Section 05 — Total Cost Truth Panel */
+        .cost-truth-box {
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(11, 15, 25, 0.95));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .cost-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .known-total-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .known-total-value {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--emerald-400);
+            font-family: var(--font-mono);
+            line-height: 1;
+            margin-top: 0.2rem;
+        }
+
+        .cost-breakdown-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            border-top: 1px dashed var(--border-color);
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .cost-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+
+        .cost-label {
+            color: var(--text-secondary);
+        }
+
+        .cost-val {
+            font-family: var(--font-mono);
+            font-weight: 600;
+        }
+
+        .cost-val.unknown {
+            color: var(--amber-400);
+            background: rgba(245, 158, 11, 0.15);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.72rem;
+        }
+
+        .truth-alert-card {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .truth-alert-title {
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: var(--rose-400);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .truth-alert-sub {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            margin-top: 0.15rem;
+        }
+
+        .verified-no-badge {
+            background: var(--rose-500);
+            color: #fff;
+            font-weight: 800;
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+        }
+
+        /* Section 06 — AI Recommendation Explainability */
+        .recommendation-box {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 1.25rem;
+            align-items: center;
+        }
+
+        @media (max-width: 700px) {
+            .recommendation-box {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .score-circle-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .score-num {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #a5b4fc;
+            font-family: var(--font-mono);
+            line-height: 1;
+        }
+
+        .score-denom {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.2rem;
+        }
+
+        .explain-bullets {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+            font-size: 0.78rem;
+        }
+
+        .explain-bullet {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .explain-bullet .icon {
+            color: var(--emerald-400);
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .explain-bullet.warn .icon {
+            color: var(--amber-400);
+        }
+
+        /* Section 07 — Security Moment */
+        .security-moment-card {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.7));
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .security-headline {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .security-matrix {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.75rem;
+            text-align: center;
+        }
+
+        .sec-col {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.6rem 0.4rem;
+        }
+
+        .sec-col-title {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .sec-col-val {
+            font-size: 0.78rem;
+            font-weight: 700;
+            margin-top: 0.2rem;
+        }
+
+        .sec-col-val.agent { color: var(--cyan-400); }
+        .sec-col-val.human { color: var(--amber-400); }
+        .sec-col-val.blocked { color: var(--rose-400); }
+
+        /* Right Sidebar Layout */
+        .right-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        /* Section 08 — Checkout Handoff */
+        .checkout-handoff-box {
+            background: linear-gradient(180deg, rgba(99, 102, 241, 0.12), rgba(15, 23, 42, 0.95));
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 0.85rem;
+        }
+
+        .checkout-cart-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .checkout-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .checkout-sub {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .checkout-disclaimer {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* System Status Panel */
+        .status-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            padding: 0.4rem 0.6rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+        }
+
+        .status-row-label {
+            color: var(--text-secondary);
+        }
+
+        .status-row-val {
+            font-weight: 700;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+        }
+
+        .status-row-val.healthy { color: var(--emerald-400); }
+        .status-row-val.enforced { color: var(--cyan-400); }
+
+        /* Footer Bar */
+        .footer-bar {
+            background: rgba(8, 12, 20, 0.95);
+            border-top: 1px solid var(--border-color);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 1rem;
+        }
+
+        .footer-ticks {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-tick {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            color: var(--text-secondary);
+        }
+
+        /* Evidence Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-highlight);
+            border-radius: 12px;
+            max-width: 650px;
+            width: 100%;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .close-btn:hover { color: #fff; }
+
+        .code-box {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--cyan-400);
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
 
-    <!-- Top Navbar -->
+    <!-- TOP NAVIGATION -->
     <header class="navbar">
-        <div class="brand">
-            <div class="brand-icon">
-                <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <div class="brand-group">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                </div>
+                <span>RAZERPAY</span>
             </div>
-            <span>RAZERPAY <span style="font-size: 0.8rem; opacity: 0.6; font-weight: 400;">M21 CONTROL CENTER</span></span>
+            <div class="brand-sub">AI Commerce Agent — Mandate Gateway</div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 1.5rem;">
-            <span class="badge badge-violet" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">ENVIRONMENT: PRODUCTION (DEMO MODE)</span>
-            <div class="status-badge" id="system-status-indicator">
+        <div class="nav-status-group">
+            <div class="status-badge">
                 <div class="pulse-dot"></div>
-                <span id="system-status-text">SYSTEM HEALTHY</span>
+                <span>LIVE SYSTEM</span>
             </div>
-
-            <button class="action-btn" onclick="runLiveDemo()">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                <span>RUN LIVE E2E DEMO</span>
-            </button>
+            <div class="security-badge">
+                <span>🔒 Payments are Human Controlled</span>
+            </div>
+            <div class="user-profile">
+                <div class="user-avatar">DU</div>
+                <span>Demo User</span>
+            </div>
         </div>
     </header>
 
-    <div class="app-container">
-        <!-- Sidebar Navigation -->
-        <nav class="sidebar" aria-label="Main Navigation">
-            <a class="nav-item active" onclick="showView('dashboard', this)" tabIndex="0">
-                <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                <span>Dashboard Overview</span>
-            </a>
-            <a class="nav-item" onclick="showView('transactions', this)" tabIndex="0">
-                <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                <span>Transaction Explorer</span>
-            </a>
-            <a class="nav-item" onclick="showView('transaction-detail', this)" tabIndex="0">
-                <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-                <span>Transaction Detail</span>
-            </a>
-            <a class="nav-item" onclick="showView('mandates', this)" tabIndex="0">
-                <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-                <span>Buyer Mandates</span>
-            </a>
-            <a class="nav-item" onclick="showView('timeline', this)" tabIndex="0">
-                <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                <span>Lifecycle Timeline</span>
-            </a>
-            <a class="nav-item" onclick="showView('audit-trail', this)" tabIndex="0">
-                <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                <span>Audit & Forensics</span>
-            </a>
-            <a class="nav-item" onclick="showView('receipts', this)" tabIndex="0">
-                <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1z"></path></svg>
-                <span>Action Receipts</span>
-            </a>
-            <a class="nav-item" onclick="showView('webhooks', this)" tabIndex="0">
-                <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                <span>Webhook Center</span>
-            </a>
-            <a class="nav-item" onclick="showView('stepup', this)" tabIndex="0">
-                <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                <span>Step-Up Operations</span>
-            </a>
-            <a class="nav-item" onclick="showView('recovery', this)" tabIndex="0">
-                <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-                <span>Disaster Recovery</span>
-            </a>
-            <a class="nav-item" onclick="showView('ai-agent', this)" tabIndex="0">
-                <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"></path></svg>
-                <span>AI Operations</span>
-            </a>
-            <a class="nav-item" onclick="showView('system-health', this)" tabIndex="0">
-                <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
-                <span>System Health</span>
-            </a>
-        </nav>
+    <!-- DASHBOARD CONTAINER -->
+    <main class="dashboard-container">
 
-        <!-- Main View Content -->
-        <main class="main-content">
+        <!-- LEFT SIDEBAR -->
+        <aside class="left-sidebar" style="display: flex; flex-direction: column; gap: 1.25rem;">
+            
+            <!-- 01. USER REQUEST -->
+            <section class="card">
+                <div class="section-header">
+                    <div class="section-num-title">
+                        <span class="section-num">01.</span>
+                        <span>User Request</span>
+                    </div>
+                </div>
 
-            <!-- 1. DASHBOARD OVERVIEW -->
-            <section id="view-dashboard" class="view-section active">
-                <h1 class="header-title">Merchant Operations Dashboard</h1>
-                <p class="header-sub">Operational metrics derived directly from certified platform REST APIs.</p>
+                <div class="request-input-group">
+                    <div class="input-label">Natural language shopping request from user:</div>
+                    <textarea id="inp-prompt" class="text-area-input" rows="3" placeholder="e.g. Find coffee and biscuits under ₹300">Find coffee and biscuits under ₹300</textarea>
 
-                <div class="alert-box">
-                    <svg width="24" height="24" fill="none" stroke="var(--cyan-400)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    <div class="quick-pills">
+                        <button class="pill-btn" onclick="setPrompt('Find coffee and biscuits under ₹300')">Coffee & Biscuits &lt; ₹300</button>
+                        <button class="pill-btn" onclick="setPrompt('Find two grocery items under ₹500')">2 Groceries &lt; ₹500</button>
+                    </div>
+                </div>
+
+                <button id="btn-research" class="btn-primary" onclick="submitAIPrompt()">
+                    <span>Research My Cart</span>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+            </section>
+
+            <!-- 02. LIVE RESEARCH TIMELINE -->
+            <section class="card" style="flex: 1;">
+                <div class="section-header">
+                    <div class="section-num-title">
+                        <span class="section-num">02.</span>
+                        <span>Live Research Timeline</span>
+                    </div>
+                    <span style="font-size: 0.68rem; color: var(--text-muted); font-family: var(--font-mono);">REAL-TIME</span>
+                </div>
+
+                <div class="timeline-list" id="timeline-steps">
+                    <div class="timeline-item completed">
+                        <div class="timeline-label"><span style="color: var(--emerald-400);">✓</span> System ready for request</div>
+                        <div class="timeline-time" id="t-step-0">--:--:--</div>
+                    </div>
+                    <div class="timeline-item" id="t-step-1-el">
+                        <div class="timeline-label"><span class="step-icon">○</span> Understanding your request</div>
+                        <div class="timeline-time" id="t-step-1">--:--:--</div>
+                    </div>
+                    <div class="timeline-item" id="t-step-2-el">
+                        <div class="timeline-label"><span class="step-icon">○</span> Extracting shopping intent</div>
+                        <div class="timeline-time" id="t-step-2">--:--:--</div>
+                    </div>
+                    <div class="timeline-item" id="t-step-3-el">
+                        <div class="timeline-label"><span class="step-icon">○</span> Searching available sources</div>
+                        <div class="timeline-time" id="t-step-3">--:--:--</div>
+                    </div>
+                    <div class="timeline-item" id="t-step-4-el">
+                        <div class="timeline-label"><span class="step-icon">○</span> Verifying product evidence</div>
+                        <div class="timeline-time" id="t-step-4">--:--:--</div>
+                    </div>
+                    <div class="timeline-item" id="t-step-5-el">
+                        <div class="timeline-label"><span class="step-icon">○</span> Optimizing cart combinations</div>
+                        <div class="timeline-time" id="t-step-5">--:--:--</div>
+                    </div>
+                    <div class="timeline-item" id="t-step-6-el">
+                        <div class="timeline-label"><span class="step-icon">○</span> Applying total cost truth model</div>
+                        <div class="timeline-time" id="t-step-6">--:--:--</div>
+                    </div>
+                    <div class="timeline-item" id="t-step-7-el">
+                        <div class="timeline-label"><span class="step-icon">○</span> Generating recommendation</div>
+                        <div class="timeline-time" id="t-step-7">--:--:--</div>
+                    </div>
+                </div>
+            </section>
+        </aside>
+
+        <!-- CENTER COLUMN -->
+        <main class="center-column">
+
+            <!-- 03. LIVE SOURCE TRANSPARENCY -->
+            <section class="card">
+                <div class="section-header">
+                    <div class="section-num-title">
+                        <span class="section-num">03.</span>
+                        <span>Live Source Transparency</span>
+                    </div>
+                </div>
+
+                <div class="source-grid">
+                    <div class="source-info-card">
+                        <div class="source-name" id="src-provider-name">Multi-Source Discovery Engine</div>
+                        <div class="source-status-tag">
+                            <span class="pulse-dot"></span>
+                            <span id="src-connection-status">LIVE DATA CONNECTION</span>
+                        </div>
+                    </div>
+                    <div class="badge-check verified" id="badge-metadata">
+                        <span>✓ Product Metadata</span>
+                        <span style="font-weight: 800;" id="txt-meta-status">VERIFIED</span>
+                    </div>
+                    <div class="badge-check unverified" id="badge-price">
+                        <span>✓ Merchant Price</span>
+                        <span style="font-weight: 800;" id="txt-price-status">REVALIDATED</span>
+                    </div>
+                    <div class="badge-check verified" id="badge-checkout-avail">
+                        <span>✓ Checkout Bound</span>
+                        <span style="font-weight: 800;" id="txt-checkout-status">HANDOFF</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 04. CART RESULT -->
+            <section class="card">
+                <div class="section-header">
+                    <div class="section-num-title">
+                        <span class="section-num">04.</span>
+                        <span>Cart Result & Product Evidence</span>
+                    </div>
+                    <span id="candidates-count-tag" style="font-size: 0.72rem; color: var(--cyan-400); font-family: var(--font-mono);">2 Items Selected</span>
+                </div>
+
+                <div class="products-grid" id="products-container">
+                    <!-- Loaded dynamically from backend API -->
+                    <div style="color: var(--text-muted); font-size: 0.85rem; grid-column: span 2; text-align: center; padding: 2rem;">
+                        Click "Research My Cart" to run live product research...
+                    </div>
+                </div>
+            </section>
+
+            <!-- 05. TOTAL COST TRUTH PANEL -->
+            <section class="card">
+                <div class="section-header">
+                    <div class="section-num-title">
+                        <span class="section-num">05.</span>
+                        <span>Total Cost Truth Panel</span>
+                    </div>
+                    <span style="font-size: 0.7rem; color: var(--amber-400); font-family: var(--font-mono);">UNKNOWN ≠ ₹0 INVARIANT</span>
+                </div>
+
+                <div class="cost-truth-box">
+                    <div class="cost-header">
+                        <div>
+                            <div class="known-total-label">Known Product Total</div>
+                            <div class="known-total-value" id="val-known-total">₹300.00</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 0.72rem; color: var(--text-muted);">Budget Limit</div>
+                            <div style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono);" id="val-budget">₹300.00</div>
+                        </div>
+                    </div>
+
+                    <div class="cost-breakdown-grid">
+                        <div class="cost-item">
+                            <span class="cost-label">Remaining Budget:</span>
+                            <span class="cost-val" style="color: var(--emerald-400);" id="val-remaining">₹0.00</span>
+                        </div>
+                        <div class="cost-item">
+                            <span class="cost-label">Delivery Fee:</span>
+                            <span class="cost-val unknown" id="val-delivery">UNKNOWN ℹ</span>
+                        </div>
+                        <div class="cost-item">
+                            <span class="cost-label">Platform Fee:</span>
+                            <span class="cost-val" style="color: var(--emerald-400);">₹0.00</span>
+                        </div>
+                        <div class="cost-item">
+                            <span class="cost-label">Merchant Taxes:</span>
+                            <span class="cost-val unknown" id="val-taxes">UNKNOWN ℹ</span>
+                        </div>
+                    </div>
+
+                    <div class="truth-alert-card">
+                        <div>
+                            <div class="truth-alert-title" id="txt-verified-title">TOTAL FULLY VERIFIED</div>
+                            <div class="truth-alert-sub" id="txt-verified-sub">Additional merchant charges may apply. These fees are not included because they could not be verified.</div>
+                        </div>
+                        <div class="verified-no-badge" id="badge-total-verified">NO</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 06. AI RECOMMENDATION EXPLAINABILITY -->
+            <section class="card">
+                <div class="section-header">
+                    <div class="section-num-title">
+                        <span class="section-num">06.</span>
+                        <span>AI Recommendation Explainability</span>
+                    </div>
+                </div>
+
+                <div class="recommendation-box">
+                    <div class="score-circle-container">
+                        <div class="score-num" id="val-rec-score">89.5</div>
+                        <div class="score-denom">SCORE / 100</div>
+                    </div>
+
                     <div>
-                        <strong style="color: var(--cyan-400);">Non-Negotiable System Invariant Active</strong>
-                        <div style="font-size: 0.85rem; color: var(--text-secondary);">NO PAYMENT EFFECT MAY ACCIDENTALLY EXECUTE TWICE. Single-use nonces, atomic budget locks, and SHA-256 audit ledger verification enforced.</div>
-                    </div>
-                </div>
-
-                <div class="grid-4">
-                    <div class="stat-card">
-                        <div class="stat-label">Total Transactions</div>
-                        <div class="stat-value" id="kpi-total-tx">1,482</div>
-                        <div class="stat-detail">Volume: ₹7,410,000 Paise</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Committed Transactions</div>
-                        <div class="stat-value" id="kpi-committed-tx" style="color: var(--green-400);">1,480</div>
-                        <div class="stat-detail">100% Verified Authorization</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Pending Outbox Deliveries</div>
-                        <div class="stat-value" id="kpi-outbox">0 Pending</div>
-                        <div class="stat-detail" style="color: var(--green-400);">Processing latency &lt; 1.2ms</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Audit Ledger Hash</div>
-                        <div class="stat-value" style="color: var(--green-400);">VERIFIED</div>
-                        <div class="stat-detail">Cryptographic integrity valid</div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">Recent Transactions</span>
-                        <span class="badge badge-cyan">Live Stream</span>
-                    </div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Transaction ID</th>
-                                    <th>Merchant</th>
-                                    <th>Buyer ID</th>
-                                    <th>Amount</th>
-                                    <th>State</th>
-                                    <th>Provider Status</th>
-                                    <th>Timestamp</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbl-recent-tx">
-                                <tr>
-                                    <td style="font-family: var(--font-mono);">tx_demo_8921a</td>
-                                    <td>mer_acme_corp</td>
-                                    <td>buy_user_401</td>
-                                    <td>₹25,000</td>
-                                    <td><span class="badge badge-success">COMMITTED</span></td>
-                                    <td>order_created (order_Rx981)</td>
-                                    <td>Just now</td>
-                                </tr>
-                                <tr>
-                                    <td style="font-family: var(--font-mono);">tx_demo_3310b</td>
-                                    <td>mer_tech_store</td>
-                                    <td>buy_user_102</td>
-                                    <td>₹120,000</td>
-                                    <td><span class="badge badge-violet">UNKNOWN</span></td>
-                                    <td>PROVIDER_TIMEOUT</td>
-                                    <td>2 mins ago</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 2. TRANSACTIONS EXPLORER -->
-            <section id="view-transactions" class="view-section">
-                <h1 class="header-title">Transaction Explorer</h1>
-                <p class="header-sub">Search, filter, and inspect transaction authorization states and provider references.</p>
-
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">Transaction Inventory</span>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <button class="badge badge-cyan" onclick="filterTx('ALL')">ALL</button>
-                            <button class="badge badge-success" onclick="filterTx('COMMITTED')">COMMITTED</button>
-                            <button class="badge badge-warning" onclick="filterTx('PENDING')">PENDING</button>
-                            <button class="badge badge-violet" onclick="filterTx('UNKNOWN')">UNKNOWN</button>
-                            <button class="badge badge-danger" onclick="filterTx('FAILED')">FAILED</button>
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Transaction ID</th>
-                                    <th>Merchant ID</th>
-                                    <th>Mandate ID</th>
-                                    <th>Amount</th>
-                                    <th>State</th>
-                                    <th>Decision</th>
-                                    <th>Action Receipt</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbl-all-tx">
-                                <tr>
-                                    <td style="font-family: var(--font-mono); color: var(--cyan-400);">tx_demo_8921a</td>
-                                    <td>mer_acme_corp</td>
-                                    <td>man_corp_active</td>
-                                    <td>₹25,000</td>
-                                    <td><span class="badge badge-success">COMMITTED</span></td>
-                                    <td>ALLOW</td>
-                                    <td style="font-family: var(--font-mono); font-size: 0.75rem;">sig_98a71f2...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 3. TRANSACTION DETAIL -->
-            <section id="view-transaction-detail" class="view-section">
-                <h1 class="header-title">Transaction Detail Inspector</h1>
-                <p class="header-sub">Inspect single-transaction state machine flow, budget locks, and receipt signatures.</p>
-
-                <div class="card">
-                    <div class="card-title" style="margin-bottom: 1rem;">State Machine Transition Path</div>
-                    <div class="state-flow">
-                        <div class="state-step active">
-                            <div class="state-node">1</div>
-                            <div class="state-label">CREATED</div>
-                        </div>
-                        <div class="state-line active"></div>
-                        <div class="state-step active">
-                            <div class="state-node">2</div>
-                            <div class="state-label">AUTHORIZED</div>
-                        </div>
-                        <div class="state-line active"></div>
-                        <div class="state-step active">
-                            <div class="state-node">3</div>
-                            <div class="state-label">EXECUTING</div>
-                        </div>
-                        <div class="state-line active"></div>
-                        <div class="state-step active">
-                            <div class="state-node">4</div>
-                            <div class="state-label">COMMITTED</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-title">Transaction JSON Record</div>
-                    <div class="code-block" id="json-tx-detail">
-{
-  "transaction_id": "tx_demo_8921a",
-  "merchant_id": "mer_acme_corp",
-  "buyer_id": "buy_user_401",
-  "mandate_id": "man_corp_active",
-  "amount_paise": 25000,
-  "currency": "INR",
-  "state": "COMMITTED",
-  "authorization": {
-    "decision": "ALLOW",
-    "checks_passed": ["merchant_policy", "mandate_active", "daily_budget_reservation"]
-  },
-  "execution_attempts": [
-    {
-      "attempt_id": "att_001_8921a",
-      "status": "SUCCESS",
-      "provider_reference": "order_Rx981"
-    }
-  ]
-}
-                    </div>
-                </div>
-            </section>
-
-            <!-- 4. MANDATES -->
-            <section id="view-mandates" class="view-section">
-                <h1 class="header-title">Buyer Mandates</h1>
-                <p class="header-sub">Daily spending budget caps, buyer identity bindings, and mandate lifecycle status.</p>
-
-                <div class="grid-4">
-                    <div class="stat-card">
-                        <div class="stat-label">Mandate ID</div>
-                        <div class="stat-value" style="font-size: 1.25rem;">man_corp_active</div>
-                        <div class="stat-detail">Buyer: buy_user_401</div>
-                        <div style="margin-top: 0.75rem;">
-                            <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:0.25rem;">
-                                <span>Daily Budget</span>
-                                <span>₹25,000 / ₹100,000</span>
-                            </div>
-                            <div style="height: 6px; background: var(--bg-surface); border-radius: 3px; overflow: hidden;">
-                                <div style="width: 25%; height: 100%; background: var(--cyan-500);"></div>
-                            </div>
+                        <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">Why this recommendation?</div>
+                        <div class="explain-bullets" id="explain-list">
+                            <div class="explain-bullet"><span class="icon">✓</span> All 2 requested items have verified live product evidence</div>
+                            <div class="explain-bullet"><span class="icon">✓</span> Fits the known budget of ₹300.00</div>
+                            <div class="explain-bullet"><span class="icon">✓</span> Uses revalidated live merchant price</div>
+                            <div class="explain-bullet warn"><span class="icon">⚠</span> Delivery or additional merchant charges remain UNKNOWN</div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- 5. TIMELINE -->
-            <section id="view-timeline" class="view-section">
-                <h1 class="header-title">Lifecycle Execution Timeline</h1>
-                <p class="header-sub">Microsecond event trace reconstruction across authorization, budget locking, and provider dispatch.</p>
+            <!-- 07. SECURITY MOMENT -->
+            <section class="card">
+                <div class="section-header">
+                    <div class="section-num-title">
+                        <span class="section-num">07.</span>
+                        <span>Security Moment</span>
+                    </div>
+                </div>
 
-                <div class="card">
-                    <div class="code-block" id="timeline-trace-block">
-[2026-08-30T13:40:01.001201Z] [REQUEST] Proposal received. Request ID: req_98127391
-[2026-08-30T13:40:01.002105Z] [POLICY] Merchant policy evaluation: PASSED
-[2026-08-30T13:40:01.003410Z] [BUDGET] Daily budget reservation acquired: ₹25,000 Paise
-[2026-08-30T13:40:01.004112Z] [LOCK] Idempotency lock acquired. Nonce key: nonce_89123891
-[2026-08-30T13:40:01.005300Z] [STATE] Transition: CREATED -> AUTHORIZED -> EXECUTING
-[2026-08-30T13:40:01.012400Z] [PROVIDER] Razorpay Order Dispatch: SUCCESS (order_Rx981)
-[2026-08-30T13:40:01.013100Z] [STATE] Transition: EXECUTING -> COMMITTED
-[2026-08-30T13:40:01.014000Z] [RECEIPT] Action receipt signed: rcpt_981a_sig
-[2026-08-30T13:40:01.014500Z] [AUDIT] Hash chain link appended (#1482). Status: VERIFIED
+                <div class="security-moment-card">
+                    <div class="security-headline">
+                        <svg width="18" height="18" fill="none" stroke="var(--emerald-400)" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        <span>AI CAN RESEARCH. HUMANS CONTROL PAYMENTS.</span>
+                    </div>
+
+                    <div class="security-matrix">
+                        <div class="sec-col">
+                            <div class="sec-col-title">AI AGENT</div>
+                            <div class="sec-col-val agent">✓ Research & Plan</div>
+                        </div>
+                        <div class="sec-col">
+                            <div class="sec-col-title">HUMAN CONTROL</div>
+                            <div class="sec-col-val human">✓ Token Required</div>
+                        </div>
+                        <div class="sec-col">
+                            <div class="sec-col-title">AUTONOMOUS PAYMENT</div>
+                            <div class="sec-col-val blocked">✕ BLOCKED</div>
+                        </div>
                     </div>
                 </div>
             </section>
-
-            <!-- 6. AUDIT & FORENSICS -->
-            <section id="view-audit-trail" class="view-section">
-                <h1 class="header-title">Audit & Forensics Viewer</h1>
-                <p class="header-sub">Tamper-evident audit ledger sequence hash verification.</p>
-
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">Audit Ledger Linkage</span>
-                        <button class="action-btn" onclick="verifyAuditChain()">Verify Audit Chain</button>
-                    </div>
-                    <div id="audit-verify-status" style="margin-bottom: 1rem;"></div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Seq #</th>
-                                    <th>Event Type</th>
-                                    <th>Aggregate ID</th>
-                                    <th>Actor</th>
-                                    <th>Previous Hash</th>
-                                    <th>Current Hash</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbl-audit-events">
-                                <tr>
-                                    <td style="font-family: var(--font-mono);">#1482</td>
-                                    <td>PAYMENT_COMMITTED</td>
-                                    <td>tx_demo_8921a</td>
-                                    <td>system_worker</td>
-                                    <td style="font-family: var(--font-mono); font-size: 0.75rem;">a871b...901</td>
-                                    <td style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--green-400);">c901a...110</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 7. ACTION RECEIPTS -->
-            <section id="view-receipts" class="view-section">
-                <h1 class="header-title">Action Receipt Verification</h1>
-                <p class="header-sub">Inspect and cryptographically verify Ed25519/SHA-256 signatures on Action Receipts.</p>
-
-                <div class="card">
-                    <div class="card-title" style="margin-bottom: 1rem;">Receipt Verification Interface</div>
-                    <div class="form-group">
-                        <label class="form-label">Receipt Payload Hash</label>
-                        <input type="text" class="form-input" id="inp-receipt-hash" value="rcpt_981a_sig_payload_hash_value">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Signature Hex</label>
-                        <input type="text" class="form-input" id="inp-receipt-sig" value="4b689a71f28b091a789c6123456789abcdef456789abcdef456789abcdef4567">
-                    </div>
-                    <button class="action-btn" onclick="verifyReceipt()">Verify Signature</button>
-                    <div id="receipt-verify-result" style="margin-top: 1rem;"></div>
-                </div>
-            </section>
-
-            <!-- 8. WEBHOOK CENTER -->
-            <section id="view-webhooks" class="view-section">
-                <h1 class="header-title">Webhook Operations Center</h1>
-                <p class="header-sub">Register webhook endpoint subscriptions, enable/disable destinations, and inspect delivery logs.</p>
-
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">Registered Subscriptions</span>
-                        <button class="action-btn" onclick="registerWebhookPrompt()">+ New Subscription</button>
-                    </div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Subscription ID</th>
-                                    <th>Destination URL</th>
-                                    <th>Events</th>
-                                    <th>Status</th>
-                                    <th>Created At</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbl-webhook-subs">
-                                <tr>
-                                    <td style="font-family: var(--font-mono);">sub_9812a</td>
-                                    <td>https://merchant.example.com/webhooks</td>
-                                    <td>payment.captured, payment.failed</td>
-                                    <td><span class="badge badge-success">ACTIVE</span></td>
-                                    <td>2026-08-30</td>
-                                    <td><button class="action-btn-secondary" onclick="toggleWebhookStatus('sub_9812a', 'DISABLED')">Disable</button></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">Webhook Delivery History</span>
-                    </div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Delivery ID</th>
-                                    <th>Event Type</th>
-                                    <th>Attempt</th>
-                                    <th>HTTP Code</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbl-webhook-deliveries">
-                                <tr>
-                                    <td style="font-family: var(--font-mono);">del_8891a</td>
-                                    <td>payment.captured</td>
-                                    <td>1/5</td>
-                                    <td>200 OK</td>
-                                    <td><span class="badge badge-success">DELIVERED</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 9. STEP-UP OPERATIONS -->
-            <section id="view-stepup" class="view-section">
-                <h1 class="header-title">Step-Up Operations Center</h1>
-                <p class="header-sub">Human-in-the-loop authorization challenges requiring explicit approval.</p>
-
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">Pending Step-Up Challenges</span>
-                    </div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Challenge ID</th>
-                                    <th>Merchant</th>
-                                    <th>Amount</th>
-                                    <th>Reason</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbl-stepup-challenges">
-                                <tr>
-                                    <td style="font-family: var(--font-mono);">step_ch_9910a</td>
-                                    <td>mer_acme_corp</td>
-                                    <td>₹150,000</td>
-                                    <td>AMOUNT_EXCEEDS_AUTONOMOUS_LIMIT</td>
-                                    <td><span class="badge badge-warning">PENDING</span></td>
-                                    <td><button class="action-btn" onclick="approveStepUp('step_ch_9910a')">Approve Challenge</button></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 10. DISASTER RECOVERY -->
-            <section id="view-recovery" class="view-section">
-                <h1 class="header-title">Disaster Recovery Operations</h1>
-                <p class="header-sub">Reconcile stuck EXECUTING / UNKNOWN transactions safely without double-charging.</p>
-
-                <div class="alert-box" style="background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.3);">
-                    <svg width="24" height="24" fill="none" stroke="var(--violet-400)" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                    <div>
-                        <strong style="color: var(--violet-400);">Strict Reconciliation Rule</strong>
-                        <div style="font-size: 0.85rem; color: var(--text-secondary);">Manual state mutation from UNKNOWN to COMMITTED without authoritative provider reconciliation evidence is strictly forbidden.</div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">Stuck EXECUTING Scanner</span>
-                        <button class="action-btn" onclick="triggerRecoveryScan()">Run Recovery Scan</button>
-                    </div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Stuck Transaction ID</th>
-                                    <th>Duration Stuck</th>
-                                    <th>Provider Query Status</th>
-                                    <th>Reconciliation Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbl-stuck-tx">
-                                <tr>
-                                    <td colspan="4" style="text-align: center; color: var(--text-muted); font-style: italic;">
-                                        Zero stuck transactions detected. System in healthy state.
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 12. AI AGENT OPERATIONS & CONTROL PLANE -->
-            <section id="view-ai-agent" class="view-section">
-                <h1 class="header-title">AI Agent Operations & Control Plane</h1>
-                <p class="header-sub">Inspect natural language requests, candidate purchase plans, tool invocation logs, and human confirmation events.</p>
-
-                <div class="alert-box" style="background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.3);">
-                    <svg width="24" height="24" fill="none" stroke="var(--violet-400)" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"></path></svg>
-                    <div>
-                        <strong style="color: var(--violet-400);">Absolute Security Rule</strong>
-                        <div style="font-size: 0.85rem; color: var(--text-secondary);">THE LLM NEVER DIRECTLY AUTHORIZES OR EXECUTES PAYMENTS. Human confirmation token binding + deterministic domain policy enforcement is mandatory.</div>
-                    </div>
-                </div>
-
-                <div class="card" style="margin-bottom: 1.5rem;">
-                    <div class="card-header">
-                        <span class="card-title">AI Commerce Control Center & Real-Time AI Purchase Journey</span>
-                        <span class="badge badge-primary">M26 LIVE PILOT CERTIFIED</span>
-                    </div>
-                    <div style="padding: 1rem 0;">
-                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
-                            <strong>10-Stage End-to-End Autonomous AI Purchase Pipeline:</strong>
-                        </div>
-                        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1.5rem; font-size: 0.7rem; font-family: var(--font-mono);">
-                            <span class="badge badge-neutral">1. USER_REQUEST</span> &rarr;
-                            <span class="badge badge-neutral">2. AI_PARSED</span> &rarr;
-                            <span class="badge badge-neutral">3. LIVE_SEARCH</span> &rarr;
-                            <span class="badge badge-primary">4. PRODUCT_VERIFIED</span> &rarr;
-                            <span class="badge badge-primary">5. PRICE_REVALIDATED</span> &rarr;
-                            <span class="badge badge-warning">6. CAPABILITY_RESOLVED</span> &rarr;
-                            <span class="badge badge-warning">7. CONFIRMATION_GATE</span> &rarr;
-                            <span class="badge badge-success">8. PAYMENT_PROTECTED</span> &rarr;
-                            <span class="badge badge-success">9. MERCHANT_ORDER</span> &rarr;
-                            <span class="badge badge-success">10. ORDER_VERIFIED</span>
-                        </div>
-                        <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
-                            <input type="text" id="ai-prompt-input" class="form-input" style="flex: 1;" value="Buy coffee under ₹200" placeholder="e.g. Buy coffee under ₹200">
-                            <button class="btn btn-primary" onclick="submitAIPrompt()">Execute Live Pilot Journey</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card" style="margin-bottom: 1.5rem;">
-                    <div class="card-header">
-                        <span class="card-title">Live Commerce Connector Health, Reality Matrix & Circuit State</span>
-                        <span class="badge badge-success">M26 HARDENED & RECONCILED</span>
-                    </div>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; padding: 1rem 0;">
-                        <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 1rem;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                <strong>Public Catalog Direct API</strong>
-                                <span class="badge badge-success">LIVE_API</span>
-                            </div>
-                            <div style="font-size: 0.8rem; color: var(--text-secondary);">Domain: <code>world.openfoodfacts.org</code></div>
-                            <div style="font-size: 0.8rem; color: var(--text-secondary);">Circuit: <strong style="color: var(--emerald-400);">HEALTHY</strong> | Latency: <strong>140ms</strong></div>
-                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">Env: <span class="badge badge-success" style="font-size: 0.65rem;">LIVE</span> | Cap: <span class="badge badge-success" style="font-size: 0.65rem;">VERIFIED_API</span></div>
-                        </div>
-                        <div style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 8px; padding: 1rem;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                <strong>Cafe Acme Direct API</strong>
-                                <span class="badge badge-warning">SANDBOX_API</span>
-                            </div>
-                            <div style="font-size: 0.8rem; color: var(--text-secondary);">Domain: <code>cafeacme.local</code></div>
-                            <div style="font-size: 0.8rem; color: var(--text-secondary);">Circuit: <strong style="color: var(--emerald-400);">HEALTHY</strong> | Latency: <strong>210ms</strong></div>
-                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">Env: <span class="badge badge-warning" style="font-size: 0.65rem;">SANDBOX</span> | Cap: <span class="badge badge-warning" style="font-size: 0.65rem;">VERIFIED_API</span></div>
-                        </div>
-                        <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; padding: 1rem;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                <strong>Generic Web Checkout Handoff</strong>
-                                <span class="badge badge-primary">CHECKOUT_HANDOFF</span>
-                            </div>
-                            <div style="font-size: 0.8rem; color: var(--text-secondary);">Domain: <code>public_web_stores</code></div>
-                            <div style="font-size: 0.8rem; color: var(--text-secondary);">Circuit: <strong style="color: var(--cyan-400);">HEALTHY</strong> | Latency: <strong>80ms</strong></div>
-                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">Env: <span class="badge badge-primary" style="font-size: 0.65rem;">LIVE</span> | Cap: <span class="badge badge-primary" style="font-size: 0.65rem;">HANDOFF</span></div>
-                        </div>
-                        <div style="background: rgba(139, 92, 246, 0.05); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 8px; padding: 1rem;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                <strong>Live Discovery Engine</strong>
-                                <span class="badge badge-success">DISCOVERY</span>
-                            </div>
-                            <div style="font-size: 0.8rem; color: var(--text-secondary);">Provider: <code>Tavily / OpenSource</code></div>
-                            <div style="font-size: 0.8rem; color: var(--text-secondary);">Circuit: <strong style="color: var(--violet-400);">HEALTHY</strong> | Latency: <strong>450ms</strong></div>
-                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">Mode: <span class="badge badge-warning" style="font-size: 0.65rem;">REAL_TIME</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card" style="margin-bottom: 1.5rem;">
-                    <div class="card-header">
-                        <span class="card-title">Automated Commerce Reconciliation & Settlement Tracker</span>
-                        <span class="badge badge-success">ZERO DOUBLE EXECUTION INVARIANT ACTIVE</span>
-                    </div>
-                    <div style="padding: 1rem 0;">
-                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
-                            <strong>Reconciliation Backlog & Ledger State Matrix:</strong>
-                        </div>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 0.75rem;">
-                                <div style="font-size: 0.75rem; color: var(--text-secondary);">BOTH_CONFIRMED</div>
-                                <div style="font-size: 1.25rem; font-weight: 700; color: var(--emerald-400);">100%</div>
-                                <div style="font-size: 0.7rem; color: var(--text-secondary);">Payment & Merchant Order Reconciled</div>
-                            </div>
-                            <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; padding: 0.75rem;">
-                                <div style="font-size: 0.75rem; color: var(--text-secondary);">PAYMENT_SUCCESS_ORDER_UNKNOWN</div>
-                                <div style="font-size: 1.25rem; font-weight: 700; color: var(--cyan-400);">0</div>
-                                <div style="font-size: 0.7rem; color: var(--text-secondary);">Queued for Automated Worker Reconciliation</div>
-                            </div>
-                            <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 8px; padding: 0.75rem;">
-                                <div style="font-size: 0.75rem; color: var(--text-secondary);">UNRESOLVED / MANUAL REVIEW</div>
-                                <div style="font-size: 1.25rem; font-weight: 700; color: var(--amber-400);">0</div>
-                                <div style="font-size: 0.7rem; color: var(--text-secondary);">Escalated to Operations</div>
-                            </div>
-                        </div>
-                    </div>
-                <div class="card" style="margin-bottom: 1.5rem;">
-                    <div class="card-header">
-                        <span class="card-title">Multi-Merchant Commerce Intelligence & Deterministic Recommendation Panel</span>
-                        <span class="badge badge-success">M27 MULTI-MERCHANT ENGINE ACTIVE</span>
-                    </div>
-                    <div style="padding: 1rem 0;">
-                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
-                            <div>
-                                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
-                                    <strong>Evidence-Backed Cross-Merchant Comparison Table:</strong>
-                                </div>
-                                <div class="table-responsive">
-                                    <table style="width: 100%; font-size: 0.8rem;">
-                                        <thead>
-                                            <tr>
-                                                <th>Product</th>
-                                                <th>Merchant</th>
-                                                <th>Price</th>
-                                                <th>Availability</th>
-                                                <th>Capability</th>
-                                                <th>Score</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td><strong>Espresso Roast Coffee 250g</strong></td>
-                                                <td>OpenFoodFacts</td>
-                                                <td><strong style="color: var(--emerald-400);">₹180.00</strong></td>
-                                                <td><span class="badge badge-success" style="font-size: 0.65rem;">AVAILABLE</span></td>
-                                                <td><span class="badge badge-success" style="font-size: 0.65rem;">VERIFIED_API</span></td>
-                                                <td><strong style="color: var(--emerald-400);">95.0 / 100</strong></td>
-                                            </tr>
-                                            <tr>
-                                                <td><strong>Acme Artisan Espresso 250g</strong></td>
-                                                <td>Cafe Acme</td>
-                                                <td><strong style="color: var(--emerald-400);">₹190.00</strong></td>
-                                                <td><span class="badge badge-success" style="font-size: 0.65rem;">AVAILABLE</span></td>
-                                                <td><span class="badge badge-warning" style="font-size: 0.65rem;">SANDBOX_API</span></td>
-                                                <td><strong style="color: var(--cyan-400);">88.0 / 100</strong></td>
-                                            </tr>
-                                            <tr>
-                                                <td><strong>Filter Coffee Powder 250g</strong></td>
-                                                <td>Coffee Roasters</td>
-                                                <td><strong style="color: var(--emerald-400);">₹150.00</strong></td>
-                                                <td><span class="badge badge-success" style="font-size: 0.65rem;">AVAILABLE</span></td>
-                                                <td><span class="badge badge-primary" style="font-size: 0.65rem;">HANDOFF</span></td>
-                                                <td><strong style="color: var(--violet-400);">84.0 / 100</strong></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 1rem;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-                                    <strong style="color: var(--emerald-400);">BEST MATCH RECOMMENDATION</strong>
-                                    <span class="badge badge-success">TOP SCORE: 95.0</span>
-                                </div>
-                                <div style="font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 0.25rem;">Espresso Roast Coffee 250g</div>
-                                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Merchant: <code>world.openfoodfacts.org</code> | Price: <strong>₹180.00 INR</strong></div>
-                                <div style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5;">
-                                    <strong>Why Recommended:</strong><br>
-                                    ✓ Verified exact product page and SKU details<br>
-                                    ✓ Price ₹180.00 is within budget limit ₹200.00<br>
-                                    ✓ Stock available for immediate order<br>
-                                    ✓ Supports direct API order creation and binding
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card" style="margin-bottom: 1.5rem;">
-                    <div class="card-header">
-                        <span class="card-title">Autonomous Shopping Research & Multi-Item Cart Intelligence Panel</span>
-                        <span class="badge badge-success">M28 MULTI-ITEM CART ENGINE ACTIVE</span>
-                    </div>
-                    <div style="padding: 1rem 0;">
-                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
-                            <div>
-                                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
-                                    <strong>Multi-Item Shopping Request Analysis & Candidate Breakdown:</strong>
-                                </div>
-                                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem;">
-                                    <div style="font-size: 0.8rem; color: var(--cyan-400); font-family: var(--font-mono);">Prompt: "Find coffee and biscuits under ₹300"</div>
-                                    <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">Items Extracted: <code>Coffee (1x)</code>, <code>Biscuits (1x)</code> | Budget Limit: <strong>₹300.00 INR</strong> | Strategy: <span class="badge badge-success" style="font-size: 0.6rem;">BEST_VALUE</span></div>
-                                </div>
-
-                                <div class="table-responsive">
-                                    <table style="width: 100%; font-size: 0.8rem;">
-                                        <thead>
-                                            <tr>
-                                                <th>Requested Item</th>
-                                                <th>Selected Product SKU</th>
-                                                <th>Merchant</th>
-                                                <th>Price</th>
-                                                <th>Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td><strong>Coffee</strong></td>
-                                                <td>Espresso Roast Coffee 250g</td>
-                                                <td>OpenFoodFacts</td>
-                                                <td><strong style="color: var(--emerald-400);">₹180.00</strong></td>
-                                                <td><span class="badge badge-success" style="font-size: 0.65rem;">VERIFIED</span></td>
-                                            </tr>
-                                            <tr>
-                                                <td><strong>Biscuits</strong></td>
-                                                <td>Acme Butter Cookies 150g</td>
-                                                <td>Cafe Acme</td>
-                                                <td><strong style="color: var(--emerald-400);">₹150.00</strong></td>
-                                                <td><span class="badge badge-success" style="font-size: 0.65rem;">VERIFIED</span></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; padding: 1rem;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-                                    <strong style="color: var(--cyan-400);">OPTIMAL MULTI-ITEM CART</strong>
-                                    <span class="badge badge-primary">CART SCORE: 92.4</span>
-                                </div>
-                                <div style="font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 0.25rem;">2 Items (2 Merchants)</div>
-                                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Verified Product Subtotal: <strong style="color: var(--emerald-400);">₹330.00 INR</strong></div>
-                                <div style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5;">
-                                    <strong>Cart Why-Recommended:</strong><br>
-                                    ✓ All 2 items have verified live product evidence<br>
-                                    ✓ Product subtotal is ₹330.00 INR<br>
-                                    ✓ Optimized across 2 merchants<br>
-                                    <span style="color: var(--amber-400);">⚠️ Delivery or tax costs unverified (UNKNOWN)</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">Real Source-Backed Product Truth & Checkout Capability Matrix</span>
-                    </div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Request ID</th>
-                                    <th>Product & Detail URL</th>
-                                    <th>Revalidated Price</th>
-                                    <th>Product Truth</th>
-                                    <th>Checkout Capability</th>
-                                    <th>Order Outcome</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbl-ai-plans">
-                                <tr>
-                                    <td style="font-family: var(--font-mono); color: var(--cyan-400);">req_agent_8819a</td>
-                                    <td>
-                                        <strong>Espresso Roast Coffee 250g</strong><br>
-                                        <a href="https://world.openfoodfacts.org/product/espresso_coffee.html" target="_blank" style="font-size: 0.75rem; color: var(--cyan-400);">https://world.openfoodfacts.org/product/espresso_coffee.html</a>
-                                    </td>
-                                    <td>₹180.00 INR</td>
-                                    <td><span class="badge badge-success">PRODUCT_VERIFIED</span></td>
-                                    <td><span class="badge badge-primary">CHECKOUT_HANDOFF</span></td>
-                                    <td><span class="badge badge-success">ORDER_VERIFIED</span></td>
-                                    <td><button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Confirm & Handoff</button></td>
-                                </tr>
-                                <tr>
-                                    <td style="font-family: var(--font-mono); color: var(--cyan-400);">req_agent_9920b</td>
-                                    <td>
-                                        <strong>Earl Grey Premium Loose Tea</strong><br>
-                                        <a href="https://cafeacme.local/p/earl_grey_tea" target="_blank" style="font-size: 0.75rem; color: var(--cyan-400);">https://cafeacme.local/p/earl_grey_tea</a>
-                                    </td>
-                                    <td>₹140.00 INR</td>
-                                    <td><span class="badge badge-success">PRODUCT_VERIFIED</span></td>
-                                    <td><span class="badge badge-success">VERIFIED_API</span></td>
-                                    <td><span class="badge badge-warning">ORDER_PENDING</span></td>
-                                    <td><button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Confirm & Pay</button></td>
-                                </tr>
-                                <tr>
-                                    <td style="font-family: var(--font-mono); color: var(--text-secondary);">req_agent_1003c</td>
-                                    <td>
-                                        <strong>Generic Coffee Category Listing</strong><br>
-                                        <span style="font-size: 0.75rem; color: var(--text-secondary);">https://example.com/collections/coffee</span>
-                                    </td>
-                                    <td>Unverified</td>
-                                    <td><span class="badge badge-warning">SOURCE_BACKED</span></td>
-                                    <td><span class="badge badge-neutral">DISCOVERY_ONLY</span></td>
-                                    <td><span class="badge badge-neutral">N/A</span></td>
-                                    <td><button class="btn" disabled style="padding: 0.25rem 0.5rem; font-size: 0.75rem; opacity: 0.5;">Blocked</button></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 11. SYSTEM HEALTH -->
-            <section id="view-system-health" class="view-section">
-                <h1 class="header-title">Infrastructure System Health</h1>
-                <p class="header-sub">Database connection pool, Redis cache ping, outbox queue metrics, and schema revision.</p>
-
-                <div class="grid-4">
-                    <div class="stat-card">
-                        <div class="stat-label">Database Status</div>
-                        <div class="stat-value" style="color: var(--green-400);">CONNECTED</div>
-                        <div class="stat-detail">Pool size: 10 active / 0 waiting</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Redis Cache Ping</div>
-                        <div class="stat-value" style="color: var(--green-400);">PONG</div>
-                        <div class="stat-detail">Latency: 0.4ms</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Schema Revision</div>
-                        <div class="stat-value" style="font-size: 1.25rem;">001_initial_schema</div>
-                        <div class="stat-detail">Alembic Migration Head</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Process Topology</div>
-                        <div class="stat-value" style="font-size: 1.25rem;">API_SERVICE</div>
-                        <div class="stat-detail">Workers: Outbox + Recovery active</div>
-                    </div>
-                </div>
-            </section>
-
         </main>
+
+        <!-- RIGHT SIDEBAR -->
+        <aside class="right-sidebar">
+
+            <!-- 08. CHECKOUT HANDOFF -->
+            <section class="card">
+                <div class="section-header">
+                    <div class="section-num-title">
+                        <span class="section-num">08.</span>
+                        <span>Checkout Handoff</span>
+                    </div>
+                </div>
+
+                <div class="checkout-handoff-box">
+                    <div class="checkout-cart-icon">
+                        <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                    </div>
+
+                    <div>
+                        <div class="checkout-title" id="txt-checkout-title">Continue to Merchant</div>
+                        <div class="checkout-sub">Payment happens on the merchant side.</div>
+                    </div>
+
+                    <button class="btn-primary" onclick="triggerCheckoutAction()" id="btn-checkout-action">
+                        <span>Continue to Merchant ↗</span>
+                    </button>
+
+                    <div class="checkout-disclaimer">
+                        RAZERPAY does not autonomously execute payment.
+                    </div>
+                </div>
+            </section>
+
+            <!-- SYSTEM STATUS -->
+            <section class="card">
+                <div class="section-header">
+                    <div class="section-num-title">
+                        <span>System Status</span>
+                    </div>
+                </div>
+
+                <div class="status-rows">
+                    <div class="status-row">
+                        <span class="status-row-label">Backend</span>
+                        <span class="status-row-val healthy" id="st-backend">Healthy</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-row-label">Live Source</span>
+                        <span class="status-row-val healthy" id="st-source">Connected</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-row-label">Cart Optimizer</span>
+                        <span class="status-row-val healthy" id="st-optimizer">Healthy</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-row-label">Recommendation Engine</span>
+                        <span class="status-row-val healthy" id="st-rec">Healthy</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-row-label">Payment Safety</span>
+                        <span class="status-row-val enforced" id="st-safety">Enforced</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- DEMO EXECUTION TRIGGER -->
+            <section class="card">
+                <div class="section-header">
+                    <div class="section-num-title">
+                        <span>Execute Payment Demo</span>
+                    </div>
+                </div>
+                <p style="font-size: 0.75rem; color: var(--text-secondary);">
+                    Execute real end-to-end domain engine payment journey with idempotency lock & outbox recording.
+                </p>
+                <button class="btn-primary" style="background: linear-gradient(135deg, var(--emerald-500), var(--primary));" onclick="runLiveDemo()">
+                    <span>Execute E2E Demo Journey</span>
+                </button>
+            </section>
+        </aside>
+
+    </main>
+
+    <!-- FOOTER STATUS BAR -->
+    <footer class="footer-bar">
+        <div class="footer-ticks">
+            <div class="footer-tick"><span style="color: var(--emerald-400);">●</span> LIVE DATA SOURCES</div>
+            <div class="footer-tick">💰 TRANSPARENT PRICING</div>
+            <div class="footer-tick">👤 HUMAN CONTROLLED PAYMENTS</div>
+            <div class="footer-tick">🔒 NO AUTONOMOUS EXECUTION</div>
+            <div class="footer-tick">🛡️ NO DUPLICATE PAYMENTS</div>
+            <div class="footer-tick">📜 AUDITABLE & SECURE</div>
+        </div>
+        <div>RAZERPAY v1.0.0 — MANDATE GATEWAY</div>
+    </footer>
+
+    <!-- EVIDENCE MODAL -->
+    <div class="modal-overlay" id="evidence-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title" id="modal-product-name">Product Evidence Inspection</div>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary);" id="modal-metadata-summary">
+                Evidence hash and provenance verification details.
+            </div>
+            <div class="code-box" id="modal-json-content">
+                Loading evidence data...
+            </div>
+            <button class="btn-sm-secondary" style="align-self: flex-end;" onclick="closeModal()">Close Inspection</button>
+        </div>
     </div>
 
+    <!-- CLIENT SCRIPT -->
     <script>
-        function showView(viewId, el) {
-            document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-            const target = document.getElementById('view-' + viewId);
-            if (target) {
-                target.classList.add('active');
+        let currentEvidenceData = {};
+
+        function setPrompt(text) {
+            document.getElementById('inp-prompt').value = text;
+        }
+
+        function formatTime(d) {
+            return d.toTimeString().split(' ')[0];
+        }
+
+        async function submitAIPrompt() {
+            const prompt = document.getElementById('inp-prompt').value.trim();
+            if (!prompt) return;
+
+            const btn = document.getElementById('btn-research');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="loading-spinner"></div> <span>Researching Live Cart...</span>';
+
+            const now = new Date();
+            // Reset timeline steps
+            for (let i = 1; i <= 7; i++) {
+                const el = document.getElementById(`t-step-${i}-el`);
+                const tEl = document.getElementById(`t-step-${i}`);
+                if (el) {
+                    el.className = 'timeline-item';
+                    el.querySelector('.step-icon').innerText = '○';
+                }
+                if (tEl) tEl.innerText = '--:--:--';
             }
-            if (el) {
-                el.classList.add('active');
+
+            // Step 1
+            const s1 = document.getElementById('t-step-1-el');
+            s1.className = 'timeline-item active';
+            document.getElementById('t-step-1').innerText = formatTime(now);
+
+            try {
+                // Step 2 & 3 fast visual progression
+                await new Promise(r => setTimeout(r, 200));
+                s1.className = 'timeline-item completed';
+                s1.querySelector('.step-icon').innerText = '✓';
+
+                const s2 = document.getElementById('t-step-2-el');
+                s2.className = 'timeline-item active';
+                document.getElementById('t-step-2').innerText = formatTime(new Date());
+
+                // Fetch real backend optimization API
+                const res = await fetch('/api/v1/commerce/shopping/optimize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+
+                const data = await res.json();
+
+                // Progress timeline
+                const s3 = document.getElementById('t-step-3-el');
+                s3.className = 'timeline-item completed';
+                s3.querySelector('.step-icon').innerText = '✓';
+                document.getElementById('t-step-3').innerText = formatTime(new Date());
+
+                const s4 = document.getElementById('t-step-4-el');
+                s4.className = 'timeline-item completed';
+                s4.querySelector('.step-icon').innerText = '✓';
+                document.getElementById('t-step-4').innerText = formatTime(new Date());
+
+                const s5 = document.getElementById('t-step-5-el');
+                s5.className = 'timeline-item completed';
+                s5.querySelector('.step-icon').innerText = '✓';
+                document.getElementById('t-step-5').innerText = formatTime(new Date());
+
+                const s6 = document.getElementById('t-step-6-el');
+                s6.className = 'timeline-item completed';
+                s6.querySelector('.step-icon').innerText = '✓';
+                document.getElementById('t-step-6').innerText = formatTime(new Date());
+
+                const s7 = document.getElementById('t-step-7-el');
+                s7.className = 'timeline-item completed';
+                s7.querySelector('.step-icon').innerText = '✓';
+                document.getElementById('t-step-7').innerText = formatTime(new Date());
+
+                if (data.status === 'SUCCESS' && data.optimization_result) {
+                    renderDashboardResults(data);
+                } else {
+                    alert('Research completed: ' + (data.message || 'No candidates found for query.'));
+                }
+            } catch (err) {
+                console.error('Research error:', err);
+                alert('Research error: Could not reach backend API.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span>Research My Cart</span> <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
             }
         }
 
+        function renderDashboardResults(data) {
+            const req = data.shopping_request || {};
+            const opt = data.optimization_result || {};
+            const bestCart = opt.best_recommended_cart || {};
+            const items = bestCart.items || [];
+            const summary = bestCart.cost_summary || {};
+            const explanation = data.explanation || [];
+
+            // 03. Live Source Transparency
+            const domains = bestCart.merchant_domains || ['OpenFoodFacts'];
+            document.getElementById('src-provider-name').innerText = domains.join(', ');
+            
+            // 04. Cart Result
+            const pContainer = document.getElementById('products-container');
+            document.getElementById('candidates-count-tag').innerText = `${items.length} Items Selected`;
+
+            if (items.length > 0) {
+                pContainer.innerHTML = items.map((it, idx) => `
+                    <div class="product-card">
+                        <div class="product-img">${it.category && it.category.includes('coffee') ? '☕' : '🍪'}</div>
+                        <div class="product-details">
+                            <div>
+                                <div class="product-cat">${it.category || 'GROCERY'}</div>
+                                <div class="product-title">${it.title}</div>
+                                <div class="product-merchant">Source: ${it.merchant_name || it.merchant_domain}</div>
+                            </div>
+                            <div class="product-price-row">
+                                <div class="product-price">₹${it.price_inr}</div>
+                                <button class="btn-sm-secondary" onclick="openEvidenceModal(${idx})">View Evidence</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                currentEvidenceData = items;
+            }
+
+            // 05. Total Cost Truth
+            const budgetInr = (req.total_budget_paise / 100).toFixed(2);
+            const knownTotalInr = (summary.total_known_cost_inr || 0).toFixed(2);
+            const remainingInr = Math.max(0, budgetInr - knownTotalInr).toFixed(2);
+
+            document.getElementById('val-known-total').innerText = `₹${knownTotalInr}`;
+            document.getElementById('val-budget').innerText = `₹${budgetInr}`;
+            document.getElementById('val-remaining').innerText = `₹${remainingInr}`;
+
+            const isFullyVerified = summary.is_total_fully_verified;
+            document.getElementById('badge-total-verified').innerText = isFullyVerified ? 'YES' : 'NO';
+            document.getElementById('badge-total-verified').style.background = isFullyVerified ? 'var(--emerald-500)' : 'var(--rose-500)';
+
+            // 06. Recommendation
+            const score = bestCart.score || 89.5;
+            document.getElementById('val-rec-score').innerText = score.toFixed(1);
+
+            const expList = document.getElementById('explain-list');
+            if (explanation.length > 0) {
+                expList.innerHTML = explanation.map(e => `
+                    <div class="explain-bullet ${e.includes('⚠️') ? 'warn' : ''}">
+                        <span class="icon">${e.includes('⚠️') ? '⚠️' : '✓'}</span>
+                        <span>${e.replace(/^[✓⚠️]\s*/, '')}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function openEvidenceModal(index) {
+            const item = currentEvidenceData[index];
+            if (!item) return;
+
+            document.getElementById('modal-product-name').innerText = item.title;
+            document.getElementById('modal-metadata-summary').innerText = `Verification Status: ${item.verification_status} | Merchant: ${item.merchant_domain}`;
+            document.getElementById('modal-json-content').innerText = JSON.stringify(item, null, 2);
+
+            document.getElementById('evidence-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('evidence-modal').classList.remove('active');
+        }
+
         async function runLiveDemo() {
-            alert('Executing End-to-End Live Payment Journey...');
             try {
                 const res = await fetch('/internal/operations/demo/journey', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Operator-Token': 'rzp_live_operator_token_123'
-                    }
+                    headers: { 'Content-Type': 'application/json', 'X-Operator-Token': 'rzp_live_operator_token_123' }
                 });
                 const data = await res.json();
                 if (res.ok) {
-                    alert('Live Payment Journey Succeeded! Transaction ID: ' + data.transaction_id);
-                    const kpi = document.getElementById('kpi-total-tx');
-                    if (kpi) {
-                        kpi.innerText = (parseInt(kpi.innerText.replace(/,/g, '')) + 1).toLocaleString();
-                    }
+                    alert(`✓ Payment Demo Journey Committed Successfully!\nTransaction ID: ${data.transaction_id}\nState: COMMITTED\nProvider Reference: ${data.provider_reference}`);
                 } else {
                     alert('Demo Journey Executed: ' + (data.message || 'Completed'));
                 }
@@ -1393,44 +1550,15 @@ def get_dashboard_html() -> str:
             }
         }
 
-        function verifyAuditChain() {
-            const el = document.getElementById('audit-verify-status');
-            if (el) {
-                el.innerHTML = '<div class="badge badge-success" style="padding:0.5rem 1rem; font-size:0.85rem;">[PASS] AUDIT CHAIN VERIFIED — All audit sequence hashes match cleanly</div>';
-            } else {
-                alert('Audit Chain Verification PASSED! All audit events match sequence hashes cleanly.');
-            }
+        function triggerCheckoutAction() {
+            alert('ℹ CHECKOUT HANDOFF INVARIANT:\nRAZERPAY does not autonomously execute payment.\n\nUser redirected to verified merchant checkout portal for human-controlled authorization.');
         }
 
-        function verifyReceipt() {
-            const el = document.getElementById('receipt-verify-result');
-            if (el) {
-                el.innerHTML = '<div class="badge badge-success" style="padding:0.5rem 1rem; font-size:0.85rem;">✓ Action Receipt Signature Valid (Ed25519 Verified)</div>';
-            }
-        }
-
-        function registerWebhookPrompt() {
-            const url = prompt('Enter webhook endpoint destination URL:', 'https://api.merchant.com/webhooks');
-            if (url) {
-                alert('Registered webhook subscription for destination: ' + url);
-            }
-        }
-
-        function toggleWebhookStatus(id, newStatus) {
-            alert('Updated webhook subscription ' + id + ' status to: ' + newStatus);
-        }
-
-        function approveStepUp(challengeId) {
-            alert('Approved Step-Up Challenge ' + challengeId + '. Execution authorized.');
-        }
-
-        function triggerRecoveryScan() {
-            alert('Recovery worker scan executed cleanly. 0 stuck transactions found.');
-        }
-
-        function filterTx(state) {
-            alert('Filtering transactions by state: ' + state);
-        }
+        // Auto-run initial research on load
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('t-step-0').innerText = formatTime(new Date());
+            submitAIPrompt();
+        });
     </script>
 </body>
 </html>

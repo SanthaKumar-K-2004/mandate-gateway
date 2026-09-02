@@ -606,6 +606,12 @@ class MandateGatewayApp:
             }
         else:
             try:
+                if path.startswith("/api/"):
+                    if not hasattr(self, "_fastapi_app") or self._fastapi_app is None:
+                        self._fastapi_app = create_fastapi_app(self.settings)
+                    if self._fastapi_app is not None:
+                        await self._fastapi_app(scope, receive, send)
+                        return
                 if path in ("/health", "/health/live", "/live") and method == "GET":
                     status_code, body = handle_health(self.settings)
                 elif path in ("/ready", "/health/ready") and method == "GET":
