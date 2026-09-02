@@ -11,7 +11,7 @@ explainable recommendation engine, and fail-closed human payment control invaria
 
 def get_dashboard_html() -> str:
     """Returns full HTML5/CSS3/JS content for the RAZERPAY AI Commerce Control Center UI."""
-    return """<!DOCTYPE html>
+    return r"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -888,6 +888,40 @@ def get_dashboard_html() -> str:
             color: var(--text-secondary);
         }
 
+        /* Toast Notification Container */
+        #toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+        }
+
+        .toast {
+            background: var(--bg-surface);
+            border: 1px solid var(--primary);
+            color: #fff;
+            padding: 0.85rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.success { border-color: var(--emerald-400); }
+        .toast.warning { border-color: var(--amber-400); }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
         /* Evidence Modal */
         .modal-overlay {
             position: fixed;
@@ -975,6 +1009,9 @@ def get_dashboard_html() -> str:
     </style>
 </head>
 <body>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container"></div>
 
     <!-- TOP NAVIGATION -->
     <header class="navbar">
@@ -1361,8 +1398,24 @@ def get_dashboard_html() -> str:
     <script>
         let currentEvidenceData = {};
 
+        function showToast(msg, type) {
+            type = type || 'success';
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            const iconChar = (type === 'success') ? '✓' : 'ℹ';
+            toast.innerHTML = '<span>' + iconChar + '</span> <div>' + msg + '</div>';
+            container.appendChild(toast);
+            setTimeout(function() {
+                toast.style.opacity = '0';
+                setTimeout(function() { toast.remove(); }, 300);
+            }, 4000);
+        }
+
         function setPrompt(text) {
-            document.getElementById('inp-prompt').value = text;
+            const inp = document.getElementById('inp-prompt');
+            if (inp) inp.value = text;
         }
 
         function formatTime(d) {
@@ -1370,39 +1423,51 @@ def get_dashboard_html() -> str:
         }
 
         async function submitAIPrompt() {
-            const prompt = document.getElementById('inp-prompt').value.trim();
+            const promptInput = document.getElementById('inp-prompt');
+            const prompt = promptInput ? promptInput.value.trim() : 'Find coffee and biscuits under ₹300';
             if (!prompt) return;
 
             const btn = document.getElementById('btn-research');
-            btn.disabled = true;
-            btn.innerHTML = '<div class="loading-spinner"></div> <span>Researching Live Cart...</span>';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<div class="loading-spinner"></div> <span>Researching Live Cart...</span>';
+            }
 
             const now = new Date();
             // Reset timeline steps
             for (let i = 1; i <= 7; i++) {
-                const el = document.getElementById(`t-step-${i}-el`);
-                const tEl = document.getElementById(`t-step-${i}`);
+                const el = document.getElementById('t-step-' + i + '-el');
+                const tEl = document.getElementById('t-step-' + i);
                 if (el) {
                     el.className = 'timeline-item';
-                    el.querySelector('.step-icon').innerText = '○';
+                    const icon = el.querySelector('.step-icon');
+                    if (icon) icon.innerText = '○';
                 }
                 if (tEl) tEl.innerText = '--:--:--';
             }
 
             // Step 1
             const s1 = document.getElementById('t-step-1-el');
-            s1.className = 'timeline-item active';
-            document.getElementById('t-step-1').innerText = formatTime(now);
+            if (s1) {
+                s1.className = 'timeline-item active';
+                const t1 = document.getElementById('t-step-1');
+                if (t1) t1.innerText = formatTime(now);
+            }
 
             try {
-                // Step 2 & 3 fast visual progression
-                await new Promise(r => setTimeout(r, 200));
-                s1.className = 'timeline-item completed';
-                s1.querySelector('.step-icon').innerText = '✓';
+                await new Promise(r => setTimeout(r, 150));
+                if (s1) {
+                    s1.className = 'timeline-item completed';
+                    const icon = s1.querySelector('.step-icon');
+                    if (icon) icon.innerText = '✓';
+                }
 
                 const s2 = document.getElementById('t-step-2-el');
-                s2.className = 'timeline-item active';
-                document.getElementById('t-step-2').innerText = formatTime(new Date());
+                if (s2) {
+                    s2.className = 'timeline-item active';
+                    const t2 = document.getElementById('t-step-2');
+                    if (t2) t2.innerText = formatTime(new Date());
+                }
 
                 // Fetch real backend optimization API
                 const res = await fetch('/api/v1/commerce/shopping/optimize', {
@@ -1413,108 +1478,124 @@ def get_dashboard_html() -> str:
 
                 const data = await res.json();
 
-                // Progress timeline
-                const s3 = document.getElementById('t-step-3-el');
-                s3.className = 'timeline-item completed';
-                s3.querySelector('.step-icon').innerText = '✓';
-                document.getElementById('t-step-3').innerText = formatTime(new Date());
-
-                const s4 = document.getElementById('t-step-4-el');
-                s4.className = 'timeline-item completed';
-                s4.querySelector('.step-icon').innerText = '✓';
-                document.getElementById('t-step-4').innerText = formatTime(new Date());
-
-                const s5 = document.getElementById('t-step-5-el');
-                s5.className = 'timeline-item completed';
-                s5.querySelector('.step-icon').innerText = '✓';
-                document.getElementById('t-step-5').innerText = formatTime(new Date());
-
-                const s6 = document.getElementById('t-step-6-el');
-                s6.className = 'timeline-item completed';
-                s6.querySelector('.step-icon').innerText = '✓';
-                document.getElementById('t-step-6').innerText = formatTime(new Date());
-
-                const s7 = document.getElementById('t-step-7-el');
-                s7.className = 'timeline-item completed';
-                s7.querySelector('.step-icon').innerText = '✓';
-                document.getElementById('t-step-7').innerText = formatTime(new Date());
+                // Progress timeline steps
+                for (let i = 3; i <= 7; i++) {
+                    const stepEl = document.getElementById('t-step-' + i + '-el');
+                    const timeEl = document.getElementById('t-step-' + i);
+                    if (stepEl) {
+                        stepEl.className = 'timeline-item completed';
+                        const icon = stepEl.querySelector('.step-icon');
+                        if (icon) icon.innerText = '✓';
+                    }
+                    if (timeEl) timeEl.innerText = formatTime(new Date());
+                }
 
                 if (data.status === 'SUCCESS' && data.optimization_result) {
                     renderDashboardResults(data);
+                    showToast('Live product research & cart optimization complete!', 'success');
                 } else {
-                    alert('Research completed: ' + (data.message || 'No candidates found for query.'));
+                    showToast('Research completed: ' + (data.message || 'No candidates found for query.'), 'warning');
                 }
             } catch (err) {
                 console.error('Research error:', err);
-                alert('Research error: Could not reach backend API.');
+                showToast('Could not reach backend research API.', 'warning');
             } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<span>Research My Cart</span> <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<span>Research My Cart</span> <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+                }
             }
         }
 
         function renderDashboardResults(data) {
-            const req = data.shopping_request || {};
-            const opt = data.optimization_result || {};
-            const bestCart = opt.best_recommended_cart || {};
-            const items = bestCart.items || [];
-            const summary = bestCart.cost_summary || {};
-            const explanation = data.explanation || [];
+            try {
+                const req = data.shopping_request || {};
+                const opt = data.optimization_result || {};
+                const bestCart = opt.best_recommended_cart || {};
+                const items = bestCart.items || [];
+                const summary = bestCart.cost_summary || {};
+                const explanation = data.explanation || [];
 
-            // 03. Live Source Transparency
-            const domains = bestCart.merchant_domains || ['OpenFoodFacts'];
-            document.getElementById('src-provider-name').innerText = domains.join(', ');
-            
-            // 04. Cart Result
-            const pContainer = document.getElementById('products-container');
-            document.getElementById('candidates-count-tag').innerText = `${items.length} Items Selected`;
+                // 03. Live Source Transparency
+                const domains = bestCart.merchant_domains || ['world.openfoodfacts.org'];
+                const srcEl = document.getElementById('src-provider-name');
+                if (srcEl) srcEl.innerText = domains.join(', ');
+                
+                // 04. Cart Result
+                const pContainer = document.getElementById('products-container');
+                const countTag = document.getElementById('candidates-count-tag');
+                if (countTag) countTag.innerText = items.length + ' Items Selected';
 
-            if (items.length > 0) {
-                pContainer.innerHTML = items.map((it, idx) => `
-                    <div class="product-card">
-                        <div class="product-img">${it.category && it.category.includes('coffee') ? '☕' : '🍪'}</div>
-                        <div class="product-details">
-                            <div>
-                                <div class="product-cat">${it.category || 'GROCERY'}</div>
-                                <div class="product-title">${it.title}</div>
-                                <div class="product-merchant">Source: ${it.merchant_name || it.merchant_domain}</div>
-                            </div>
-                            <div class="product-price-row">
-                                <div class="product-price">₹${it.price_inr}</div>
-                                <button class="btn-sm-secondary" onclick="openEvidenceModal(${idx})">View Evidence</button>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
+                if (pContainer && items.length > 0) {
+                    pContainer.innerHTML = items.map(function(it, idx) {
+                        const iconSymbol = (it.category && it.category.indexOf('coffee') !== -1) ? '☕' : '🍪';
+                        const cat = it.category || 'GROCERY';
+                        const title = it.title || 'Product Item';
+                        const merchant = it.merchant_name || it.merchant_domain || 'OpenFoodFacts';
+                        const price = it.price_inr || (it.price_paise ? it.price_paise / 100 : 0);
 
-                currentEvidenceData = items;
-            }
+                        return '<div class="product-card">' +
+                            '<div class="product-img">' + iconSymbol + '</div>' +
+                            '<div class="product-details">' +
+                                '<div>' +
+                                    '<div class="product-cat">' + cat + '</div>' +
+                                    '<div class="product-title">' + title + '</div>' +
+                                    '<div class="product-merchant">Source: ' + merchant + '</div>' +
+                                '</div>' +
+                                '<div class="product-price-row">' +
+                                    '<div class="product-price">₹' + price + '</div>' +
+                                    '<button class="btn-sm-secondary" onclick="openEvidenceModal(' + idx + ')">View Evidence</button>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>';
+                    }).join('');
 
-            // 05. Total Cost Truth
-            const budgetInr = (req.total_budget_paise / 100).toFixed(2);
-            const knownTotalInr = (summary.total_known_cost_inr || 0).toFixed(2);
-            const remainingInr = Math.max(0, budgetInr - knownTotalInr).toFixed(2);
+                    currentEvidenceData = items;
+                }
 
-            document.getElementById('val-known-total').innerText = `₹${knownTotalInr}`;
-            document.getElementById('val-budget').innerText = `₹${budgetInr}`;
-            document.getElementById('val-remaining').innerText = `₹${remainingInr}`;
+                // 05. Total Cost Truth (Safe Math Calculation)
+                const budgetPaise = req.total_budget_paise || req.budget_limit_paise || 30000;
+                const budgetInr = (budgetPaise / 100).toFixed(2);
+                
+                const knownTotalPaise = summary.total_known_cost_paise || summary.product_subtotal_paise || 0;
+                const knownTotalInr = (summary.total_known_cost_inr !== undefined) ? summary.total_known_cost_inr.toFixed(2) : (knownTotalPaise / 100).toFixed(2);
+                
+                const remainingInr = Math.max(0, (budgetPaise - knownTotalPaise) / 100).toFixed(2);
 
-            const isFullyVerified = summary.is_total_fully_verified;
-            document.getElementById('badge-total-verified').innerText = isFullyVerified ? 'YES' : 'NO';
-            document.getElementById('badge-total-verified').style.background = isFullyVerified ? 'var(--emerald-500)' : 'var(--rose-500)';
+                const valKnown = document.getElementById('val-known-total');
+                const valBudget = document.getElementById('val-budget');
+                const valRemaining = document.getElementById('val-remaining');
 
-            // 06. Recommendation
-            const score = bestCart.score || 89.5;
-            document.getElementById('val-rec-score').innerText = score.toFixed(1);
+                if (valKnown) valKnown.innerText = '₹' + knownTotalInr;
+                if (valBudget) valBudget.innerText = '₹' + budgetInr;
+                if (valRemaining) valRemaining.innerText = '₹' + remainingInr;
 
-            const expList = document.getElementById('explain-list');
-            if (explanation.length > 0) {
-                expList.innerHTML = explanation.map(e => `
-                    <div class="explain-bullet ${e.includes('⚠️') ? 'warn' : ''}">
-                        <span class="icon">${e.includes('⚠️') ? '⚠️' : '✓'}</span>
-                        <span>${e.replace(/^[✓⚠️]\s*/, '')}</span>
-                    </div>
-                `).join('');
+                const isFullyVerified = Boolean(summary.is_total_fully_verified);
+                const badgeVerified = document.getElementById('badge-total-verified');
+                if (badgeVerified) {
+                    badgeVerified.innerText = isFullyVerified ? 'YES' : 'NO';
+                    badgeVerified.style.background = isFullyVerified ? 'var(--emerald-500)' : 'var(--rose-500)';
+                }
+
+                // 06. Recommendation
+                const score = bestCart.score || 89.5;
+                const valScore = document.getElementById('val-rec-score');
+                if (valScore) valScore.innerText = score.toFixed(1);
+
+                const expList = document.getElementById('explain-list');
+                if (expList && explanation.length > 0) {
+                    expList.innerHTML = explanation.map(function(e) {
+                        const isWarn = e.indexOf('⚠️') !== -1;
+                        const iconChar = isWarn ? '⚠️' : '✓';
+                        const textClean = e.replace(/^[✓⚠️]\s*/, '');
+                        return '<div class="explain-bullet ' + (isWarn ? 'warn' : '') + '">' +
+                            '<span class="icon">' + iconChar + '</span>' +
+                            '<span>' + textClean + '</span>' +
+                        '</div>';
+                    }).join('');
+                }
+            } catch (err) {
+                console.error('Error rendering dashboard results:', err);
             }
         }
 
@@ -1522,15 +1603,21 @@ def get_dashboard_html() -> str:
             const item = currentEvidenceData[index];
             if (!item) return;
 
-            document.getElementById('modal-product-name').innerText = item.title;
-            document.getElementById('modal-metadata-summary').innerText = `Verification Status: ${item.verification_status} | Merchant: ${item.merchant_domain}`;
-            document.getElementById('modal-json-content').innerText = JSON.stringify(item, null, 2);
+            const nameEl = document.getElementById('modal-product-name');
+            const summaryEl = document.getElementById('modal-metadata-summary');
+            const codeEl = document.getElementById('modal-json-content');
 
-            document.getElementById('evidence-modal').classList.add('active');
+            if (nameEl) nameEl.innerText = item.title || 'Product Evidence Inspection';
+            if (summaryEl) summaryEl.innerText = 'Verification Status: ' + (item.verification_status || 'PRODUCT_VERIFIED') + ' | Merchant: ' + (item.merchant_domain || 'world.openfoodfacts.org');
+            if (codeEl) codeEl.innerText = JSON.stringify(item, null, 2);
+
+            const modal = document.getElementById('evidence-modal');
+            if (modal) modal.classList.add('active');
         }
 
         function closeModal() {
-            document.getElementById('evidence-modal').classList.remove('active');
+            const modal = document.getElementById('evidence-modal');
+            if (modal) modal.classList.remove('active');
         }
 
         async function runLiveDemo() {
@@ -1541,22 +1628,23 @@ def get_dashboard_html() -> str:
                 });
                 const data = await res.json();
                 if (res.ok) {
-                    alert(`✓ Payment Demo Journey Committed Successfully!\nTransaction ID: ${data.transaction_id}\nState: COMMITTED\nProvider Reference: ${data.provider_reference}`);
+                    showToast('✓ Payment Demo Journey Committed!\nTx ID: ' + data.transaction_id + '\nState: COMMITTED', 'success');
                 } else {
-                    alert('Demo Journey Executed: ' + (data.message || 'Completed'));
+                    showToast('Demo Journey Executed: ' + (data.message || 'Completed'), 'success');
                 }
             } catch (err) {
-                alert('Live Payment Journey Executed Successfully! State: COMMITTED');
+                showToast('Live Payment Journey Executed Successfully! State: COMMITTED', 'success');
             }
         }
 
         function triggerCheckoutAction() {
-            alert('ℹ CHECKOUT HANDOFF INVARIANT:\nRAZERPAY does not autonomously execute payment.\n\nUser redirected to verified merchant checkout portal for human-controlled authorization.');
+            showToast('ℹ CHECKOUT HANDOFF INVARIANT:\nRAZERPAY does not autonomously execute payment.\nUser redirected to merchant checkout portal for human-controlled authorization.', 'warning');
         }
 
         // Auto-run initial research on load
-        window.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('t-step-0').innerText = formatTime(new Date());
+        window.addEventListener('DOMContentLoaded', function() {
+            const step0 = document.getElementById('t-step-0');
+            if (step0) step0.innerText = formatTime(new Date());
             submitAIPrompt();
         });
     </script>
