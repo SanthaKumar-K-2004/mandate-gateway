@@ -1007,6 +1007,255 @@ def get_dashboard_html() -> str:
             to { transform: rotate(360deg); }
         }
     </style>
+
+    <!-- EARLY SCRIPT IN HEAD FOR GLOBAL INITIALIZATION -->
+    <script>
+        // Global variables & window scope bindings
+        window.currentEvidenceData = [];
+
+        window.showToast = function(msg, type) {
+            type = type || 'success';
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            const iconChar = (type === 'success') ? '✓' : 'ℹ';
+            toast.innerHTML = '<span>' + iconChar + '</span> <div>' + msg + '</div>';
+            container.appendChild(toast);
+            setTimeout(function() {
+                toast.style.opacity = '0';
+                setTimeout(function() { toast.remove(); }, 300);
+            }, 4000);
+        };
+
+        window.setPrompt = function(text) {
+            const inp = document.getElementById('inp-prompt');
+            if (inp) inp.value = text;
+        };
+
+        window.formatTime = function(d) {
+            return d.toTimeString().split(' ')[0];
+        };
+
+        window.submitAIPrompt = async function() {
+            const promptInput = document.getElementById('inp-prompt');
+            const prompt = promptInput ? promptInput.value.trim() : 'Find coffee and biscuits under ₹300';
+            if (!prompt) return;
+
+            const btn = document.getElementById('btn-research');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<div class="loading-spinner"></div> <span>Researching Live Cart...</span>';
+            }
+
+            const now = new Date();
+            // Reset timeline steps
+            for (let i = 1; i <= 7; i++) {
+                const el = document.getElementById('t-step-' + i + '-el');
+                const tEl = document.getElementById('t-step-' + i);
+                if (el) {
+                    el.className = 'timeline-item';
+                    const icon = el.querySelector('.step-icon');
+                    if (icon) icon.innerText = '○';
+                }
+                if (tEl) tEl.innerText = '--:--:--';
+            }
+
+            // Step 1
+            const s1 = document.getElementById('t-step-1-el');
+            if (s1) {
+                s1.className = 'timeline-item active';
+                const t1 = document.getElementById('t-step-1');
+                if (t1) t1.innerText = window.formatTime(now);
+            }
+
+            try {
+                await new Promise(r => setTimeout(r, 150));
+                if (s1) {
+                    s1.className = 'timeline-item completed';
+                    const icon = s1.querySelector('.step-icon');
+                    if (icon) icon.innerText = '✓';
+                }
+
+                const s2 = document.getElementById('t-step-2-el');
+                if (s2) {
+                    s2.className = 'timeline-item active';
+                    const t2 = document.getElementById('t-step-2');
+                    if (t2) t2.innerText = window.formatTime(new Date());
+                }
+
+                // Fetch real backend optimization API
+                const res = await fetch('/api/v1/commerce/shopping/optimize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+
+                const data = await res.json();
+
+                // Progress timeline steps
+                for (let i = 3; i <= 7; i++) {
+                    const stepEl = document.getElementById('t-step-' + i + '-el');
+                    const timeEl = document.getElementById('t-step-' + i);
+                    if (stepEl) {
+                        stepEl.className = 'timeline-item completed';
+                        const icon = stepEl.querySelector('.step-icon');
+                        if (icon) icon.innerText = '✓';
+                    }
+                    if (timeEl) timeEl.innerText = window.formatTime(new Date());
+                }
+
+                if (data.status === 'SUCCESS' && data.optimization_result) {
+                    window.renderDashboardResults(data);
+                    window.showToast('Live product research & cart optimization complete!', 'success');
+                } else {
+                    window.showToast('Research completed: ' + (data.message || 'No candidates found for query.'), 'warning');
+                }
+            } catch (err) {
+                console.error('Research error:', err);
+                window.showToast('Could not reach backend research API.', 'warning');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<span>Research My Cart</span> <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+                }
+            }
+        };
+
+        window.renderDashboardResults = function(data) {
+            try {
+                const req = data.shopping_request || {};
+                const opt = data.optimization_result || {};
+                const bestCart = opt.best_recommended_cart || {};
+                const items = bestCart.items || [];
+                const summary = bestCart.cost_summary || {};
+                const explanation = data.explanation || [];
+
+                // 03. Live Source Transparency
+                const domains = bestCart.merchant_domains || ['world.openfoodfacts.org'];
+                const srcEl = document.getElementById('src-provider-name');
+                if (srcEl) srcEl.innerText = domains.join(', ');
+                
+                // 04. Cart Result
+                const pContainer = document.getElementById('products-container');
+                const countTag = document.getElementById('candidates-count-tag');
+                if (countTag) countTag.innerText = items.length + ' Items Selected';
+
+                if (pContainer && items.length > 0) {
+                    pContainer.innerHTML = items.map(function(it, idx) {
+                        const iconSymbol = (it.category && it.category.indexOf('coffee') !== -1) ? '☕' : '🍪';
+                        const cat = it.category || 'GROCERY';
+                        const title = it.title || 'Product Item';
+                        const merchant = it.merchant_name || it.merchant_domain || 'OpenFoodFacts';
+                        const price = it.price_inr || (it.price_paise ? it.price_paise / 100 : 0);
+
+                        return '<div class="product-card">' +
+                            '<div class="product-img">' + iconSymbol + '</div>' +
+                            '<div class="product-details">' +
+                                '<div>' +
+                                    '<div class="product-cat">' + cat + '</div>' +
+                                    '<div class="product-title">' + title + '</div>' +
+                                    '<div class="product-merchant">Source: ' + merchant + '</div>' +
+                                '</div>' +
+                                '<div class="product-price-row">' +
+                                    '<div class="product-price">₹' + price + '</div>' +
+                                    '<button class="btn-sm-secondary" onclick="openEvidenceModal(' + idx + ')">View Evidence</button>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>';
+                    }).join('');
+
+                    window.currentEvidenceData = items;
+                }
+
+                // 05. Total Cost Truth (Safe Math Calculation)
+                const budgetPaise = req.total_budget_paise || req.budget_limit_paise || 30000;
+                const budgetInr = (budgetPaise / 100).toFixed(2);
+                
+                const knownTotalPaise = summary.total_known_cost_paise || summary.product_subtotal_paise || 0;
+                const knownTotalInr = (summary.total_known_cost_inr !== undefined) ? summary.total_known_cost_inr.toFixed(2) : (knownTotalPaise / 100).toFixed(2);
+                
+                const remainingInr = Math.max(0, (budgetPaise - knownTotalPaise) / 100).toFixed(2);
+
+                const valKnown = document.getElementById('val-known-total');
+                const valBudget = document.getElementById('val-budget');
+                const valRemaining = document.getElementById('val-remaining');
+
+                if (valKnown) valKnown.innerText = '₹' + knownTotalInr;
+                if (valBudget) valBudget.innerText = '₹' + budgetInr;
+                if (valRemaining) valRemaining.innerText = '₹' + remainingInr;
+
+                const isFullyVerified = Boolean(summary.is_total_fully_verified);
+                const badgeVerified = document.getElementById('badge-total-verified');
+                if (badgeVerified) {
+                    badgeVerified.innerText = isFullyVerified ? 'YES' : 'NO';
+                    badgeVerified.style.background = isFullyVerified ? 'var(--emerald-500)' : 'var(--rose-500)';
+                }
+
+                // 06. Recommendation
+                const score = bestCart.score || 89.5;
+                const valScore = document.getElementById('val-rec-score');
+                if (valScore) valScore.innerText = score.toFixed(1);
+
+                const expList = document.getElementById('explain-list');
+                if (expList && explanation.length > 0) {
+                    expList.innerHTML = explanation.map(function(e) {
+                        const isWarn = e.indexOf('⚠️') !== -1;
+                        const iconChar = isWarn ? '⚠️' : '✓';
+                        const textClean = e.replace(/^[✓⚠️]\s*/, '');
+                        return '<div class="explain-bullet ' + (isWarn ? 'warn' : '') + '">' +
+                            '<span class="icon">' + iconChar + '</span>' +
+                            '<span>' + textClean + '</span>' +
+                        '</div>';
+                    }).join('');
+                }
+            } catch (err) {
+                console.error('Error rendering dashboard results:', err);
+            }
+        };
+
+        window.openEvidenceModal = function(index) {
+            const item = window.currentEvidenceData[index];
+            if (!item) return;
+
+            const nameEl = document.getElementById('modal-product-name');
+            const summaryEl = document.getElementById('modal-metadata-summary');
+            const codeEl = document.getElementById('modal-json-content');
+
+            if (nameEl) nameEl.innerText = item.title || 'Product Evidence Inspection';
+            if (summaryEl) summaryEl.innerText = 'Verification Status: ' + (item.verification_status || 'PRODUCT_VERIFIED') + ' | Merchant: ' + (item.merchant_domain || 'world.openfoodfacts.org');
+            if (codeEl) codeEl.innerText = JSON.stringify(item, null, 2);
+
+            const modal = document.getElementById('evidence-modal');
+            if (modal) modal.classList.add('active');
+        };
+
+        window.closeModal = function() {
+            const modal = document.getElementById('evidence-modal');
+            if (modal) modal.classList.remove('active');
+        };
+
+        window.runLiveDemo = async function() {
+            try {
+                const res = await fetch('/internal/operations/demo/journey', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Operator-Token': 'rzp_live_operator_token_123' }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    window.showToast('✓ Payment Demo Journey Committed!\nTx ID: ' + data.transaction_id + '\nState: COMMITTED', 'success');
+                } else {
+                    window.showToast('Demo Journey Executed: ' + (data.message || 'Completed'), 'success');
+                }
+            } catch (err) {
+                window.showToast('Live Payment Journey Executed Successfully! State: COMMITTED', 'success');
+            }
+        };
+
+        window.triggerCheckoutAction = function() {
+            window.showToast('ℹ CHECKOUT HANDOFF INVARIANT:\nRAZERPAY does not autonomously execute payment.\nUser redirected to merchant checkout portal for human-controlled authorization.', 'warning');
+        };
+    </script>
 </head>
 <body>
 
@@ -1060,12 +1309,12 @@ def get_dashboard_html() -> str:
                     <textarea id="inp-prompt" class="text-area-input" rows="3" placeholder="e.g. Find coffee and biscuits under ₹300">Find coffee and biscuits under ₹300</textarea>
 
                     <div class="quick-pills">
-                        <button class="pill-btn" onclick="setPrompt('Find coffee and biscuits under ₹300')">Coffee & Biscuits &lt; ₹300</button>
-                        <button class="pill-btn" onclick="setPrompt('Find two grocery items under ₹500')">2 Groceries &lt; ₹500</button>
+                        <button class="pill-btn" onclick="window.setPrompt('Find coffee and biscuits under ₹300')">Coffee & Biscuits &lt; ₹300</button>
+                        <button class="pill-btn" onclick="window.setPrompt('Find two grocery items under ₹500')">2 Groceries &lt; ₹500</button>
                     </div>
                 </div>
 
-                <button id="btn-research" class="btn-primary" onclick="submitAIPrompt()">
+                <button id="btn-research" class="btn-primary" onclick="window.submitAIPrompt()">
                     <span>Research My Cart</span>
                     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </button>
@@ -1304,7 +1553,7 @@ def get_dashboard_html() -> str:
                         <div class="checkout-sub">Payment happens on the merchant side.</div>
                     </div>
 
-                    <button class="btn-primary" onclick="triggerCheckoutAction()" id="btn-checkout-action">
+                    <button class="btn-primary" onclick="window.triggerCheckoutAction()" id="btn-checkout-action">
                         <span>Continue to Merchant ↗</span>
                     </button>
 
@@ -1356,7 +1605,7 @@ def get_dashboard_html() -> str:
                 <p style="font-size: 0.75rem; color: var(--text-secondary);">
                     Execute real end-to-end domain engine payment journey with idempotency lock & outbox recording.
                 </p>
-                <button class="btn-primary" style="background: linear-gradient(135deg, var(--emerald-500), var(--primary));" onclick="runLiveDemo()">
+                <button class="btn-primary" style="background: linear-gradient(135deg, var(--emerald-500), var(--primary));" onclick="window.runLiveDemo()">
                     <span>Execute E2E Demo Journey</span>
                 </button>
             </section>
@@ -1382,7 +1631,7 @@ def get_dashboard_html() -> str:
         <div class="modal-card">
             <div class="modal-header">
                 <div class="modal-title" id="modal-product-name">Product Evidence Inspection</div>
-                <button class="close-btn" onclick="closeModal()">&times;</button>
+                <button class="close-btn" onclick="window.closeModal()">&times;</button>
             </div>
             <div style="font-size: 0.8rem; color: var(--text-secondary);" id="modal-metadata-summary">
                 Evidence hash and provenance verification details.
@@ -1390,262 +1639,34 @@ def get_dashboard_html() -> str:
             <div class="code-box" id="modal-json-content">
                 Loading evidence data...
             </div>
-            <button class="btn-sm-secondary" style="align-self: flex-end;" onclick="closeModal()">Close Inspection</button>
+            <button class="btn-sm-secondary" style="align-self: flex-end;" onclick="window.closeModal()">Close Inspection</button>
         </div>
     </div>
 
-    <!-- CLIENT SCRIPT -->
+    <!-- ON LOAD EVENT LISTENERS BINDING -->
     <script>
-        let currentEvidenceData = {};
-
-        function showToast(msg, type) {
-            type = type || 'success';
-            const container = document.getElementById('toast-container');
-            if (!container) return;
-            const toast = document.createElement('div');
-            toast.className = 'toast ' + type;
-            const iconChar = (type === 'success') ? '✓' : 'ℹ';
-            toast.innerHTML = '<span>' + iconChar + '</span> <div>' + msg + '</div>';
-            container.appendChild(toast);
-            setTimeout(function() {
-                toast.style.opacity = '0';
-                setTimeout(function() { toast.remove(); }, 300);
-            }, 4000);
-        }
-
-        function setPrompt(text) {
-            const inp = document.getElementById('inp-prompt');
-            if (inp) inp.value = text;
-        }
-
-        function formatTime(d) {
-            return d.toTimeString().split(' ')[0];
-        }
-
-        async function submitAIPrompt() {
-            const promptInput = document.getElementById('inp-prompt');
-            const prompt = promptInput ? promptInput.value.trim() : 'Find coffee and biscuits under ₹300';
-            if (!prompt) return;
-
-            const btn = document.getElementById('btn-research');
-            if (btn) {
-                btn.disabled = true;
-                btn.innerHTML = '<div class="loading-spinner"></div> <span>Researching Live Cart...</span>';
-            }
-
-            const now = new Date();
-            // Reset timeline steps
-            for (let i = 1; i <= 7; i++) {
-                const el = document.getElementById('t-step-' + i + '-el');
-                const tEl = document.getElementById('t-step-' + i);
-                if (el) {
-                    el.className = 'timeline-item';
-                    const icon = el.querySelector('.step-icon');
-                    if (icon) icon.innerText = '○';
-                }
-                if (tEl) tEl.innerText = '--:--:--';
-            }
-
-            // Step 1
-            const s1 = document.getElementById('t-step-1-el');
-            if (s1) {
-                s1.className = 'timeline-item active';
-                const t1 = document.getElementById('t-step-1');
-                if (t1) t1.innerText = formatTime(now);
-            }
-
-            try {
-                await new Promise(r => setTimeout(r, 150));
-                if (s1) {
-                    s1.className = 'timeline-item completed';
-                    const icon = s1.querySelector('.step-icon');
-                    if (icon) icon.innerText = '✓';
-                }
-
-                const s2 = document.getElementById('t-step-2-el');
-                if (s2) {
-                    s2.className = 'timeline-item active';
-                    const t2 = document.getElementById('t-step-2');
-                    if (t2) t2.innerText = formatTime(new Date());
-                }
-
-                // Fetch real backend optimization API
-                const res = await fetch('/api/v1/commerce/shopping/optimize', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: prompt })
-                });
-
-                const data = await res.json();
-
-                // Progress timeline steps
-                for (let i = 3; i <= 7; i++) {
-                    const stepEl = document.getElementById('t-step-' + i + '-el');
-                    const timeEl = document.getElementById('t-step-' + i);
-                    if (stepEl) {
-                        stepEl.className = 'timeline-item completed';
-                        const icon = stepEl.querySelector('.step-icon');
-                        if (icon) icon.innerText = '✓';
-                    }
-                    if (timeEl) timeEl.innerText = formatTime(new Date());
-                }
-
-                if (data.status === 'SUCCESS' && data.optimization_result) {
-                    renderDashboardResults(data);
-                    showToast('Live product research & cart optimization complete!', 'success');
-                } else {
-                    showToast('Research completed: ' + (data.message || 'No candidates found for query.'), 'warning');
-                }
-            } catch (err) {
-                console.error('Research error:', err);
-                showToast('Could not reach backend research API.', 'warning');
-            } finally {
-                if (btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = '<span>Research My Cart</span> <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
-                }
-            }
-        }
-
-        function renderDashboardResults(data) {
-            try {
-                const req = data.shopping_request || {};
-                const opt = data.optimization_result || {};
-                const bestCart = opt.best_recommended_cart || {};
-                const items = bestCart.items || [];
-                const summary = bestCart.cost_summary || {};
-                const explanation = data.explanation || [];
-
-                // 03. Live Source Transparency
-                const domains = bestCart.merchant_domains || ['world.openfoodfacts.org'];
-                const srcEl = document.getElementById('src-provider-name');
-                if (srcEl) srcEl.innerText = domains.join(', ');
-                
-                // 04. Cart Result
-                const pContainer = document.getElementById('products-container');
-                const countTag = document.getElementById('candidates-count-tag');
-                if (countTag) countTag.innerText = items.length + ' Items Selected';
-
-                if (pContainer && items.length > 0) {
-                    pContainer.innerHTML = items.map(function(it, idx) {
-                        const iconSymbol = (it.category && it.category.indexOf('coffee') !== -1) ? '☕' : '🍪';
-                        const cat = it.category || 'GROCERY';
-                        const title = it.title || 'Product Item';
-                        const merchant = it.merchant_name || it.merchant_domain || 'OpenFoodFacts';
-                        const price = it.price_inr || (it.price_paise ? it.price_paise / 100 : 0);
-
-                        return '<div class="product-card">' +
-                            '<div class="product-img">' + iconSymbol + '</div>' +
-                            '<div class="product-details">' +
-                                '<div>' +
-                                    '<div class="product-cat">' + cat + '</div>' +
-                                    '<div class="product-title">' + title + '</div>' +
-                                    '<div class="product-merchant">Source: ' + merchant + '</div>' +
-                                '</div>' +
-                                '<div class="product-price-row">' +
-                                    '<div class="product-price">₹' + price + '</div>' +
-                                    '<button class="btn-sm-secondary" onclick="openEvidenceModal(' + idx + ')">View Evidence</button>' +
-                                '</div>' +
-                            '</div>' +
-                        '</div>';
-                    }).join('');
-
-                    currentEvidenceData = items;
-                }
-
-                // 05. Total Cost Truth (Safe Math Calculation)
-                const budgetPaise = req.total_budget_paise || req.budget_limit_paise || 30000;
-                const budgetInr = (budgetPaise / 100).toFixed(2);
-                
-                const knownTotalPaise = summary.total_known_cost_paise || summary.product_subtotal_paise || 0;
-                const knownTotalInr = (summary.total_known_cost_inr !== undefined) ? summary.total_known_cost_inr.toFixed(2) : (knownTotalPaise / 100).toFixed(2);
-                
-                const remainingInr = Math.max(0, (budgetPaise - knownTotalPaise) / 100).toFixed(2);
-
-                const valKnown = document.getElementById('val-known-total');
-                const valBudget = document.getElementById('val-budget');
-                const valRemaining = document.getElementById('val-remaining');
-
-                if (valKnown) valKnown.innerText = '₹' + knownTotalInr;
-                if (valBudget) valBudget.innerText = '₹' + budgetInr;
-                if (valRemaining) valRemaining.innerText = '₹' + remainingInr;
-
-                const isFullyVerified = Boolean(summary.is_total_fully_verified);
-                const badgeVerified = document.getElementById('badge-total-verified');
-                if (badgeVerified) {
-                    badgeVerified.innerText = isFullyVerified ? 'YES' : 'NO';
-                    badgeVerified.style.background = isFullyVerified ? 'var(--emerald-500)' : 'var(--rose-500)';
-                }
-
-                // 06. Recommendation
-                const score = bestCart.score || 89.5;
-                const valScore = document.getElementById('val-rec-score');
-                if (valScore) valScore.innerText = score.toFixed(1);
-
-                const expList = document.getElementById('explain-list');
-                if (expList && explanation.length > 0) {
-                    expList.innerHTML = explanation.map(function(e) {
-                        const isWarn = e.indexOf('⚠️') !== -1;
-                        const iconChar = isWarn ? '⚠️' : '✓';
-                        const textClean = e.replace(/^[✓⚠️]\s*/, '');
-                        return '<div class="explain-bullet ' + (isWarn ? 'warn' : '') + '">' +
-                            '<span class="icon">' + iconChar + '</span>' +
-                            '<span>' + textClean + '</span>' +
-                        '</div>';
-                    }).join('');
-                }
-            } catch (err) {
-                console.error('Error rendering dashboard results:', err);
-            }
-        }
-
-        function openEvidenceModal(index) {
-            const item = currentEvidenceData[index];
-            if (!item) return;
-
-            const nameEl = document.getElementById('modal-product-name');
-            const summaryEl = document.getElementById('modal-metadata-summary');
-            const codeEl = document.getElementById('modal-json-content');
-
-            if (nameEl) nameEl.innerText = item.title || 'Product Evidence Inspection';
-            if (summaryEl) summaryEl.innerText = 'Verification Status: ' + (item.verification_status || 'PRODUCT_VERIFIED') + ' | Merchant: ' + (item.merchant_domain || 'world.openfoodfacts.org');
-            if (codeEl) codeEl.innerText = JSON.stringify(item, null, 2);
-
-            const modal = document.getElementById('evidence-modal');
-            if (modal) modal.classList.add('active');
-        }
-
-        function closeModal() {
-            const modal = document.getElementById('evidence-modal');
-            if (modal) modal.classList.remove('active');
-        }
-
-        async function runLiveDemo() {
-            try {
-                const res = await fetch('/internal/operations/demo/journey', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Operator-Token': 'rzp_live_operator_token_123' }
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    showToast('✓ Payment Demo Journey Committed!\nTx ID: ' + data.transaction_id + '\nState: COMMITTED', 'success');
-                } else {
-                    showToast('Demo Journey Executed: ' + (data.message || 'Completed'), 'success');
-                }
-            } catch (err) {
-                showToast('Live Payment Journey Executed Successfully! State: COMMITTED', 'success');
-            }
-        }
-
-        function triggerCheckoutAction() {
-            showToast('ℹ CHECKOUT HANDOFF INVARIANT:\nRAZERPAY does not autonomously execute payment.\nUser redirected to merchant checkout portal for human-controlled authorization.', 'warning');
-        }
-
-        // Auto-run initial research on load
         window.addEventListener('DOMContentLoaded', function() {
             const step0 = document.getElementById('t-step-0');
-            if (step0) step0.innerText = formatTime(new Date());
-            submitAIPrompt();
+            if (step0) step0.innerText = window.formatTime(new Date());
+
+            const btnResearch = document.getElementById('btn-research');
+            if (btnResearch) {
+                btnResearch.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.submitAIPrompt();
+                });
+            }
+
+            const btnCheckout = document.getElementById('btn-checkout-action');
+            if (btnCheckout) {
+                btnCheckout.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.triggerCheckoutAction();
+                });
+            }
+
+            // Auto run initial research
+            window.submitAIPrompt();
         });
     </script>
 </body>
