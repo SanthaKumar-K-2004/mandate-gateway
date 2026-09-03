@@ -113,6 +113,7 @@ def get_dashboard_html() -> str:
             color: #ffffff;
             font-weight: 900;
             font-size: 1.1rem;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
         }
 
         .brand-sub {
@@ -135,18 +136,20 @@ def get_dashboard_html() -> str:
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.4rem 0.85rem;
+            padding: 0.45rem 0.95rem;
             border-radius: 9999px;
-            font-size: 0.8rem;
+            font-size: 0.82rem;
             font-weight: 700;
             border: 1px solid var(--border-color);
             background: #ffffff;
+            position: relative;
         }
 
         .widget-pill.wallet {
             background: var(--emerald-light);
             border-color: var(--emerald-border);
             color: var(--emerald-700);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
         }
 
         .widget-pill.status {
@@ -165,14 +168,32 @@ def get_dashboard_html() -> str:
 
         @keyframes pulse {
             0% { transform: scale(0.95); opacity: 0.8; }
-            50% { transform: scale(1.25); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 1; }
             100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        .deduct-anim {
+            position: absolute;
+            top: -24px;
+            right: 15px;
+            color: var(--rose-600);
+            font-family: var(--font-mono);
+            font-weight: 800;
+            font-size: 0.9rem;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s ease;
+        }
+
+        .deduct-anim.active {
+            opacity: 1;
+            transform: translateY(-5px);
         }
 
         /* Layout Grid */
         .dashboard-container {
             display: grid;
-            grid-template-columns: 350px 1fr 360px;
+            grid-template-columns: 350px 1fr 370px;
             gap: 1.5rem;
             padding: 1.5rem 2rem;
             flex: 1;
@@ -207,31 +228,31 @@ def get_dashboard_html() -> str:
         .card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 1.25rem;
+            border-radius: 16px;
+            padding: 1.35rem;
             display: flex;
             flex-direction: column;
             gap: 1rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
-            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02);
+            transition: all 0.25s ease;
         }
 
         .card:hover {
             border-color: var(--border-highlight);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.04);
         }
 
         .card-title-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding-bottom: 0.6rem;
+            padding-bottom: 0.65rem;
             border-bottom: 1px solid #f1f5f9;
         }
 
         .card-title {
             font-family: var(--font-display);
-            font-size: 0.92rem;
+            font-size: 0.94rem;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.04em;
@@ -264,14 +285,14 @@ def get_dashboard_html() -> str:
         .input-text {
             width: 100%;
             background: #ffffff;
-            border: 1px solid var(--border-color);
-            border-radius: 9px;
-            padding: 0.65rem 0.85rem;
+            border: 1.5px solid var(--border-color);
+            border-radius: 10px;
+            padding: 0.7rem 0.9rem;
             color: var(--text-primary);
             font-family: var(--font-main);
-            font-size: 0.88rem;
+            font-size: 0.9rem;
             outline: none;
-            transition: border-color 0.2s ease;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         .input-text:focus {
@@ -281,14 +302,14 @@ def get_dashboard_html() -> str:
 
         /* Buttons */
         .btn {
-            background: var(--orange-600);
+            background: linear-gradient(135deg, var(--orange-500), var(--orange-600));
             color: #ffffff;
             border: none;
-            padding: 0.8rem 1.2rem;
-            border-radius: 10px;
+            padding: 0.85rem 1.3rem;
+            border-radius: 12px;
             font-family: var(--font-display);
-            font-weight: 700;
-            font-size: 0.88rem;
+            font-weight: 800;
+            font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
@@ -296,26 +317,32 @@ def get_dashboard_html() -> str:
             justify-content: center;
             gap: 0.5rem;
             width: 100%;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
         }
 
         .btn:hover {
-            background: var(--orange-700);
+            background: linear-gradient(135deg, var(--orange-600), var(--orange-700));
             transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(249, 115, 22, 0.35);
         }
 
         .btn-emerald {
-            background: var(--emerald-600);
+            background: linear-gradient(135deg, var(--emerald-500), var(--emerald-600));
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
         }
 
         .btn-emerald:hover {
-            background: var(--emerald-700);
+            background: linear-gradient(135deg, var(--emerald-600), var(--emerald-700));
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
         }
 
         .btn-outline {
             background: #ffffff;
-            border: 1px solid var(--border-color);
+            border: 1.5px solid var(--border-color);
             color: var(--text-secondary);
             cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.2s ease;
         }
 
         .btn-outline:hover {
@@ -330,13 +357,13 @@ def get_dashboard_html() -> str:
         }
 
         .quick-pill {
-            background: #f1f5f9;
-            border: 1px solid var(--border-color);
+            background: #ffffff;
+            border: 1.5px solid var(--border-color);
             color: var(--text-secondary);
-            padding: 0.35rem 0.65rem;
-            border-radius: 7px;
-            font-size: 0.74rem;
-            font-weight: 600;
+            padding: 0.4rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.76rem;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.2s ease;
         }
@@ -345,6 +372,7 @@ def get_dashboard_html() -> str:
             background: var(--orange-light);
             border-color: var(--orange-500);
             color: var(--orange-700);
+            transform: translateY(-1px);
         }
 
         /* 10-Stage Stepper Timeline */
@@ -358,78 +386,105 @@ def get_dashboard_html() -> str:
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0.5rem 0.75rem;
-            border-radius: 8px;
+            padding: 0.55rem 0.8rem;
+            border-radius: 9px;
             background: #ffffff;
             border: 1px solid var(--border-color);
             font-size: 0.78rem;
-            font-weight: 500;
+            font-weight: 600;
             color: var(--text-secondary);
+            transition: all 0.2s ease;
         }
 
         .step-row.completed {
             background: var(--emerald-light);
             border-color: var(--emerald-border);
             color: var(--emerald-700);
-            font-weight: 600;
+            font-weight: 700;
         }
 
         .step-row.active {
             background: var(--orange-light);
             border-color: var(--orange-border);
             color: var(--orange-700);
-            font-weight: 700;
+            font-weight: 800;
         }
 
-        /* Products Grid */
+        /* Products Grid & Real Product Cards */
         .products-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
         }
 
         .product-card {
             background: #ffffff;
-            border: 1.5px solid var(--border-color);
-            border-radius: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 14px;
             padding: 1.1rem;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            gap: 0.85rem;
-            transition: all 0.2s ease;
+            gap: 1rem;
+            transition: all 0.25s ease;
             position: relative;
+            overflow: hidden;
         }
 
         .product-card.selected {
             border-color: var(--emerald-500);
-            background: var(--emerald-light);
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.12);
         }
 
-        .product-header {
+        .product-card-top {
             display: flex;
+            gap: 0.85rem;
             align-items: flex-start;
-            justify-content: space-between;
-            gap: 0.5rem;
+        }
+
+        .product-img-wrapper {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f1f5f9;
+            flex-shrink: 0;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .product-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .product-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            flex: 1;
         }
 
         .product-title-text {
             font-family: var(--font-display);
-            font-weight: 700;
+            font-weight: 800;
             font-size: 0.95rem;
             color: var(--text-primary);
-            line-height: 1.3;
+            line-height: 1.35;
         }
 
         .product-link {
-            font-size: 0.75rem;
+            font-size: 0.76rem;
             color: var(--blue-600);
             text-decoration: none;
-            font-weight: 600;
+            font-weight: 700;
             display: inline-flex;
             align-items: center;
             gap: 0.25rem;
-            margin-top: 0.35rem;
+            margin-top: 0.3rem;
         }
 
         .product-link:hover {
@@ -439,11 +494,14 @@ def get_dashboard_html() -> str:
         .product-merchant-tag {
             font-size: 0.72rem;
             color: var(--text-muted);
-            margin-top: 0.15rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
         }
 
         .product-price-tag {
-            font-size: 1.25rem;
+            font-size: 1.3rem;
             font-weight: 800;
             color: var(--emerald-600);
             font-family: var(--font-mono);
@@ -456,76 +514,89 @@ def get_dashboard_html() -> str:
             gap: 0.85rem;
             background: #f8fafc;
             border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 1rem;
+            border-radius: 12px;
+            padding: 1.1rem;
         }
 
         .cost-cell {
             display: flex;
             flex-direction: column;
-            gap: 0.2rem;
+            gap: 0.25rem;
         }
 
         .cost-cell-label {
             font-size: 0.72rem;
             color: var(--text-muted);
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
         }
 
         .cost-cell-val {
             font-family: var(--font-mono);
-            font-weight: 700;
-            font-size: 0.95rem;
+            font-weight: 800;
+            font-size: 1rem;
         }
 
         .cost-cell-val.unknown {
             color: var(--orange-600);
             background: var(--orange-light);
-            padding: 0.1rem 0.4rem;
-            border-radius: 5px;
-            font-size: 0.75rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.78rem;
             display: inline-block;
+            width: fit-content;
         }
 
-        /* Payment Methods Grid */
+        /* Payment Methods Grid & Real Brand Logos */
         .payment-methods-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 0.6rem;
+            gap: 0.65rem;
         }
 
         .payment-method-card {
             background: #ffffff;
-            border: 1.5px solid var(--border-color);
-            border-radius: 10px;
-            padding: 0.65rem 0.5rem;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.75rem 0.5rem;
             text-align: center;
-            font-size: 0.76rem;
-            font-weight: 700;
+            font-size: 0.78rem;
+            font-weight: 800;
             cursor: pointer;
             transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
         }
 
         .payment-method-card.selected {
             border-color: var(--emerald-500);
             background: var(--emerald-light);
             color: var(--emerald-700);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+        }
+
+        .pay-icon-row {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
         }
 
         /* Live Middleware Log Stream */
         .log-stream-box {
             background: #0f172a;
             color: #38bdf8;
-            border-radius: 10px;
-            padding: 0.85rem;
+            border-radius: 12px;
+            padding: 0.95rem;
             font-family: var(--font-mono);
             font-size: 0.74rem;
-            max-height: 220px;
+            max-height: 240px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 0.4rem;
+            gap: 0.45rem;
             line-height: 1.4;
         }
 
@@ -552,12 +623,12 @@ def get_dashboard_html() -> str:
 
         .toast {
             background: #ffffff;
-            border: 1.5px solid var(--orange-500);
-            padding: 0.9rem 1.1rem;
-            border-radius: 10px;
-            font-size: 0.85rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            animation: slideIn 0.3s ease;
+            border: 2px solid var(--orange-500);
+            padding: 0.95rem 1.2rem;
+            border-radius: 12px;
+            font-size: 0.86rem;
+            box-shadow: 0 12px 36px rgba(0,0,0,0.12);
+            animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .toast.success { border-color: var(--emerald-500); }
@@ -574,8 +645,8 @@ def get_dashboard_html() -> str:
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(15, 23, 42, 0.5);
-            backdrop-filter: blur(8px);
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(10px);
             z-index: 2000;
             display: none;
             align-items: center;
@@ -587,24 +658,24 @@ def get_dashboard_html() -> str:
 
         .modal-box {
             background: #ffffff;
-            border-radius: 16px;
+            border-radius: 20px;
             max-width: 680px;
             width: 100%;
-            padding: 1.75rem;
+            padding: 1.85rem;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
-            max-height: 85vh;
+            gap: 1.2rem;
+            max-height: 88vh;
             overflow-y: auto;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.2);
         }
 
-        /* Razorpay Checkout Modal Theme */
+        /* Razorpay Visual Checkout Modal Theme */
         .rzp-modal-header {
-            background: linear-gradient(135deg, #0c2340, #1a365d);
+            background: linear-gradient(135deg, #0c2340, #1e3a8a);
             color: #ffffff;
-            padding: 1.25rem;
-            border-radius: 12px 12px 0 0;
+            padding: 1.35rem 1.5rem;
+            border-radius: 16px 16px 0 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -612,24 +683,37 @@ def get_dashboard_html() -> str:
 
         .rzp-brand {
             font-family: var(--font-display);
-            font-weight: 800;
-            font-size: 1.1rem;
+            font-weight: 900;
+            font-size: 1.2rem;
             color: #ffffff;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.6rem;
+        }
+
+        .rzp-logo-badge {
+            width: 28px;
+            height: 28px;
+            background: #0284c7;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-weight: 900;
+            font-size: 1rem;
         }
 
         .code-box {
             background: #0f172a;
             color: #38bdf8;
-            border-radius: 10px;
-            padding: 1rem;
+            border-radius: 12px;
+            padding: 1.1rem;
             font-family: var(--font-mono);
             font-size: 0.78rem;
             white-space: pre-wrap;
             word-break: break-all;
-            max-height: 320px;
+            max-height: 340px;
             overflow-y: auto;
         }
     </style>
@@ -644,6 +728,7 @@ def get_dashboard_html() -> str:
                 merchant_name: "Coffee Roasters India",
                 merchant_domain: "coffeeroasters.in",
                 product_url: "https://www.coffeeroasters.in/products/dark-roast-250g",
+                img_url: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=400&q=80",
                 category: "coffee",
                 sha256_hash: "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
             },
@@ -655,6 +740,7 @@ def get_dashboard_html() -> str:
                 merchant_name: "OpenFoodFacts Public Catalog",
                 merchant_domain: "world.openfoodfacts.org",
                 product_url: "https://world.openfoodfacts.org/product/8901063013224",
+                img_url: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=400&q=80",
                 category: "groceries",
                 sha256_hash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
             }
@@ -794,6 +880,12 @@ def get_dashboard_html() -> str:
             const bestCart = opt.best_recommended_cart || {};
             const rawItems = bestCart.items || [];
             
+            const fallbackImgs = [
+                "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=400&q=80",
+                "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=400&q=80",
+                "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=400&q=80"
+            ];
+
             if (rawItems.length > 0) {
                 window.currentProducts = rawItems.map(function(it, i) {
                     const price = it.price_inr || (it.price_paise ? it.price_paise / 100 : 150.0);
@@ -805,6 +897,7 @@ def get_dashboard_html() -> str:
                         merchant_name: it.merchant_name || it.merchant_domain || "OpenFoodFacts Public Catalog",
                         merchant_domain: it.merchant_domain || "world.openfoodfacts.org",
                         product_url: it.product_url || "https://world.openfoodfacts.org",
+                        img_url: it.img_url || fallbackImgs[i % fallbackImgs.length],
                         category: it.category || "groceries",
                         sha256_hash: it.evidence_hash || "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
                     };
@@ -816,19 +909,22 @@ def get_dashboard_html() -> str:
             window.currentProducts.forEach(function(p) { total += p.price_inr; });
             window.selectedCartTotalINR = total;
 
-            // Render Products
+            // Render Products with Real Photos
             const grid = document.getElementById('products-grid');
             if (grid && window.currentProducts.length > 0) {
                 grid.innerHTML = window.currentProducts.map(function(it, idx) {
                     return '<div class="product-card selected">' +
-                        '<div>' +
-                            '<div class="product-header">' +
-                                '<div class="product-title-text">' + it.title + '</div>' +
+                        '<div class="product-card-top">' +
+                            '<div class="product-img-wrapper">' +
+                                '<img src="' + it.img_url + '" alt="' + it.title + '" class="product-img" onerror="this.src=\'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=400&q=80\'">' +
                             '</div>' +
-                            '<div class="product-merchant-tag">Merchant: ' + it.merchant_name + '</div>' +
-                            '<a href="' + it.product_url + '" target="_blank" class="product-link">View Real Merchant Product Page ↗</a>' +
+                            '<div class="product-info">' +
+                                '<div class="product-title-text">' + it.title + '</div>' +
+                                '<div class="product-merchant-tag">🏬 ' + it.merchant_name + '</div>' +
+                                '<a href="' + it.product_url + '" target="_blank" class="product-link">View Real Merchant Page ↗</a>' +
+                            '</div>' +
                         '</div>' +
-                        '<div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed #e2e8f0; padding-top: 0.65rem;">' +
+                        '<div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed #e2e8f0; padding-top: 0.75rem; margin-top: 0.35rem;">' +
                             '<div class="product-price-tag">₹' + it.price_inr.toFixed(2) + '</div>' +
                             '<button class="btn-outline" style="padding: 0.35rem 0.65rem; font-size: 0.72rem; font-weight: 700;" onclick="openEvidenceModal(' + idx + ')">SHA-256 Proof</button>' +
                         '</div>' +
@@ -836,10 +932,9 @@ def get_dashboard_html() -> str:
                 }).join('');
             }
 
-            // Update Dynamic UI Labels
+            // Update Dynamic UI Labels & Razorpay Order Summary
             document.getElementById('val-known-subtotal').innerText = '₹' + window.selectedCartTotalINR.toFixed(2);
             document.getElementById('val-total-budget').innerText = '₹300.00';
-            document.getElementById('val-budget-remaining').innerText = '₹' + Math.max(0, 300 - window.selectedCartTotalINR).toFixed(2);
 
             document.getElementById('lbl-pay-amount').innerText = '₹' + window.selectedCartTotalINR.toFixed(2);
             document.getElementById('btn-auth-pay').innerHTML = '<span>⚡ Authorize Sandbox Payment (₹' + window.selectedCartTotalINR.toFixed(2) + ')</span>';
@@ -891,12 +986,27 @@ def get_dashboard_html() -> str:
             }
         };
 
-        // 4. Interactive Razorpay Checkout Modal & Payment Settlement
+        // 4. Interactive Razorpay Visual Checkout Modal & Payment Settlement
         window.openRazorpayCheckoutModal = function() {
             document.getElementById('rzp-order-id').innerText = 'order_rzp_' + Math.random().toString(36).substring(2, 10);
             document.getElementById('rzp-order-amount').innerText = '₹' + window.selectedCartTotalINR.toFixed(2);
+            
+            // Render Order Items Summary inside Razorpay Checkout
+            const itemsBox = document.getElementById('rzp-cart-items-summary');
+            if (itemsBox && window.currentProducts) {
+                itemsBox.innerHTML = window.currentProducts.map(function(p) {
+                    return '<div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; padding: 0.35rem 0; border-bottom: 1px dashed #e2e8f0;">' +
+                        '<div style="display: flex; align-items: center; gap: 0.5rem;">' +
+                            '<img src="' + p.img_url + '" style="width: 28px; height: 28px; border-radius: 5px; object-fit: cover;">' +
+                            '<span style="font-weight: 600; color: #334155;">' + p.title + '</span>' +
+                        '</div>' +
+                        '<strong style="font-family: var(--font-mono); color: #0f172a;">₹' + p.price_inr.toFixed(2) + '</strong>' +
+                    '</div>';
+                }).join('');
+            }
+
             document.getElementById('rzp-modal').classList.add('active');
-            window.appendLog('RAZERPAY_PAYMENT', 'Launching Razorpay Checkout Modal for ₹' + window.selectedCartTotalINR.toFixed(2));
+            window.appendLog('RAZERPAY_PAYMENT', 'Launching Visual Razorpay Checkout Modal for ₹' + window.selectedCartTotalINR.toFixed(2));
         };
 
         window.confirmRazorpayPayment = async function() {
@@ -905,6 +1015,14 @@ def get_dashboard_html() -> str:
             const deductAmount = window.selectedCartTotalINR;
             window.appendLog('RAZERPAY_EXECUTOR', 'Executing payment settlement rail: ' + window.selectedPaymentRail);
             window.appendLog('MANDATE_BINDING', 'Generating cryptographic order binding hash...');
+
+            // Show balance float-down visual deduction
+            const floatEl = document.getElementById('val-deduct-float');
+            if (floatEl) {
+                floatEl.innerText = '-₹' + deductAmount.toFixed(2);
+                floatEl.classList.add('active');
+                setTimeout(function() { floatEl.classList.remove('active'); }, 2000);
+            }
 
             try {
                 const res = await fetch('/internal/operations/demo/journey', {
@@ -994,6 +1112,7 @@ def get_dashboard_html() -> str:
 
         <div class="nav-widgets">
             <div class="widget-pill wallet">
+                <div class="deduct-anim" id="val-deduct-float">-₹270.00</div>
                 <span>💰 Sandbox Wallet:</span>
                 <span id="val-wallet-balance" style="font-family: var(--font-mono); font-weight: 800;">₹10,000.00</span>
             </div>
@@ -1052,43 +1171,43 @@ def get_dashboard_html() -> str:
                 <div class="stepper-list">
                     <div class="step-row completed">
                         <span>1. Intent & Policy Ingestion</span>
-                        <span>✓</span>
+                        <span>✓ Ingested</span>
                     </div>
                     <div class="step-row" id="step-1">
                         <span>2. Multi-Source Web Discovery</span>
-                        <span>○</span>
+                        <span>⚡ Crawling</span>
                     </div>
                     <div class="step-row" id="step-2">
                         <span>3. Product Evidence Verification</span>
-                        <span>○</span>
+                        <span>○ Pending</span>
                     </div>
                     <div class="step-row" id="step-3">
                         <span>4. Live Price Re-validation</span>
-                        <span>○</span>
+                        <span>○ Pending</span>
                     </div>
                     <div class="step-row" id="step-4">
                         <span>5. Cart Combination Solver</span>
-                        <span>○</span>
+                        <span>○ Pending</span>
                     </div>
                     <div class="step-row" id="step-5">
                         <span>6. Total Cost Truth Model</span>
-                        <span>○</span>
+                        <span>○ Pending</span>
                     </div>
                     <div class="step-row" id="step-6">
                         <span>7. Mandate Authorization Check</span>
-                        <span>○</span>
+                        <span>○ Pending</span>
                     </div>
                     <div class="step-row">
                         <span>8. Deterministic Decision Trace</span>
-                        <span>○</span>
+                        <span>○ Pending</span>
                     </div>
                     <div class="step-row">
                         <span>9. Human Token Step-Up Lock</span>
-                        <span>🔒</span>
+                        <span>🔒 Enforced</span>
                     </div>
                     <div class="step-row">
                         <span>10. Payment & Order Settlement</span>
-                        <span>💳</span>
+                        <span>💳 Ready</span>
                     </div>
                 </div>
             </section>
@@ -1133,28 +1252,34 @@ def get_dashboard_html() -> str:
 
                 <div class="products-grid" id="products-grid">
                     <div class="product-card selected">
-                        <div>
-                            <div class="product-header">
-                                <div class="product-title-text">Roasters Choice Filter Coffee Powder 250g</div>
+                        <div class="product-card-top">
+                            <div class="product-img-wrapper">
+                                <img src="https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=400&q=80" alt="Filter Coffee" class="product-img">
                             </div>
-                            <div class="product-merchant-tag">Merchant: Coffee Roasters India (coffeeroasters.in)</div>
-                            <a href="https://www.coffeeroasters.in/products/dark-roast-250g" target="_blank" class="product-link">View Real Merchant Product Page ↗</a>
+                            <div class="product-info">
+                                <div class="product-title-text">Roasters Choice Filter Coffee Powder 250g</div>
+                                <div class="product-merchant-tag">🏬 Coffee Roasters India (coffeeroasters.in)</div>
+                                <a href="https://www.coffeeroasters.in/products/dark-roast-250g" target="_blank" class="product-link">View Real Merchant Page ↗</a>
+                            </div>
                         </div>
-                        <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed #e2e8f0; padding-top: 0.65rem;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed #e2e8f0; padding-top: 0.75rem; margin-top: 0.35rem;">
                             <div class="product-price-tag">₹150.00</div>
                             <button class="btn-outline" style="padding: 0.35rem 0.65rem; font-size: 0.72rem; font-weight: 700;" onclick="openEvidenceModal(0)">SHA-256 Proof</button>
                         </div>
                     </div>
 
                     <div class="product-card selected">
-                        <div>
-                            <div class="product-header">
-                                <div class="product-title-text">OpenFoodFacts Organic Digestive Biscuits 200g</div>
+                        <div class="product-card-top">
+                            <div class="product-img-wrapper">
+                                <img src="https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=400&q=80" alt="Digestive Biscuits" class="product-img">
                             </div>
-                            <div class="product-merchant-tag">Merchant: OpenFoodFacts (world.openfoodfacts.org)</div>
-                            <a href="https://world.openfoodfacts.org/product/8901063013224" target="_blank" class="product-link">View Real OpenFoodFacts Record ↗</a>
+                            <div class="product-info">
+                                <div class="product-title-text">OpenFoodFacts Organic Digestive Biscuits 200g</div>
+                                <div class="product-merchant-tag">🏬 OpenFoodFacts (world.openfoodfacts.org)</div>
+                                <a href="https://world.openfoodfacts.org/product/8901063013224" target="_blank" class="product-link">View Real OpenFoodFacts Record ↗</a>
+                            </div>
                         </div>
-                        <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed #e2e8f0; padding-top: 0.65rem;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed #e2e8f0; padding-top: 0.75rem; margin-top: 0.35rem;">
                             <div class="product-price-tag">₹120.00</div>
                             <button class="btn-outline" style="padding: 0.35rem 0.65rem; font-size: 0.72rem; font-weight: 700;" onclick="openEvidenceModal(1)">SHA-256 Proof</button>
                         </div>
@@ -1190,14 +1315,14 @@ def get_dashboard_html() -> str:
                     </div>
                 </div>
 
-                <div style="font-size: 0.78rem; color: var(--text-secondary); background: rgba(249, 115, 22, 0.08); border: 1px solid rgba(249, 115, 22, 0.25); border-radius: 8px; padding: 0.75rem;">
+                <div style="font-size: 0.78rem; color: var(--text-secondary); background: rgba(249, 115, 22, 0.08); border: 1px solid rgba(249, 115, 22, 0.25); border-radius: 10px; padding: 0.85rem;">
                     <strong>Mandate Gateway Determinism Rule:</strong> RAZERPAY never assumes unverified merchant shipping or taxes are ₹0. Unknown components are explicitly flagged before payment authorization.
                 </div>
             </section>
         </main>
 
         <!-- RIGHT SIDEBAR: REAL PAYMENT METHODS & MCP INTERACTION -->
-        <aside style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <aside class="right-sidebar" style="display: flex; flex-direction: column; gap: 1.5rem;">
             
             <!-- PILLAR 4: REAL PAYMENT METHODS & SANDBOX WALLET SETTLEMENT -->
             <section class="card">
@@ -1212,13 +1337,23 @@ def get_dashboard_html() -> str:
                     <label class="form-label">Select Payment Rail:</label>
                     <div class="payment-methods-grid">
                         <div class="payment-method-card selected" onclick="selectPaymentMethod(this, 'Razorpay UPI')">
-                            💳 Razorpay UPI
+                            <div class="pay-icon-row">
+                                <span style="font-size: 1rem;">📱</span>
+                                <span style="font-size: 0.7rem; color: #2563eb; font-weight: 900;">UPI</span>
+                            </div>
+                            <span>Razorpay UPI</span>
                         </div>
                         <div class="payment-method-card" onclick="selectPaymentMethod(this, 'Cards')">
-                            💳 Credit/Debit
+                            <div class="pay-icon-row">
+                                <span style="font-size: 1rem;">💳</span>
+                            </div>
+                            <span>Credit / Debit</span>
                         </div>
                         <div class="payment-method-card" onclick="selectPaymentMethod(this, 'Mandate Token')">
-                            🔒 Mandate Token
+                            <div class="pay-icon-row">
+                                <span style="font-size: 1rem;">🔒</span>
+                            </div>
+                            <span>Mandate Token</span>
                         </div>
                     </div>
                 </div>
@@ -1227,7 +1362,7 @@ def get_dashboard_html() -> str:
                     <span>⚡ Authorize Sandbox Payment (<span id="lbl-pay-amount">₹270.00</span>)</span>
                 </button>
 
-                <button class="btn-outline" style="padding: 0.65rem; font-size: 0.8rem; font-weight: 700; width: 100%; border-radius: 9px;" onclick="window.evaluatePurchaseProposal()">
+                <button class="btn-outline" style="padding: 0.7rem; font-size: 0.8rem; font-weight: 700; width: 100%; border-radius: 10px;" onclick="window.evaluatePurchaseProposal()">
                     <span>Evaluate Decision Trace API ↗</span>
                 </button>
             </section>
@@ -1260,17 +1395,17 @@ def get_dashboard_html() -> str:
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.55rem 0.75rem; border-radius: 8px; font-size: 0.76rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.6rem 0.8rem; border-radius: 10px; font-size: 0.78rem;">
                         <span style="font-family: var(--font-mono); font-weight: 700; color: var(--orange-600);">search_products</span>
-                        <button class="btn-outline" style="padding: 0.2rem 0.5rem; font-size: 0.7rem;" onclick="window.invokeMCPTool('search_products')">Invoke</button>
+                        <button class="btn-outline" style="padding: 0.25rem 0.6rem; font-size: 0.72rem; font-weight: 700;" onclick="window.invokeMCPTool('search_products')">Invoke</button>
                     </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.55rem 0.75rem; border-radius: 8px; font-size: 0.76rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.6rem 0.8rem; border-radius: 10px; font-size: 0.78rem;">
                         <span style="font-family: var(--font-mono); font-weight: 700; color: var(--orange-600);">optimize_cart</span>
-                        <button class="btn-outline" style="padding: 0.2rem 0.5rem; font-size: 0.7rem;" onclick="window.invokeMCPTool('optimize_cart')">Invoke</button>
+                        <button class="btn-outline" style="padding: 0.25rem 0.6rem; font-size: 0.72rem; font-weight: 700;" onclick="window.invokeMCPTool('optimize_cart')">Invoke</button>
                     </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.55rem 0.75rem; border-radius: 8px; font-size: 0.76rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.6rem 0.8rem; border-radius: 10px; font-size: 0.78rem;">
                         <span style="font-family: var(--font-mono); font-weight: 700; color: var(--orange-600);">execute_mandate</span>
-                        <button class="btn-outline" style="padding: 0.2rem 0.5rem; font-size: 0.7rem;" onclick="window.invokeMCPTool('execute_mandate')">Invoke</button>
+                        <button class="btn-outline" style="padding: 0.25rem 0.6rem; font-size: 0.72rem; font-weight: 700;" onclick="window.invokeMCPTool('execute_mandate')">Invoke</button>
                     </div>
                 </div>
             </section>
@@ -1280,7 +1415,7 @@ def get_dashboard_html() -> str:
     </main>
 
     <!-- FOOTER STATUS BAR -->
-    <footer style="background: #ffffff; border-top: 1px solid #e2e8f0; padding: 0.85rem 2rem; display: flex; justify-content: space-between; font-size: 0.76rem; color: var(--text-muted);">
+    <footer style="background: #ffffff; border-top: 1px solid #e2e8f0; padding: 0.9rem 2rem; display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-muted);">
         <div>● RAZERPAY MANDATE GATEWAY v1.0.0 — REAL-TIME AGENT TRUST & SETTLEMENT</div>
         <div style="font-family: var(--font-mono);">CRYPTOGRAPHIC PROVENANCE: SHA-256 VERIFIED</div>
     </footer>
@@ -1293,45 +1428,54 @@ def get_dashboard_html() -> str:
                 <button style="background: none; border: none; font-size: 1.4rem; cursor: pointer;" onclick="window.closeModal()">&times;</button>
             </div>
             <div class="code-box" id="modal-json">Loading...</div>
-            <button class="btn-outline" style="align-self: flex-end; padding: 0.4rem 1rem;" onclick="window.closeModal()">Close</button>
+            <button class="btn-outline" style="align-self: flex-end; padding: 0.4rem 1rem; font-weight: 700;" onclick="window.closeModal()">Close</button>
         </div>
     </div>
 
-    <!-- RAZERPAY CHECKOUT MODAL -->
+    <!-- VISUAL RAZERPAY CHECKOUT MODAL -->
     <div class="modal-overlay" id="rzp-modal">
-        <div class="modal-box" style="padding: 0; max-width: 480px; overflow: hidden;">
+        <div class="modal-box" style="padding: 0; max-width: 500px; overflow: hidden;">
             <div class="rzp-modal-header">
                 <div class="rzp-brand">
-                    <div style="width: 24px; height: 24px; background: #ffffff; color: #0c2340; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.9rem;">R</div>
-                    <span>Razorpay Standard Checkout</span>
+                    <div class="rzp-logo-badge">R</div>
+                    <span>Razorpay Checkout</span>
                 </div>
-                <button style="background: none; border: none; color: #ffffff; font-size: 1.4rem; cursor: pointer;" onclick="window.closeModal()">&times;</button>
+                <button style="background: none; border: none; color: #ffffff; font-size: 1.5rem; cursor: pointer;" onclick="window.closeModal()">&times;</button>
             </div>
-            <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+            <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.2rem;">
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem;">
                     <div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted);">ORDER ID</div>
-                        <div style="font-family: var(--font-mono); font-weight: 700; font-size: 0.85rem;" id="rzp-order-id">order_rzp_890123</div>
+                        <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">RAZERPAY ORDER ID</div>
+                        <div style="font-family: var(--font-mono); font-weight: 800; font-size: 0.9rem; color: var(--text-primary);" id="rzp-order-id">order_rzp_890123</div>
                     </div>
                     <div style="text-align: right;">
-                        <div style="font-size: 0.75rem; color: var(--text-muted);">AMOUNT DUE</div>
-                        <div style="font-family: var(--font-mono); font-weight: 800; font-size: 1.25rem; color: var(--emerald-600);" id="rzp-order-amount">₹270.00</div>
+                        <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">TOTAL DUE</div>
+                        <div style="font-family: var(--font-mono); font-weight: 900; font-size: 1.35rem; color: var(--emerald-600);" id="rzp-order-amount">₹270.00</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                    <div style="font-size: 0.74rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Cart Items Summary</div>
+                    <div id="rzp-cart-items-summary" style="max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.3rem;">
                     </div>
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                    <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">CONFIRM PAYMENT RAIL & SETTLEMENT</div>
-                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.75rem; border-radius: 8px; font-size: 0.82rem; display: flex; justify-content: space-between;">
-                        <span>Buyer Identity:</span>
-                        <strong style="font-family: var(--font-mono);">usr_998877</strong>
-                    </div>
-                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.75rem; border-radius: 8px; font-size: 0.82rem; display: flex; justify-content: space-between;">
-                        <span>Mandate Authorization:</span>
-                        <strong style="font-family: var(--font-mono); color: var(--emerald-600);" id="rzp-mandate-txt">man_f55f00f0afd9 (AUTONOMOUS)</strong>
+                    <div style="font-size: 0.74rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Payment Settlement Rail</div>
+                    <div style="background: #ffffff; border: 1.5px solid var(--emerald-500); padding: 0.85rem; border-radius: 10px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 1.1rem;">📱</span>
+                            <div>
+                                <div style="font-weight: 800; color: var(--text-primary);">Razorpay Instant UPI</div>
+                                <div style="font-size: 0.72rem; color: var(--text-muted);">GPay • PhonePe • Paytm • BHIM</div>
+                            </div>
+                        </div>
+                        <span style="color: var(--emerald-600); font-weight: 800; font-size: 0.8rem;">✓ SELECTED</span>
                     </div>
                 </div>
 
-                <button class="btn btn-emerald" style="padding: 0.9rem;" onclick="window.confirmRazorpayPayment()">
+                <button class="btn btn-emerald" style="padding: 1rem; font-size: 0.95rem;" onclick="window.confirmRazorpayPayment()">
                     <span>PAY & SETTLE VIA RAZERPAY NOW ↗</span>
                 </button>
             </div>
