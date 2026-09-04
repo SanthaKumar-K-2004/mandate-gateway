@@ -90,14 +90,15 @@ class MultiSourceDiscoveryEngine:
     ) -> Tuple[List[CanonicalProduct], str]:
         """
         Discover candidates matching query and budget limit across all registered connectors.
+        Prioritizes live real-time web search discovery.
         Returns (list_of_canonical_products, status_code).
         """
-        candidates: List[CanonicalProduct] = []
-
-        # 0. Live Real-Time Web Search Discovery via Tavily
+        # 0. Live Real-Time Web Search Discovery via Tavily API
         tavily_candidates = self._discover_tavily_web_search(query, max_price_paise)
         if tavily_candidates:
-            candidates.extend(tavily_candidates)
+            return (tavily_candidates, "SUCCESS")
+
+        candidates: List[CanonicalProduct] = []
 
         # 1. Query Public Open Food Facts & Open Commerce Catalog
         public_candidates = self._discover_public_catalog(query, max_price_paise)
@@ -121,7 +122,21 @@ class MultiSourceDiscoveryEngine:
     ) -> List[CanonicalProduct]:
         """Fetch live real-time candidate products using Tavily Web Search API."""
         candidates: List[CanonicalProduct] = []
+
+        # Ensure .env is populated into os.environ if missing
         tavily_key = os.environ.get("TAVILY_API_KEY", "")
+        if not tavily_key and os.path.exists(".env"):
+            try:
+                from apps.api.config.env_loader import load_env_file
+
+                env_vars = load_env_file(".env")
+                for k, v in env_vars.items():
+                    if k not in os.environ:
+                        os.environ[k] = v
+                tavily_key = os.environ.get("TAVILY_API_KEY", "")
+            except Exception:
+                pass
+
         if not tavily_key:
             return candidates
 
@@ -129,18 +144,52 @@ class MultiSourceDiscoveryEngine:
             provider = TavilyWebSearchProvider(api_key=tavily_key)
             web_results = provider.search(query=query, max_results=5)
             for idx, res in enumerate(web_results):
-                title = res.get("title", f"Live Product Candidate {idx + 1}")
+                raw_title = res.get("title", f"Live Product Candidate {idx + 1}")
                 snippet = res.get("snippet", "")
                 url = res.get("url", "https://tavily.com")
 
-                if not title or len(title) < 3:
+                if not raw_title or len(raw_title) < 3:
                     continue
+
+                # Extract domain and merchant name
+                domain = "world.openfoodfacts.org"
+                domain_match = re.search(r"https?://(?:www\.)?([^/]+)", url)
+                if domain_match:
+                    domain = domain_match.group(1)
+
+                m_name = domain.split(".")[0].capitalize()
+                if "flipkart" in domain:
+                    m_name = "Flipkart Direct Store"
+                elif "blinkit" in domain:
+                    m_name = "Blinkit Quick Store"
+                elif "zepto" in domain:
+                    m_name = "Zepto Dairy & Goods"
+                elif "bigbasket" in domain:
+                    m_name = "BigBasket Store"
+                elif "amazon" in domain:
+                    m_name = "Amazon India Store"
+                elif "countrydelight" in domain:
+                    m_name = "Country Delight Dairy"
+
+                # Build clean item title from web result
+                clean_t = re.sub(
+                    r"^(?:buy|check|get|shop|find)\s+", "", raw_title, flags=re.IGNORECASE
+                )
+                clean_t = re.sub(
+                    r"\s+-(?:buy|best price|online).*$", "", clean_t, flags=re.IGNORECASE
+                )
+                clean_t = clean_t.strip()
+                if len(clean_t) < 5:
+                    clean_t = f"{m_name} {query.title()}"
 
                 # Extract price digits from snippet if present
                 price_paise = 0
-                price_match = re.search(r"(?:Rs\.?|₹|INR)\s*(\d+(?:,\d+)*)", snippet, re.IGNORECASE)
+                price_match = re.search(
+                    r"(?:Rs\.?|₹|INR)\s*(\d+(?:,\d+)*(?:\.\d+)?)", snippet, re.IGNORECASE
+                )
                 if price_match:
-                    price_paise = int(price_match.group(1).replace(",", "")) * 100
+                    p_val = float(price_match.group(1).replace(",", ""))
+                    price_paise = int(p_val * 100)
 
                 if not price_paise or price_paise > max_price_paise:
                     base_fraction = 0.35 + (idx * 0.15)
@@ -149,8 +198,10 @@ class MultiSourceDiscoveryEngine:
 
                 # Select high-res thumbnail matching product domain
                 img = IMG_GENERAL
-                q_lower = (query + " " + title).lower()
-                if any(k in q_lower for k in ["mouse", "mice"]):
+                q_lower = (query + " " + clean_t).lower()
+                if any(k in q_lower for k in ["milk", "dairy"]):
+                    img = "https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=400&q=80"
+                elif any(k in q_lower for k in ["mouse", "mice"]):
                     img = IMG_MOUSE
                 elif any(k in q_lower for k in ["keyboard", "keypad"]):
                     img = IMG_KEYBOARD
@@ -166,24 +217,21 @@ class MultiSourceDiscoveryEngine:
                     img = IMG_BISCUIT
                 elif "coffee" in q_lower:
                     img = IMG_COFFEE
-
-                domain = "world.openfoodfacts.org"
-                domain_match = re.search(r"https?://([^/]+)", url)
-                if domain_match:
-                    domain = domain_match.group(1)
+                elif any(k in q_lower for k in ["pen", "stationery"]):
+                    img = "https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?auto=format&fit=crop&w=400&q=80"
 
                 p = CanonicalProduct.create(
                     product_id=f"prod_tavily_{idx + 1}_{abs(hash(url)) % 10000}",
-                    title=title[:75],
+                    title=clean_t[:80],
                     price_paise=price_paise,
-                    merchant_name=f"{domain} (Web Source)",
+                    merchant_name=m_name,
                     merchant_domain=domain,
                     product_url=url,
                     image_url=img,
                     source_provider="Tavily Live Web Search",
                     checkout_capability=CheckoutCapability.VERIFIED_API,
-                    brand="Live Merchant",
-                    description=snippet[:160] if snippet else title,
+                    brand=m_name.split()[0],
+                    description=snippet[:160] if snippet else clean_t,
                     category=(
                         "electronics"
                         if any(k in q_lower for k in ["mouse", "keyboard", "monitor", "headphone"])
