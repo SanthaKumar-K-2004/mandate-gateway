@@ -62,7 +62,13 @@ _TRANSACTIONS: dict[str, TransactionResponse] = {
         state=TransactionState.COMMITTED,
         decision_trace=DecisionTraceResponse(
             decision=PolicyDecision.ALLOW,
-            checks_passed=["merchant_policy", "mandate_active", "daily_budget", "autonomous_limit", "nonce_unique"],
+            checks_passed=[
+                "merchant_policy",
+                "mandate_active",
+                "daily_budget",
+                "autonomous_limit",
+                "nonce_unique",
+            ],
             checks_failed=[],
         ),
         rejection_reason=None,
@@ -93,7 +99,9 @@ _TRANSACTIONS: dict[str, TransactionResponse] = {
                 proposed_paise=1250000,
                 delta_paise=750000,
                 delta_percent=150.0,
-                reason="Purchase amount ₹12,500 exceeds single-transaction cap ₹5,000. Step-up approval token required.",
+                reason=(
+                    "Purchase amount ₹12,500 exceeds single-transaction cap ₹5,000. Step-up approval token required."
+                ),
             ),
         ),
         rejection_reason=None,

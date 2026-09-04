@@ -48,7 +48,9 @@ _MANDATES: dict[str, MandateResponse] = {
         buyer_id="buy_user_99",
         version=1,
         merchant_scope=frozenset(["mer_tech_store", "mer_office_world", "world.openfoodfacts.org"]),
-        category_scope=frozenset(["electronics", "supplies", "groceries", "office", "general", "beverages"]),
+        category_scope=frozenset(
+            ["electronics", "supplies", "groceries", "office", "general", "beverages"]
+        ),
         allowed_regions=frozenset([Region.IN]),
         maximum_amount_paise=500000,
         daily_budget_paise=1000000,
