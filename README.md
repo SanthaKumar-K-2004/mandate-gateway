@@ -148,6 +148,7 @@ PYTHONPATH=. python3 -m unittest discover -s tests -p "test_*.py"
 
 ### Prerequisites
 - Python 3.10+
+- Node.js 18+ & npm (for Next.js Web Portal)
 - Docker & Docker Compose (for infrastructure containers)
 
 ### Installation & Verification
@@ -160,14 +161,63 @@ cd mandate-gateway
 # 2. Setup environment configuration
 cp .env.example .env
 
-# 3. Install dependencies
+# 3. Install Python virtual environment & Node dependencies
 make install
+cd apps/web && npm install && cd ../..
 
-# 4. Run Master Quality Gate (FAIL-CLOSED check)
+# 4. Run Master Quality Gate (FAIL-CLOSED check: 844 tests passing)
 make check
 ```
 
-### Running Real Demonstrations
+---
+
+## 🌐 Running Full-Stack Web Application
+
+### 1. Launch FastAPI Backend Service (Port 8000)
+```bash
+.venv311/bin/python -m uvicorn apps.api.app.factory:create_fastapi_app --factory --host 0.0.0.0 --port 8000
+```
+*API docs available at: `http://localhost:8000/docs`*
+
+### 2. Launch Next.js Enterprise Frontend (Port 3000)
+```bash
+cd apps/web
+npm run dev
+```
+*Web Portal live at: `http://localhost:3000`*
+
+### 🎨 Enterprise Frontend Modules
+
+| Route | Module Name | Features & Real-Time API Integration |
+|-------|-------------|-------------------------------------|
+| `/` | **Command Hub** | System status, active mandate metrics, pipeline live stats, quick navigation |
+| `/buyer` | **Buyer Telemetry Hub** | Live 10-stage agent telemetry pipeline, real product search (OpenFoodFacts API), cart solver |
+| `/mandates` | **Mandate Studio** | Autonomous spending mandate creation, threshold configuration, live status toggle & revocation |
+| `/transactions` | **Operations & Audit** | Real-time transaction stream, 5-layer security verification timeline, manual step-up approval/rejection |
+| `/merchant` | **Merchant Policy Center**| Store policy rules, real-time merchant product catalog management, mandate compatibility settings |
+| `/audit` | **Cryptographic Audit** | Immutable Ed25519 signed receipts, SHA-256 evidence chain verification |
+| `/red-team` | **Red-Team Security** | Adversarial attack suite, prompt injection barrier tests, replay defense verification |
+
+---
+
+## 🚀 10-Stage Agent Telemetry Pipeline
+
+```mermaid
+flowchart LR
+    S1[1. Intent Ingestion] --> S2[2. Multi-Source Web Discovery]
+    S2 --> S3[3. Product Evidence Verification]
+    S3 --> S4[4. Live Price Re-validation]
+    S4 --> S5[5. Cart Combination Solver]
+    S5 --> S6[6. Total Cost Truth Model]
+    S6 --> S7[7. Mandate Authorization Check]
+    S7 --> S8[8. Deterministic Decision Trace]
+    S8 --> S9[9. Human Token Step-Up Lock]
+    S9 --> S10[10. Settlement & Audit Receipt]
+```
+
+---
+
+## 🧪 Authoritative Test Accounting & Demos
 
 ```bash
 # Run Production Reality Certification Suite (7 stages)
