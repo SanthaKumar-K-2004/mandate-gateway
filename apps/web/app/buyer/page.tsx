@@ -285,32 +285,36 @@ export default function BuyerPage() {
   const cartTotalPaise = cart.reduce((s, c) => s + c.price_paise, 0);
 
   return (
-    <div className="min-h-screen bg-[#050810] text-slate-100 font-sans">
+    <div className="min-h-screen bg-[#040711] text-slate-100 font-sans">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Left Column: Search + Products */}
+        {/* Left Column: Search + Products + Cart */}
         <div className="xl:col-span-2 space-y-6">
           {/* Header */}
           <div className="mb-2">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-black uppercase tracking-widest text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">AI Buyer Telemetry</span>
-              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" /> LIVE API
+              <span className="text-xs font-bold uppercase tracking-widest text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20 backdrop-blur-md">
+                AI Buyer Control Interface
+              </span>
+              <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" /> LIVE API CONNECTED
               </span>
             </div>
-            <h1 className="text-2xl font-black text-white">AI Buyer Control Interface</h1>
-            <p className="text-xs text-slate-500">10-Stage pipeline • OpenFoodFacts live search • SHA-256 provenance • Mandate enforcement gate</p>
+            <h1 className="text-3xl font-extrabold text-white tracking-tight">AI Autonomous Buyer Telemetry</h1>
+            <p className="text-xs text-slate-400 font-normal mt-1">10-stage execution pipeline • OpenFoodFacts live catalog search • SHA-256 provenance • Mandate enforcement gate</p>
           </div>
 
           {/* Intent Search */}
-          <section className="bg-[#0c1120] border border-[#1e2d40] p-6 rounded-2xl shadow-xl space-y-4">
+          <section className="glass-card p-6 rounded-2xl space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                <span className="w-2 h-2 bg-blue-500 rounded-full" />
+                <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
                 Natural Language Shopping Intent
               </h2>
-              <span className="text-[10px] text-slate-600 font-mono bg-[#0a0f1e] px-2 py-0.5 rounded border border-[#1a2535]">PIPELINE STAGE 01</span>
+              <span className="text-[10px] text-slate-400 font-mono bg-black/40 px-2 py-0.5 rounded border border-white/[0.08]">
+                PIPELINE STAGE 01
+              </span>
             </div>
             <div className="flex gap-3">
               <input
@@ -318,13 +322,13 @@ export default function BuyerPage() {
                 value={userIntent}
                 onChange={(e) => setUserIntent(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearchClick()}
-                className="flex-1 bg-[#080d18] border border-[#1e2d40] text-white px-4 py-3 rounded-xl text-sm focus:outline-none focus:border-blue-500/60 transition placeholder-slate-600"
+                className="flex-1 glass-input text-white px-4 py-3 rounded-xl text-sm focus:outline-none placeholder-slate-500 font-medium"
                 placeholder="e.g. Find ergonomic office mouse under ₹1500..."
               />
               <button
                 onClick={handleSearchClick}
                 disabled={loadingSearch}
-                className="bg-blue-600 hover:bg-blue-500 text-white font-black text-sm px-6 py-3 rounded-xl shadow-lg shadow-blue-600/20 transition-all hover:scale-105 disabled:opacity-50 disabled:scale-100 min-w-[160px] flex items-center justify-center gap-2"
+                className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm px-6 py-3 rounded-xl shadow-lg shadow-blue-600/20 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:scale-100 min-w-[160px] flex items-center justify-center gap-2"
               >
                 {loadingSearch ? (
                   <><span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> Crawling...</>
@@ -335,56 +339,56 @@ export default function BuyerPage() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <span className="text-[10px] text-slate-600 font-bold uppercase tracking-wider self-center">Quick Presets:</span>
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider self-center">Quick Presets:</span>
               {SUGGESTED.map((s) => (
                 <button
                   key={s}
                   onClick={() => handleSearch(s)}
-                  className="text-[11px] bg-[#080d18] hover:bg-[#0f1628] border border-[#1e2d40] hover:border-blue-500/30 text-slate-400 hover:text-white px-3 py-1 rounded-full transition"
+                  className="text-[11px] bg-black/40 hover:bg-white/[0.08] border border-white/[0.08] hover:border-blue-500/40 text-slate-300 hover:text-white px-3 py-1 rounded-full transition-all duration-200"
                 >
                   {s}
                 </button>
               ))}
             </div>
 
-            <div className="flex items-center gap-3 pt-3 border-t border-[#1e2d40]">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Active Mandate:</label>
+            <div className="flex items-center gap-3 pt-3 border-t border-white/[0.08]">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">Active Mandate Scope:</label>
               <select
                 value={selectedMandate}
                 onChange={(e) => {
                   setSelectedMandate(e.target.value);
                   setMandateCapPaise(e.target.value === "man_buyer_01" ? 500000 : 1500000);
                 }}
-                className="flex-1 bg-[#080d18] border border-[#1e2d40] text-white px-3 py-2 rounded-xl text-xs font-mono focus:outline-none focus:border-blue-500/50 transition"
+                className="flex-1 glass-input text-white px-3 py-2 rounded-xl text-xs font-mono focus:outline-none transition cursor-pointer"
               >
-                <option value="man_buyer_01">man_buyer_01 — Cap ₹5,000 | Daily ₹10,000</option>
-                <option value="man_buyer_02">man_buyer_02 — Cap ₹15,000 | Daily ₹25,000</option>
+                <option value="man_buyer_01">man_buyer_01 — Cap ₹5,000 | Daily Budget ₹10,000</option>
+                <option value="man_buyer_02">man_buyer_02 — Cap ₹15,000 | Daily Budget ₹25,000</option>
               </select>
             </div>
           </section>
 
           {/* Discovered Products */}
-          <section className="bg-[#0c1120] border border-[#1e2d40] p-6 rounded-2xl shadow-xl space-y-4">
+          <section className="glass-card p-6 rounded-2xl space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
                 Live Discovered Products
                 {products.length > 0 && <span className="text-emerald-400 font-mono text-xs">({products.length})</span>}
               </h2>
-              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">MULTI-SOURCE API</span>
+              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/20">MULTI-SOURCE VERIFIED</span>
             </div>
 
             {loadingSearch ? (
               <div className="py-12 text-center">
                 <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                <p className="text-sm font-semibold text-slate-300">Crawling live APIs for &quot;{userIntent}&quot;...</p>
-                <p className="text-xs text-slate-600 mt-1">OpenFoodFacts • Merchant Direct • Commerce Connectors</p>
+                <p className="text-sm font-semibold text-slate-200">Crawling live APIs for &quot;{userIntent}&quot;...</p>
+                <p className="text-xs text-slate-500 mt-1">OpenFoodFacts • Merchant Direct • Commerce Connectors</p>
               </div>
             ) : products.length === 0 ? (
-              <div className="py-12 text-center border border-dashed border-[#1e2d40] rounded-xl">
+              <div className="py-12 text-center border border-dashed border-white/[0.08] rounded-2xl">
                 <div className="text-3xl mb-2">🔍</div>
-                <p className="text-sm text-slate-500">No verified products for &quot;{userIntent}&quot;</p>
-                <p className="text-xs text-slate-700 mt-1">Try a different query or check backend connectivity</p>
+                <p className="text-sm text-slate-400 font-medium">No verified products found for &quot;{userIntent}&quot;</p>
+                <p className="text-xs text-slate-500 mt-1">Try a preset above or check backend connector status</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -393,12 +397,12 @@ export default function BuyerPage() {
                   return (
                     <div
                       key={prod.product_id}
-                      className={`bg-[#080d18] border rounded-2xl p-4 flex flex-col justify-between transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
-                        inCart ? "border-blue-500/40 shadow-blue-500/5" : "border-[#1e2d40] hover:border-[#2d4060]"
+                      className={`glass-panel rounded-2xl p-4 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 ${
+                        inCart ? "border-blue-500/50 shadow-lg shadow-blue-500/10" : "border-white/[0.08] hover:border-white/[0.2]"
                       }`}
                     >
                       <div>
-                        <div className="w-full h-32 bg-[#0a0f1e] rounded-xl overflow-hidden mb-3 border border-[#1a2535] relative">
+                        <div className="w-full h-36 bg-black/40 rounded-xl overflow-hidden mb-3 border border-white/[0.08] relative group">
                           <img
                             src={
                               prod.img_url ||
@@ -411,32 +415,35 @@ export default function BuyerPage() {
                                 : "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=400&q=80")
                             }
                             alt={prod.title}
-                            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                             onError={(e: any) => {
                               e.target.src =
                                 "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=400&q=80";
                             }}
                           />
+                          <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10 text-[9px] font-mono text-emerald-400">
+                            PROVENANCE VERIFIED
+                          </div>
                         </div>
                         <h3 className="font-bold text-sm text-white mb-1 leading-snug line-clamp-2">{prod.title}</h3>
-                        {prod.description && <p className="text-[11px] text-slate-500 line-clamp-2 mb-2">{prod.description}</p>}
+                        {prod.description && <p className="text-[11px] text-slate-400 line-clamp-2 mb-2 font-normal">{prod.description}</p>}
                         <div className="flex flex-wrap items-center gap-1.5 mb-2">
-                          <span className="text-[10px] font-mono bg-[#0c1120] text-slate-500 border border-[#1e2d40] px-1.5 py-0.5 rounded">{prod.category}</span>
-                          <span className="text-[10px] text-slate-600">🏬 {prod.merchant_name || prod.merchant_domain}</span>
+                          <span className="text-[10px] font-mono bg-white/[0.05] text-slate-300 border border-white/[0.08] px-2 py-0.5 rounded-md">{prod.category}</span>
+                          <span className="text-[10px] text-slate-400 font-medium">🏬 {prod.merchant_name || prod.merchant_domain}</span>
                         </div>
                         {prod.evidence_hash && (
-                          <p className="text-[9px] font-mono text-slate-700 truncate">SHA-256: {prod.evidence_hash}</p>
+                          <p className="text-[9px] font-mono text-slate-500 truncate">SHA-256: {prod.evidence_hash}</p>
                         )}
                       </div>
-                      <div className="border-t border-[#1e2d40] pt-3 flex justify-between items-center mt-3">
-                        <span className="text-base font-black text-blue-400">₹{prod.price_inr.toLocaleString()}</span>
+                      <div className="border-t border-white/[0.08] pt-3 flex justify-between items-center mt-3">
+                        <span className="text-base font-extrabold text-blue-400">₹{prod.price_inr.toLocaleString()}</span>
                         <button
                           onClick={() => addToCart(prod)}
                           disabled={inCart}
                           className={`text-xs font-bold px-4 py-2 rounded-xl transition-all duration-200 ${
                             inCart
                               ? "bg-blue-500/10 text-blue-400 border border-blue-500/20 cursor-default"
-                              : "bg-blue-600 hover:bg-blue-500 text-white shadow hover:shadow-blue-500/20 hover:scale-105"
+                              : "bg-blue-600 hover:bg-blue-500 text-white shadow-lg hover:shadow-blue-500/20 hover:scale-[1.02]"
                           }`}
                         >
                           {inCart ? "✓ In Cart" : "+ Add to Cart"}
@@ -449,27 +456,27 @@ export default function BuyerPage() {
             )}
           </section>
 
-          {/* Cart & Purchase */}
-          <section className="bg-[#0c1120] border border-[#1e2d40] p-6 rounded-2xl shadow-xl space-y-4">
+          {/* Cart & Total Cost Truth */}
+          <section className="glass-card p-6 rounded-2xl space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <span className="w-2 h-2 bg-purple-500 rounded-full" />
-                3. AI Buyer Cart & Mandate Settlement
+                <span className="w-2 h-2 bg-purple-400 rounded-full" />
+                Cart Optimization & Total Cost Truth
               </h2>
-              <span className="text-xs text-slate-400 font-mono">{cart.length} ITEMS</span>
+              <span className="text-xs text-slate-400 font-mono font-medium">{cart.length} ITEMS SELECTED</span>
             </div>
 
             {cart.length === 0 ? (
-              <p className="text-slate-500 text-sm py-4">Cart empty — add products from above to begin.</p>
+              <p className="text-slate-400 text-sm py-4 font-normal">Cart empty — add products from above to calculate cost truth and mandate policy authorization.</p>
             ) : (
               <div className="space-y-3">
                 {cart.map((item, idx) => (
-                  <div key={idx} className="flex justify-between items-center text-sm p-3 bg-[#0d1322] border border-slate-800 rounded-xl">
+                  <div key={idx} className="flex justify-between items-center text-sm p-3 bg-[#080d18] border border-white/[0.08] rounded-xl">
                     <div className="flex items-center gap-3">
-                      <span className="text-xs font-mono text-slate-600">#{idx + 1}</span>
+                      <span className="text-xs font-mono text-slate-500">#{idx + 1}</span>
                       <div>
                         <span className="font-semibold text-slate-200 block">{item.title}</span>
-                        <span className="text-[11px] text-slate-500 font-mono">{item.merchant_domain}</span>
+                        <span className="text-[11px] text-slate-400 font-mono">{item.merchant_domain}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
@@ -479,49 +486,75 @@ export default function BuyerPage() {
                   </div>
                 ))}
 
-                <div className="flex justify-between items-center text-base font-bold pt-4 border-t border-slate-800">
-                  <span className="text-white">Cart Subtotal:</span>
-                  <div className="text-right">
-                    <span className="text-emerald-400">₹{cartTotal.toLocaleString()}</span>
-                    {cartTotalPaise > mandateCapPaise && (
-                      <p className="text-xs text-amber-400 font-normal mt-0.5">
-                        ⚠ Exceeds mandate cap ₹{(mandateCapPaise / 100).toLocaleString()} — Step-Up required
-                      </p>
-                    )}
+                {/* Total Cost Truth Breakdown Card */}
+                <div className="bg-[#070b16] border border-white/[0.08] p-4 rounded-xl space-y-2 mt-4">
+                  <div className="flex justify-between text-xs text-slate-300 font-medium">
+                    <span>Verified Item Subtotal:</span>
+                    <span className="font-mono text-white font-bold">₹{cartTotal.toLocaleString()}</span>
                   </div>
+                  <div className="flex justify-between text-xs text-slate-400">
+                    <span className="flex items-center gap-1.5">
+                      Shipping / Delivery:
+                      <span className="text-[9px] font-mono bg-amber-500/10 text-amber-400 px-1.5 py-0.2 rounded border border-amber-500/20">UNKNOWN</span>
+                    </span>
+                    <span className="font-mono text-slate-500">Unexposed</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-slate-400">
+                    <span className="flex items-center gap-1.5">
+                      Merchant Tax & Surcharges:
+                      <span className="text-[9px] font-mono bg-amber-500/10 text-amber-400 px-1.5 py-0.2 rounded border border-amber-500/20">UNKNOWN</span>
+                    </span>
+                    <span className="font-mono text-slate-500">Unexposed</span>
+                  </div>
+                  <div className="border-t border-white/[0.08] pt-2 flex justify-between items-center text-sm font-bold">
+                    <span className="text-white">Known Payable Total:</span>
+                    <div className="text-right">
+                      <span className="text-emerald-400 font-mono text-base">₹{cartTotal.toLocaleString()}</span>
+                      {cartTotalPaise > mandateCapPaise && (
+                        <p className="text-[11px] text-amber-400 font-normal mt-0.5">
+                          ⚠ Exceeds cap ₹{(mandateCapPaise / 100).toLocaleString()} — Step-Up token required
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-slate-500 italic mt-1">
+                    * Total cost truth policy: Known total contains only verified cost components. Unknown fees are never estimated.
+                  </p>
                 </div>
 
-                <button
-                  onClick={handleExecutePurchase}
-                  disabled={purchaseLoading}
-                  className="w-full mt-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold py-3.5 px-6 rounded-xl shadow-lg transition text-sm disabled:opacity-50"
-                >
-                  {purchaseLoading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Evaluating Authorization...
-                    </span>
-                  ) : (
-                    "⚡ Authorize & Execute AI Purchase Proposal"
-                  )}
-                </button>
+                <div className="flex gap-2 mt-4">
+                  <button
+                    onClick={handleExecutePurchase}
+                    disabled={purchaseLoading}
+                    className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold py-3.5 px-6 rounded-xl shadow-lg shadow-emerald-500/20 transition-all text-sm disabled:opacity-50 hover:scale-[1.01]"
+                  >
+                    {purchaseLoading ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Evaluating Mandate Safety...
+                      </span>
+                    ) : (
+                      "⚡ Authorize & Execute AI Purchase Proposal"
+                    )}
+                  </button>
+                </div>
               </div>
             )}
 
             {purchaseStatus && (
-              <div className={`p-4 rounded-xl border font-mono text-xs shadow-inner ${purchaseStatus.startsWith("AUTHORIZED") ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-400" : "bg-amber-500/5 border-amber-500/20 text-amber-400"}`}>
-                <span className="text-slate-400 block mb-1 font-sans text-[11px] font-bold uppercase tracking-wider">Mandate Engine Decision:</span>
+              <div className={`p-4 rounded-xl border font-mono text-xs shadow-inner ${purchaseStatus.startsWith("AUTHORIZED") ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300" : "bg-amber-500/10 border-amber-500/30 text-amber-300"}`}>
+                <span className="text-slate-400 block mb-1 font-sans text-[11px] font-bold uppercase tracking-wider">Mandate Policy Engine Decision:</span>
                 {purchaseStatus}
                 {purchaseStatus.includes("STEP_UP_REQUIRED") && (
                   <Link href="/transactions" className="block mt-2 text-blue-400 hover:text-blue-300 font-sans text-xs font-bold">
-                    → Go to Transactions to approve step-up →
+                    → Go to Transactions Ledger to issue Step-Up Approval →
                   </Link>
                 )}
               </div>
             )}
             {purchaseError && (
-              <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/20 text-red-400 font-mono text-xs">
-                <span className="text-slate-400 block mb-1 font-sans text-[11px] font-bold uppercase tracking-wider">Rejected:</span>
+              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 font-mono text-xs">
+                <span className="text-slate-400 block mb-1 font-sans text-[11px] font-bold uppercase tracking-wider">Policy Rejection:</span>
                 {purchaseError}
               </div>
             )}
@@ -530,33 +563,33 @@ export default function BuyerPage() {
 
         {/* Right Column: 10-Stage Pipeline Telemetry */}
         <div className="xl:col-span-1">
-          <div className="sticky top-6">
-            <section className="bg-[#0c1120] border border-[#1e2d40] p-5 rounded-2xl shadow-xl">
-              <div className="flex justify-between items-center mb-4">
+          <div className="sticky top-20">
+            <section className="glass-card p-5 rounded-2xl space-y-4">
+              <div className="flex justify-between items-center mb-2">
                 <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                  <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+                  <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
                   10-Stage Pipeline Telemetry
                 </h2>
-                <span className="text-[10px] text-slate-500 font-mono">LIVE</span>
+                <span className="text-[10px] text-slate-400 font-mono bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">LIVE</span>
               </div>
 
               <div className="space-y-2">
                 {stages.map((stage, idx) => (
                   <div key={stage.id} className="relative">
                     {idx < stages.length - 1 && (
-                      <div className={`absolute left-[15px] top-[28px] w-0.5 h-4 ${stage.status === "done" ? "bg-emerald-500/40" : "bg-slate-800"}`} />
+                      <div className={`absolute left-[15px] top-[28px] w-0.5 h-4 ${stage.status === "done" ? "bg-emerald-500/40" : "bg-white/[0.08]"}`} />
                     )}
-                    <div className={`flex items-start gap-3 p-2.5 rounded-xl border ${stage.status !== "pending" ? "bg-slate-800/30" : ""} ${stageBadge(stage.status)}`}>
+                    <div className={`flex items-start gap-3 p-2.5 rounded-xl border transition-all ${stage.status !== "pending" ? "bg-white/[0.03]" : ""} ${stageBadge(stage.status)}`}>
                       <span className="text-base mt-0.5">{stage.icon}</span>
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-center gap-1">
                           <span className="text-xs font-bold text-slate-200 truncate">{stage.name}</span>
-                          <span className={`text-[10px] font-bold whitespace-nowrap px-1.5 py-0.5 rounded ${stage.status === "done" ? "text-emerald-400" : stage.status === "active" ? "text-blue-400" : stage.status === "locked" ? "text-amber-400" : stage.status === "error" ? "text-red-400" : "text-slate-600"}`}>
+                          <span className={`text-[10px] font-bold whitespace-nowrap px-1.5 py-0.5 rounded ${stage.status === "done" ? "text-emerald-400" : stage.status === "active" ? "text-blue-400" : stage.status === "locked" ? "text-amber-400" : stage.status === "error" ? "text-red-400" : "text-slate-500"}`}>
                             {stageStatusLabel(stage.status)}
                           </span>
                         </div>
                         {stage.status !== "pending" && stage.detail && (
-                          <p className="text-[10px] text-slate-500 mt-0.5 leading-relaxed">{stage.detail}</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">{stage.detail}</p>
                         )}
                       </div>
                     </div>
@@ -565,18 +598,18 @@ export default function BuyerPage() {
               </div>
 
               {/* Summary */}
-              <div className="mt-4 pt-3 border-t border-slate-800 grid grid-cols-3 gap-2 text-center">
+              <div className="mt-4 pt-3 border-t border-white/[0.08] grid grid-cols-3 gap-2 text-center">
                 <div>
                   <p className="text-lg font-extrabold text-emerald-400">{stages.filter((s) => s.status === "done").length}</p>
-                  <p className="text-[10px] text-slate-500">Done</p>
+                  <p className="text-[10px] text-slate-400 font-medium">Done</p>
                 </div>
                 <div>
                   <p className="text-lg font-extrabold text-blue-400">{stages.filter((s) => s.status === "active").length}</p>
-                  <p className="text-[10px] text-slate-500">Running</p>
+                  <p className="text-[10px] text-slate-400 font-medium">Running</p>
                 </div>
                 <div>
                   <p className="text-lg font-extrabold text-amber-400">{stages.filter((s) => s.status === "locked").length}</p>
-                  <p className="text-[10px] text-slate-500">Locked</p>
+                  <p className="text-[10px] text-slate-400 font-medium">Locked</p>
                 </div>
               </div>
             </section>
@@ -586,3 +619,4 @@ export default function BuyerPage() {
     </div>
   );
 }
+

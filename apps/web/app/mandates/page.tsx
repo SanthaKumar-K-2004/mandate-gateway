@@ -135,47 +135,51 @@ export default function MandatesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 font-sans pb-16">
+    <div className="min-h-screen bg-[#040711] text-slate-100 font-sans pb-16">
       <Navbar />
 
-      <main className="max-w-6xl mx-auto px-8 py-8 space-y-6">
-        <div className="flex justify-between items-center pb-4 border-b border-slate-800">
+      <main className="max-w-6xl mx-auto px-6 md:px-8 py-8 space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-white/[0.08]">
           <div>
-            <h1 className="text-2xl font-extrabold text-white">BUYER MANDATES STUDIO</h1>
-            <p className="text-xs text-slate-400">Active authorization mandates, spend caps & one-click revocation</p>
+            <span className="text-[11px] font-mono text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20 font-bold uppercase tracking-wider">
+              POLICY MANAGEMENT
+            </span>
+            <h1 className="text-3xl font-extrabold text-white tracking-tight mt-1">BUYER MANDATES STUDIO</h1>
+            <p className="text-xs text-slate-400 mt-0.5">Configure spending mandates, daily budget caps, category permissions & one-click revocation</p>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowCreate((v) => !v)}
-              className="text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-lg border border-amber-500/40 transition shadow"
+              className="text-xs font-bold bg-amber-500 hover:bg-amber-400 text-black px-4 py-2.5 rounded-xl transition shadow-lg shadow-amber-500/20 hover:scale-[1.02]"
             >
               + New Mandate
             </button>
-            <button onClick={fetchMandates} className="text-xs font-bold text-slate-400 hover:text-white bg-slate-800 px-3.5 py-2 rounded-lg border border-slate-700">
+            <button onClick={fetchMandates} className="text-xs font-bold text-slate-300 hover:text-white bg-[#090d1a] border border-white/[0.08] px-3.5 py-2.5 rounded-xl hover:border-white/[0.2] transition">
               ↻ Refresh
             </button>
           </div>
         </div>
+
         {/* Create Mandate Form */}
         {showCreate && (
-          <section className="bg-[#111827] border border-amber-500/20 p-6 rounded-2xl shadow-xl space-y-4">
+          <section className="glass-card p-6 rounded-2xl space-y-4">
             <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <span className="w-2 h-2 bg-amber-500 rounded-full" />
-              Create New Mandate
+              <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+              Create New Mandate Rule
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
                 { label: "Buyer ID", key: "buyer_id" },
-                { label: "Merchant ID", key: "merchant_id" },
+                { label: "Merchant Scope", key: "merchant_id" },
                 { label: "Allowed Categories", key: "allowed_categories" },
               ].map(({ label, key }) => (
                 <div key={key}>
-                  <label className="text-xs text-slate-400 font-bold uppercase tracking-wider block mb-1">{label}</label>
+                  <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">{label}</label>
                   <input
                     type="text"
                     value={(form as any)[key]}
                     onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
-                    className="w-full bg-[#0d1322] border border-slate-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-amber-500"
+                    className="w-full glass-input text-white px-3 py-2 rounded-xl text-xs font-mono focus:outline-none"
                   />
                 </div>
               ))}
@@ -184,22 +188,22 @@ export default function MandatesPage() {
                 { label: "Daily Budget (₹)", key: "daily_budget_inr" },
               ].map(({ label, key }) => (
                 <div key={key}>
-                  <label className="text-xs text-slate-400 font-bold uppercase tracking-wider block mb-1">{label}</label>
+                  <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">{label}</label>
                   <input
                     type="number"
                     value={(form as any)[key]}
                     onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
-                    className="w-full bg-[#0d1322] border border-slate-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-amber-500"
+                    className="w-full glass-input text-white px-3 py-2 rounded-xl text-xs font-mono focus:outline-none"
                   />
                 </div>
               ))}
               <div>
-                <label className="text-xs text-slate-400 font-bold uppercase tracking-wider block mb-1">Expires At</label>
+                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Expires At</label>
                 <input
                   type="date"
                   value={form.expires_at}
                   onChange={(e) => setForm((f) => ({ ...f, expires_at: e.target.value }))}
-                  className="w-full bg-[#0d1322] border border-slate-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-amber-500"
+                  className="w-full glass-input text-white px-3 py-2 rounded-xl text-xs font-mono focus:outline-none"
                 />
               </div>
             </div>
@@ -207,61 +211,90 @@ export default function MandatesPage() {
               <button
                 onClick={handleCreate}
                 disabled={creating}
-                className="bg-amber-600 hover:bg-amber-500 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition disabled:opacity-50"
+                className="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-xl text-sm transition disabled:opacity-50 hover:scale-[1.02]"
               >
                 {creating ? "Creating..." : "⚡ Create & Activate Mandate"}
               </button>
-              <button onClick={() => setShowCreate(false)} className="text-xs text-slate-400 hover:text-white">Cancel</button>
+              <button onClick={() => setShowCreate(false)} className="text-xs font-semibold text-slate-400 hover:text-white">Cancel</button>
               {createMsg && <span className={`text-xs font-bold ${createMsg.startsWith("Error") ? "text-red-400" : "text-emerald-400"}`}>{createMsg}</span>}
             </div>
           </section>
         )}
 
         {/* Mandates List */}
-        <section className="bg-[#111827] border border-slate-800 p-6 rounded-2xl shadow-xl">
-          <div className="flex justify-between items-center mb-5">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <span className="w-2 h-2 bg-amber-500 rounded-full" />
-              Active Authorization Mandates ({mandates.length})
-            </h2>
-            <span className="text-xs font-mono text-slate-500">LIVE — BACKEND VERIFIED</span>
+        {loading ? (
+          <div className="py-16 text-center">
+            <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-sm font-semibold text-slate-300">Loading mandate policy ledger...</p>
           </div>
+        ) : error && mandates.length === 0 ? (
+          <div className="py-12 text-center glass-card rounded-2xl border-dashed">
+            <p className="text-sm text-slate-400">{error}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {mandates.map((m) => {
+              const maxInr = (m.max_amount_paise / 100).toLocaleString();
+              const dailyInr = (m.daily_budget_paise / 100).toLocaleString();
+              const usedInr = ((m.used_today_paise || 0) / 100).toLocaleString();
+              const isRevoking = revoking === m.mandate_id;
 
-          {loading ? (
-            <div className="py-12 text-center text-slate-400 text-sm">
-              <div className="inline-block w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mb-2" />
-              <p>Fetching mandate records from backend...</p>
-            </div>
-          ) : error && mandates.length === 0 ? (
-            <div className="py-12 text-center text-slate-500 text-sm border border-dashed border-slate-800 rounded-xl">
-              {error}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {mandates.map((m) => (
-                <div key={m.mandate_id} className="bg-[#0d1322] border border-slate-800 rounded-xl p-5 space-y-3 hover:border-slate-700 transition">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <span className="font-mono font-bold text-white text-sm">{m.mandate_id}</span>
-                      <span className={`text-xs px-2.5 py-0.5 rounded-md border font-bold ${statusColor(m.status)}`}>
-                        {m.status}
-                      </span>
+              return (
+                <div key={m.mandate_id} className="glass-panel p-6 rounded-2xl space-y-4 hover:border-white/[0.2] transition-all duration-300">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="text-[10px] font-mono text-slate-400 block mb-0.5">MANDATE ID</span>
+                      <h3 className="font-mono font-bold text-base text-white">{m.mandate_id}</h3>
                     </div>
-                    {m.status === "ACTIVE" && (
-                      <button
-                        onClick={() => handleRevoke(m.mandate_id)}
-                        disabled={revoking === m.mandate_id}
-                        className="text-xs bg-red-600/80 hover:bg-red-600 text-white font-bold py-1.5 px-4 rounded-lg transition disabled:opacity-50"
-                      >
-                        {revoking === m.mandate_id ? "Revoking..." : "✕ Revoke"}
-                      </button>
-                    )}
+                    <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border ${statusColor(m.status)}`}>
+                      {m.status}
+                    </span>
                   </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div>
-                      <span className="text-xs text-slate-500 uppercase tracking-wider block mb-1">Buyer</span>
-                      <span className="text-sm font-mono text-slate-300">{m.buyer_id}</span>
+                  <div className="grid grid-cols-2 gap-3 text-xs pt-1 border-t border-white/[0.08]">
+                    <div className="bg-[#080d18] border border-white/[0.06] p-3 rounded-xl">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block mb-0.5">Single-Tx Cap</span>
+                      <span className="font-mono font-extrabold text-amber-400 text-sm">₹{maxInr}</span>
+                    </div>
+                    <div className="bg-[#080d18] border border-white/[0.06] p-3 rounded-xl">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block mb-0.5">Daily Budget</span>
+                      <span className="font-mono font-extrabold text-emerald-400 text-sm">₹{dailyInr}</span>
+                      <span className="text-[10px] text-slate-500 block mt-0.5">Used today: ₹{usedInr}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 text-xs text-slate-300">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400 font-medium">Buyer:</span>
+                      <span className="font-mono text-slate-200">{m.buyer_id}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400 font-medium">Allowed Merchants:</span>
+                      <span className="font-mono text-slate-200 truncate max-w-[200px]">
+                        {m.allowed_merchants ? m.allowed_merchants.join(", ") : "ALL"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400 font-medium">Allowed Categories:</span>
+                      <span className="font-mono text-slate-200 truncate max-w-[200px]">
+                        {m.allowed_categories ? m.allowed_categories.join(", ") : "all"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-[11px] text-slate-400 pt-1">
+                      <span>Expires:</span>
+                      <span className="font-mono">{m.expires_at ? new Date(m.expires_at).toLocaleDateString("en-IN") : "Never"}</span>
+                    </div>
+                  </div>
+
+                  {m.status === "ACTIVE" && (
+                    <div className="pt-2 border-t border-white/[0.08] flex justify-end">
+                      <button
+                        onClick={() => handleRevoke(m.mandate_id)}
+                        disabled={isRevoking}
+                        className="text-xs font-bold bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-4 py-2 rounded-xl transition disabled:opacity-50"
+                      >
+                        {isRevoking ? "Revoking..." : "🚫 Instant Revoke Mandate"}
+                      </button>
                     </div>
                     <div>
                       <span className="text-xs text-slate-500 uppercase tracking-wider block mb-1">Single Cap</span>

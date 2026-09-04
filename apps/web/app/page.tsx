@@ -197,7 +197,8 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#050810] text-slate-100 font-sans overflow-x-hidden">
+  return (
+    <div className="min-h-screen bg-[#040711] text-slate-100 font-sans overflow-x-hidden">
       <Navbar />
 
       {/* Hero Section */}
@@ -205,53 +206,53 @@ export default function HomePage() {
         {/* Particle Canvas background */}
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 w-full h-full pointer-events-none opacity-60"
+          className="absolute inset-0 w-full h-full pointer-events-none opacity-50"
         />
         {/* Cyber grid overlay */}
-        <div className="absolute inset-0 cyber-grid opacity-20 pointer-events-none" />
+        <div className="absolute inset-0 cyber-grid opacity-15 pointer-events-none" />
         {/* Radial gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#050810]/60 to-[#050810] pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#040711]/70 to-[#040711] pointer-events-none" />
 
-        <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-16 text-center">
+        <div className="relative max-w-7xl mx-auto px-6 pt-16 pb-14 text-center">
           {/* Status pill */}
           <div className="flex justify-center items-center gap-3 mb-6 flex-wrap">
-            <span className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-orange-400 bg-orange-500/10 px-4 py-1.5 rounded-full border border-orange-500/20">
+            <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-orange-400 bg-orange-500/10 px-4 py-1.5 rounded-full border border-orange-500/20 backdrop-blur-md">
               🏆 Autonomous AI Commerce Trust Protocol
             </span>
             {apiHealthy !== null && (
-              <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border ${
+              <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border backdrop-blur-md transition-colors ${
                 apiHealthy
                   ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                   : "bg-red-500/10 text-red-400 border-red-500/20"
               }`}>
-                <span className={`w-2 h-2 rounded-full animate-pulse ${apiHealthy ? "bg-emerald-500" : "bg-red-500"}`} />
+                <span className={`w-2 h-2 rounded-full animate-pulse ${apiHealthy ? "bg-emerald-400" : "bg-red-400"}`} />
                 {apiHealthy ? "ALL SYSTEMS LIVE" : "API OFFLINE"}
               </span>
             )}
           </div>
 
           {/* Main heading */}
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight mb-5 leading-none">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-5 leading-tight text-white">
             <span className="text-white block">Mandate</span>
             <span className="gradient-text block">Gateway</span>
-            <span className="text-slate-400 text-3xl md:text-4xl font-bold block mt-2">Control Hub</span>
+            <span className="text-slate-400 text-2xl md:text-3xl font-bold block mt-2 tracking-normal">AI Commerce Safety & Settlement Layer</span>
           </h1>
 
-          <p className="text-slate-400 text-base md:text-lg max-w-3xl mx-auto leading-relaxed mb-10">
-            Production-grade AI commerce foundation enforcing fail-closed product truth, Model Context Protocol (MCP) JSON-RPC tool boundaries, 5-layer payment safety, and <span className="text-emerald-400 font-semibold">Ed25519 signed</span> transaction receipts. Built for <span className="text-orange-400 font-semibold">Razorpay Raze competition</span>.
+          <p className="text-slate-300 text-base md:text-lg max-w-3xl mx-auto leading-relaxed mb-8 font-normal">
+            Production-grade AI commerce foundation enforcing fail-closed product truth, Model Context Protocol (MCP) JSON-RPC tool boundaries, 5-layer payment safety, and <span className="text-emerald-400 font-semibold">Ed25519 signed</span> transaction receipts. Built for <span className="text-orange-400 font-semibold">Razorpay Raze 2026 Buildathon</span>.
           </p>
 
           {/* CTA buttons */}
-          <div className="flex flex-wrap gap-3 justify-center mb-16">
+          <div className="flex flex-wrap gap-3 justify-center mb-14">
             <Link
               href="/buyer"
-              className="px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-400 hover:to-orange-300 text-white font-black text-sm rounded-2xl shadow-xl shadow-orange-500/25 transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 flex items-center gap-2"
+              className="px-7 py-3.5 bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-400 hover:to-orange-300 text-white font-bold text-sm rounded-2xl shadow-xl shadow-orange-500/20 transition-all duration-300 hover:scale-[1.02] flex items-center gap-2"
             >
               🤖 Launch AI Buyer Demo
             </Link>
             <Link
               href="/mcp"
-              className="px-8 py-4 bg-[#0c1120] hover:bg-[#111827] border border-[#1e2d40] hover:border-indigo-500/40 text-white font-bold text-sm rounded-2xl transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 flex items-center gap-2"
+              className="px-7 py-3.5 bg-[#090d1a] hover:bg-[#0e1428] border border-white/[0.1] hover:border-indigo-500/40 text-white font-semibold text-sm rounded-2xl transition-all duration-300 hover:scale-[1.02] flex items-center gap-2"
             >
               ⚡ Explore MCP Tools
             </Link>
@@ -259,7 +260,7 @@ export default function HomePage() {
               href="http://localhost:8000/docs"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-8 py-4 bg-[#0c1120] hover:bg-[#111827] border border-[#1e2d40] hover:border-emerald-500/40 text-slate-300 hover:text-white font-bold text-sm rounded-2xl transition-all duration-200 flex items-center gap-2"
+              className="px-7 py-3.5 bg-[#090d1a] hover:bg-[#0e1428] border border-white/[0.1] hover:border-emerald-500/40 text-slate-300 hover:text-white font-semibold text-sm rounded-2xl transition-all duration-300 flex items-center gap-2"
             >
               📖 API Swagger Docs ↗
             </a>
@@ -268,19 +269,19 @@ export default function HomePage() {
       </section>
 
       {/* Live Stats Grid */}
-      <section className="max-w-7xl mx-auto px-6 mb-16">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <section className="max-w-7xl mx-auto px-6 mb-14">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
           {liveStats.map((stat, i) => {
             const c = colorMap[stat.color] || colorMap.indigo;
             return (
               <div
                 key={i}
-                className={`bg-[#0c1120] border ${c.border} rounded-2xl p-4 text-center hover:bg-[#0f1628] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${c.glow}`}
+                className={`glass-card rounded-2xl p-4 text-center hover:-translate-y-0.5 transition-all duration-300 ${c.glow}`}
               >
                 <div className="text-xl mb-1">{stat.icon}</div>
-                <div className={`text-xl font-black ${c.text} leading-none mb-0.5`}>{stat.value}</div>
-                <div className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">{stat.sub}</div>
-                <div className="text-[10px] text-slate-600 mt-0.5">{stat.label}</div>
+                <div className={`text-2xl font-black ${c.text} leading-none mb-1`}>{stat.value}</div>
+                <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">{stat.sub}</div>
+                <div className="text-[11px] text-slate-500 mt-0.5 font-medium">{stat.label}</div>
               </div>
             );
           })}
