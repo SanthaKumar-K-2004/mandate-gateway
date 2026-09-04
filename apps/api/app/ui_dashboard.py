@@ -1006,30 +1006,53 @@ def get_dashboard_html() -> str:
             const opt = data.optimization_result || {};
             const bestCart = opt.best_recommended_cart || {};
             const rawItems = bestCart.items || [];
-            
-            const fallbackImgs = [
-                "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=400&q=80",
-                "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=400&q=80",
-                "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=400&q=80"
-            ];
 
             if (rawItems.length > 0) {
                 window.currentProducts = rawItems.map(function(it, i) {
                     const price = it.price_inr || (it.price_paise ? it.price_paise / 100 : 150.0);
+                    const tLower = (it.title || "").toLowerCase();
+                    let categoryImg = "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=400&q=80";
+                    if (tLower.includes("mouse") || tLower.includes("mice")) {
+                        categoryImg = "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=400&q=80";
+                    } else if (tLower.includes("keyboard") || tLower.includes("keypad")) {
+                        categoryImg = "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=400&q=80";
+                    } else if (tLower.includes("monitor") || tLower.includes("display")) {
+                        categoryImg = "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=400&q=80";
+                    } else if (tLower.includes("headphone") || tLower.includes("audio") || tLower.includes("sound")) {
+                        categoryImg = "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=400&q=80";
+                    } else if (tLower.includes("chair") || tLower.includes("desk") || tLower.includes("office")) {
+                        categoryImg = "https://images.unsplash.com/photo-1580481072645-022f9a6d1209?auto=format&fit=crop&w=400&q=80";
+                    } else if (tLower.includes("tea")) {
+                        categoryImg = "https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=400&q=80";
+                    } else if (tLower.includes("biscuit") || tLower.includes("cookie")) {
+                        categoryImg = "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=400&q=80";
+                    } else if (tLower.includes("coffee")) {
+                        categoryImg = "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=400&q=80";
+                    }
+
                     return {
                         product_id: it.product_id || ("prod_candidate_" + i),
                         title: it.title || it.name || "Real Merchant Candidate",
                         price_inr: price,
                         price_paise: Math.round(price * 100),
-                        merchant_name: it.merchant_name || it.merchant_domain || "OpenFoodFacts Public Catalog",
+                        merchant_name: it.merchant_name || it.merchant_domain || "Open Commerce Catalog",
                         merchant_domain: it.merchant_domain || "world.openfoodfacts.org",
                         product_url: it.product_url || "https://world.openfoodfacts.org",
-                        img_url: it.image_url || it.img_url || fallbackImgs[i % fallbackImgs.length],
-                        category: it.category || "groceries",
+                        img_url: (it.image_url && it.image_url.length > 5) ? it.image_url : categoryImg,
+                        category: it.category || "general",
                         selected: true,
                         sha256_hash: it.evidence_hash || "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
                     };
                 });
+
+                // Dynamically align Category Scope input with discovered product categories
+                const catInput = document.getElementById('inp-category-scope');
+                if (catInput) {
+                    const discoveredCategories = Array.from(new Set(window.currentProducts.map(p => p.category))).join(', ');
+                    if (discoveredCategories) {
+                        catInput.value = discoveredCategories + ', coffee, groceries, electronics, office, supplies';
+                    }
+                }
             }
 
             window.recalculateCartTotal();
@@ -1042,7 +1065,7 @@ def get_dashboard_html() -> str:
                     return '<div class="product-card ' + selClass + '" id="prod-card-' + idx + '" onclick="window.toggleProductSelection(' + idx + ')">' +
                         '<div class="product-card-top">' +
                             '<div class="product-img-wrapper">' +
-                                '<img src="' + it.img_url + '" alt="' + it.title + '" class="product-img" onerror="this.src=\'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=400&q=80\'">' +
+                                '<img src="' + it.img_url + '" alt="' + it.title + '" class="product-img" onerror="this.src=\'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=400&q=80\'">' +
                             '</div>' +
                             '<div class="product-info">' +
                                 '<div class="product-title-text">' + it.title + '</div>' +
