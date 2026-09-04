@@ -882,8 +882,14 @@ def create_fastapi_app(settings: Optional[Settings] = None) -> Any:
 
         api_app.add_middleware(
             CORSMiddleware,
-            allow_origins=["*"],
-            allow_credentials=True,
+            allow_origins=[
+                "http://localhost:3000",
+                "http://127.0.0.1:3000",
+                "http://localhost:8000",
+                "http://127.0.0.1:8000",
+                "*",
+            ],
+            allow_credentials=False,
             allow_methods=["*"],
             allow_headers=["*"],
         )
