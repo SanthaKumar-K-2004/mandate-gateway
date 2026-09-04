@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
 import Navbar from "../components/Navbar";
 
 const API = "http://localhost:8000";
@@ -296,35 +295,12 @@ export default function MandatesPage() {
                         {isRevoking ? "Revoking..." : "🚫 Instant Revoke Mandate"}
                       </button>
                     </div>
-                    <div>
-                      <span className="text-xs text-slate-500 uppercase tracking-wider block mb-1">Single Cap</span>
-                      <span className="text-base font-extrabold text-amber-400">₹{((m.max_amount_paise || 0) / 100).toLocaleString()}</span>
-                    </div>
-                    <div>
-                      <span className="text-xs text-slate-500 uppercase tracking-wider block mb-1">Daily Budget</span>
-                      <span className="text-base font-extrabold text-blue-400">₹{((m.daily_budget_paise || 0) / 100).toLocaleString()}</span>
-                    </div>
-                    <div>
-                      <span className="text-xs text-slate-500 uppercase tracking-wider block mb-1">Expires</span>
-                      <span className="text-sm font-mono text-slate-300">{m.expires_at ? new Date(m.expires_at).toLocaleDateString("en-IN") : "—"}</span>
-                    </div>
-                  </div>
-
-                  {(m.allowed_categories?.length > 0 || m.allowed_merchants?.length > 0) && (
-                    <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-800/60">
-                      {m.allowed_categories?.map((c) => (
-                        <span key={c} className="text-[11px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded font-semibold">{c}</span>
-                      ))}
-                      {m.allowed_merchants?.map((merch) => (
-                        <span key={merch} className="text-[11px] bg-slate-800 text-slate-400 border border-slate-700 px-2 py-0.5 rounded font-mono">{merch}</span>
-                      ))}
-                    </div>
                   )}
                 </div>
-              ))}
-            </div>
-          )}
-        </section>
+              );
+            })}
+          </div>
+        )}
       </main>
     </div>
   );
