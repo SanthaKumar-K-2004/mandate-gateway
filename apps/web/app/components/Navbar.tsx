@@ -8,6 +8,14 @@ export default function Navbar() {
   const pathname = usePathname();
   const [backendStatus, setBackendStatus] = useState<"checking" | "online" | "offline">("checking");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState<string>("");
+
+  useEffect(() => {
+    const update = () => setCurrentTime(new Date().toLocaleTimeString("en-IN", { hour12: false }));
+    update();
+    const timer = setInterval(update, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const check = async () => {
@@ -42,7 +50,7 @@ export default function Navbar() {
         </span>
         <div className="flex items-center gap-3">
           <span className="text-[10px] font-mono text-slate-600">
-            {new Date().toLocaleTimeString("en-IN", { hour12: false })} IST
+            {currentTime ? `${currentTime} IST` : "LIVE IST"}
           </span>
           <div
             className={`flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full border ${
