@@ -1042,5 +1042,10 @@ def create_fastapi_app(settings: Optional[Settings] = None) -> Any:
         api_app.include_router(observability_router)
 
         return api_app
-    except ImportError:  # pragma: no cover
+    except ImportError as err:  # pragma: no cover
+        import logging
+
+        logging.getLogger("mandate_gateway").error(
+            f"Failed to create FastAPI app due to import error: {err}"
+        )
         return None

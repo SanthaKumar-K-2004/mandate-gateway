@@ -143,9 +143,9 @@ class MultiSourceDiscoveryEngine:
                     price_paise = int(price_match.group(1).replace(",", "")) * 100
 
                 if not price_paise or price_paise > max_price_paise:
-                    price_paise = min(
-                        max_price_paise, max(14900, int(max_price_paise * (0.4 + (idx * 0.15))))
-                    )
+                    base_fraction = 0.35 + (idx * 0.15)
+                    calc_val = int(max_price_paise * base_fraction)
+                    price_paise = max(500, min(max_price_paise, calc_val))
 
                 # Select high-res thumbnail matching product domain
                 img = IMG_GENERAL
@@ -315,9 +315,9 @@ class MultiSourceDiscoveryEngine:
                     r"^(?:find|buy|get|search for)\s+", "", query, flags=re.IGNORECASE
                 ).title()
                 calc_price = (
-                    min(max_price_paise, max(50000, int(max_price_paise * 0.75)))
+                    min(max_price_paise, max(500, int(max_price_paise * 0.75)))
                     if max_price_paise > 0
-                    else 99000
+                    else 9900
                 )
                 prod_url = f"https://world.openfoodfacts.org/product/{abs(hash(clean_title))}"
                 item = CanonicalProduct.create(
