@@ -26,7 +26,9 @@ class ForensicEventModel(Base):
     correlation_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, index=True)
     request_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, index=True)
     trace_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, index=True)
-    actor_principal_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, index=True)
+    actor_principal_id: Mapped[Optional[str]] = mapped_column(
+        String(128), nullable=True, index=True
+    )
     merchant_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
     target_resource: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, index=True)
     outcome: Mapped[str] = mapped_column(String(32), nullable=False, index=True)

@@ -14,6 +14,7 @@ from typing import Any, Dict, Optional
 
 try:
     import redis.asyncio as aioredis
+
     HAS_REDIS = True
 except ImportError:
     aioredis = None  # type: ignore[assignment]

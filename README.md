@@ -8,11 +8,12 @@
 [![Version](https://img.shields.io/badge/version-v1.0.0-blue)](https://github.com/SanthaKumar-K-2004/mandate-gateway/releases/tag/v1.0.0)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
+> [!IMPORTANT]
 > **Disclaimer Notice**: Mandate Gateway is an independent open-source AI commerce safety project. It is **NOT** affiliated with, endorsed by, or connected to **Razorpay Software Private Limited**.
 
 ---
 
-## The Problem
+## 💡 The Problem
 
 Every AI shopping assistant today has the same fundamental flaw: it will **invent data** to seem helpful. Fabricated prices, unverified availability, hallucinated delivery fees — all presented as fact. When the system is wrong, the user pays for it — sometimes literally.
 
@@ -20,7 +21,7 @@ Worse: most AI commerce agents have **no meaningful payment safety** layer. A si
 
 ---
 
-## The Solution
+## 🛡️ The Solution
 
 Mandate Gateway is an AI commerce agent built on a single uncompromising principle:
 
@@ -31,7 +32,7 @@ Mandate Gateway is an AI commerce agent built on a single uncompromising princip
 | Innovation | Description |
 |-----------|-------------|
 | **Fail-Closed Product Truth** | Product facts are verified against live APIs. Unverified products block checkout execution — no exceptions. |
-| **Honest Unknown Disclosure** | Shipping fees, taxes, and any unverifiable cost are shown as `UNKNOWN`, never estimated. |
+| **Honest Unknown Disclosure** | Shipping fees, taxes, and any unverifiable cost are shown as `UNKNOWN`, never estimated as ₹0. |
 | **Defense-in-Depth Safety** | Defense-in-depth across five enforcement layers prevents any payment effect from executing twice. |
 | **Cryptographic Human Gate** | HMAC-SHA256 single-use tokens bind every payment confirmation to its exact request, amount, and buyer identity. |
 | **MCP Execution Barrier** | Direct payment and order-creation tools are **blocked** from discovery and execution via autonomous MCP clients. |
@@ -40,62 +41,65 @@ Mandate Gateway is an AI commerce agent built on a single uncompromising princip
 
 ---
 
-## End-to-End System Architecture
+## 🏗️ End-to-End System Architecture
 
-```text
-User Input (Natural Language)
-        │
-        ▼
-   AI Agent Runtime  ←─(RESTRICTED)─X─  MCP Protocol Layer (13 discovery tools exposed; 3 execution tools BLOCKED)
-        │
-        ▼
-   Multi-Item Intent Parser → Parallel Cart Research Engine
-        │
-        ▼
-   Live Data Providers & Connectors
-   ├── PublicPlatformConnector  [world.openfoodfacts.org]  LIVE_CATALOG_API (Live product intelligence)
-   ├── RealPlatformConnector    [cafeacme.local]           SANDBOX (Authenticated test merchant API)
-   └── GenericWebConnector      [Validated HTTPS URLs]     CHECKOUT_HANDOFF (Redirect handoff URL only)
-        │
-        ▼
-   Product Truth Engine  →  PRODUCT_VERIFIED / SOURCE_BACKED / UNVERIFIED
-        │
-        ▼
-   Multi-Merchant Discovery → Cart Combination Optimizer → Recommendation Engine
-        │
-        ▼
-   Checkout Orchestrator (live price re-validation → plan hash binding)
-        │
-        ▼
-   ┌─ STOP: Human Confirmation Required ───────────────────────────────────────┐
-   │  HMAC-SHA256 single-use token                                             │
-   │  All UNKNOWN fees explicitly rendered                                      │
-   │  Human reads, confirms, and submits single-use token                      │
-   └───────────────────────────────────────────────────────────────────────────┘
-        │
-        ▼
-   Payment Safety Layer (nonce + replay + budget + step-up challenge)
-        │
-        ▼
-   Order Binding (1:1 cryptographic transaction ↔ order binding)
-        │
-        ▼
-   Reconciliation Engine → BOTH_CONFIRMED / PAYMENT_ONLY / UNRESOLVED
-        │
-        ▼
-   Monitoring & Operations (Prometheus + Grafana + Structured Logging + Incident Engine)
+```mermaid
+flowchart TD
+    User([User Natural Language Prompt]) --> Agent[AI Agent Runtime]
+    Agent --> Extractor[Multi-Item Intent Extractor]
+    
+    subgraph Discovery ["Multi-Merchant Commerce Discovery"]
+        Extractor --> ResearchEngine[Parallel Cart Research Engine]
+        ResearchEngine --> OFF["PublicPlatformConnector<br>(world.openfoodfacts.org LIVE API)"]
+        ResearchEngine --> Acme["RealPlatformConnector<br>(cafeacme.local SANDBOX API)"]
+        ResearchEngine --> Web["GenericWebConnector<br>(Validated HTTPS URLs)"]
+    end
+
+    OFF & Acme & Web --> TruthEngine[Product Truth Engine]
+    TruthEngine --> Verified{Product Verified?}
+    Verified -- No --> Unverified[Flag UNVERIFIED / Reject]
+    Verified -- Yes --> Optimizer[Cart Combination Optimizer]
+    
+    Optimizer --> CostTruth[Total Cost Truth Model]
+    CostTruth --> Fees{Fees Verified?}
+    Fees -- No --> Disclose[Disclose UNKNOWN Fees]
+    Fees -- Yes --> MandateCheck[Buyer Mandate Policy Engine]
+    
+    Disclose --> MandateCheck
+    MandateCheck --> AuthChoice{Autonomous Limit?}
+    AuthChoice -- Exceeded --> StepUp[Human Step-Up Challenge]
+    AuthChoice -- Within Limit --> SingleUseGate[HMAC-SHA256 Token Gate]
+    
+    StepUp --> HumanConfirm([Human Confirmation])
+    HumanConfirm --> SingleUseGate
+    
+    SingleUseGate --> SafetyLayer[5-Layer Payment Safety System]
+    SafetyLayer --> OrderBinder[1:1 Cryptographic Order Binding]
+    OrderBinder --> Settlement[Razorpay Payment Settlement Rail]
+    Settlement --> AuditLedger[(SHA-256 Cryptographic Audit Ledger)]
 ```
 
 Full architecture specification: [`docs/FINAL_ARCHITECTURE.md`](docs/FINAL_ARCHITECTURE.md)
 
 ---
 
-## Defense-in-Depth Payment Safety
+## 🔒 Defense-in-Depth Payment Safety
 
 ### Core Invariant
 > **NO PAYMENT EFFECT MAY ACCIDENTALLY EXECUTE TWICE.**
 
 Enforced by **defense-in-depth across five enforcement layers**:
+
+```mermaid
+flowchart LR
+    req[Payment Request] --> L1["Layer 1: Token Gate<br>Single-Use HMAC-SHA256 Token"]
+    L1 --> L2["Layer 2: Execution Layer<br>DB-Persisted Cryptographic Nonce"]
+    L2 --> L3["Layer 3: Request Layer<br>Fingerprint & Replay Protection"]
+    L3 --> L4["Layer 4: Binding Layer<br>1:1 Transaction ↔ Order Binding"]
+    L4 --> L5["Layer 5: Reconciliation Layer<br>Idempotent Ledger Hash Verification"]
+    L5 --> Pass[COMMITTED & SETTLED]
+```
+
 1. **Gate Layer**: HMAC-SHA256 single-use confirmation tokens (consumed on first verification attempt).
 2. **Execution Layer**: DB-persisted single-use cryptographic nonces.
 3. **Request Layer**: Cryptographic request fingerprinting & replay rejection.
@@ -104,7 +108,7 @@ Enforced by **defense-in-depth across five enforcement layers**:
 
 ---
 
-## Live Data & Reality Classification
+## 📊 Live Data & Reality Classification
 
 Mandate Gateway distinguishes live, sandbox, and handoff capabilities explicitly and does not classify sandbox data as real merchant commerce.
 
@@ -124,7 +128,7 @@ Full capability breakdown: [`docs/FINAL_CAPABILITY_MATRIX.md`](docs/FINAL_CAPABI
 
 ---
 
-## Authoritative Test Accounting
+## 🧪 Authoritative Test Accounting
 
 ### Primary Test Suite
 ```bash
@@ -140,7 +144,7 @@ PYTHONPATH=. python3 -m unittest discover -s tests -p "test_*.py"
 
 ---
 
-## Quick Start
+## ⚡ Quick Start
 
 ### Prerequisites
 - Python 3.10+
@@ -178,7 +182,7 @@ PYTHONPATH=. python3 scripts/mcp_client_test_runner.py
 
 ---
 
-## Documentation Index
+## 📚 Documentation Index
 
 - [`docs/FINAL_ARCHITECTURE.md`](docs/FINAL_ARCHITECTURE.md) — System architecture, request flows, and component registry.
 - [`docs/FINAL_CAPABILITY_MATRIX.md`](docs/FINAL_CAPABILITY_MATRIX.md) — Honest capability classification matrix.
@@ -188,7 +192,7 @@ PYTHONPATH=. python3 scripts/mcp_client_test_runner.py
 
 ---
 
-## Roadmap Status
+## 🗺️ Roadmap Status
 
 | Milestone | Status | Description |
 |-----------|--------|-------------|
@@ -205,6 +209,6 @@ PYTHONPATH=. python3 scripts/mcp_client_test_runner.py
 
 ---
 
-## License
+## 📄 License
 
 MIT License — see [`LICENSE`](LICENSE) for details.

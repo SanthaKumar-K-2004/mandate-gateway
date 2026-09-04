@@ -150,6 +150,7 @@ class TransactionRepository(BaseRepository[TransactionModel]):
     ) -> Sequence[TransactionModel]:
         """Retrieve transactions stuck in EXECUTING state."""
         from datetime import datetime, timedelta, timezone
+
         cutoff = datetime.now(timezone.utc) - timedelta(seconds=stuck_threshold_seconds)
         return await self.list_transactions_requiring_reconciliation(cutoff=cutoff)
 

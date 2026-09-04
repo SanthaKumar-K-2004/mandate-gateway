@@ -60,6 +60,7 @@ class MandateGatewayApp:
             environment=self.settings.app_env.value,
             log_level=self.settings.log_level.value,
         )
+        self._fastapi_app: Optional[Any] = None
 
     def startup(self) -> None:
         """Triggers application startup sequence."""
@@ -200,8 +201,12 @@ class MandateGatewayApp:
                 {
                     "total_incidents": len(incidents),
                     "forensic_events": len(forensics),
-                    "security_incidents": len([i for i in incidents if i.classification == "SECURITY"]),
-                    "reliability_incidents": len([i for i in incidents if i.classification == "RELIABILITY"]),
+                    "security_incidents": len(
+                        [i for i in incidents if i.classification == "SECURITY"]
+                    ),
+                    "reliability_incidents": len(
+                        [i for i in incidents if i.classification == "RELIABILITY"]
+                    ),
                     "abuse_incidents": len([i for i in incidents if i.classification == "ABUSE"]),
                 },
                 False,
@@ -227,18 +232,25 @@ class MandateGatewayApp:
 
         try:
             from db.session import (
-                initialize_database, get_async_session_factory,
-                ensure_sqlite_tables, check_database_health,
-                _async_engine as _current_engine,
+                initialize_database,
+                get_async_session_factory,
+                ensure_sqlite_tables,
+                check_database_health,
             )
             import db.session as _db_session
+
             if get_async_session_factory() is None:
                 initialize_database(self.settings)
             # Verify connection is actually working; fall back to SQLite if not
             health = await check_database_health(self.settings)
             if not health.get("connected"):
                 # Reset to SQLite in-memory fallback
-                from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+                from sqlalchemy.ext.asyncio import (
+                    create_async_engine,
+                    async_sessionmaker,
+                    AsyncSession,
+                )
+
                 _db_session._async_engine = create_async_engine(
                     "sqlite+aiosqlite:///:memory:",
                     connect_args={"check_same_thread": False},
@@ -362,7 +374,10 @@ class MandateGatewayApp:
         except Exception as exc:
             exc_str = str(exc).strip() or repr(type(exc).__name__)
             # Check if this is a DB connectivity issue
-            if any(kw in exc_str.lower() for kw in ("connect", "connection", "refused", "timeout", "resolve", "host")):
+            if any(
+                kw in exc_str.lower()
+                for kw in ("connect", "connection", "refused", "timeout", "resolve", "host")
+            ):
                 msg = (
                     f"Database unavailable ({exc_str}). "
                     "Run via docker-compose for full DB-backed demo: `docker-compose up`"
@@ -384,7 +399,12 @@ class MandateGatewayApp:
     async def _dispatch_audit_verify(self, req_id: str) -> tuple[int, Any, bool]:
         """Verify the audit chain integrity."""
         try:
-            from db.session import initialize_database, get_async_session_factory, ensure_sqlite_tables
+            from db.session import (
+                initialize_database,
+                get_async_session_factory,
+                ensure_sqlite_tables,
+            )
+
             if get_async_session_factory() is None:
                 initialize_database(self.settings)
             await ensure_sqlite_tables()
@@ -430,55 +450,158 @@ class MandateGatewayApp:
     async def _dispatch_transactions_list(self, req_id: str) -> tuple[int, Any, bool]:
         """List all transactions from the database."""
         try:
-            from db.session import initialize_database, get_async_session_factory, ensure_sqlite_tables, check_database_health
+            from db.session import (
+                initialize_database,
+                get_async_session_factory,
+                ensure_sqlite_tables,
+                check_database_health,
+            )
             import db.session as _db_session
+
             if get_async_session_factory() is None:
                 initialize_database(self.settings)
             health = await check_database_health(self.settings)
             if not health.get("connected"):
-                from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-                _db_session._async_engine = create_async_engine("sqlite+aiosqlite:///:memory:", connect_args={"check_same_thread": False}, echo=False)
-                _db_session._async_session_factory = async_sessionmaker(bind=_db_session._async_engine, class_=AsyncSession, expire_on_commit=False, autoflush=False)
+                from sqlalchemy.ext.asyncio import (
+                    create_async_engine,
+                    async_sessionmaker,
+                    AsyncSession,
+                )
+
+                _db_session._async_engine = create_async_engine(
+                    "sqlite+aiosqlite:///:memory:",
+                    connect_args={"check_same_thread": False},
+                    echo=False,
+                )
+                _db_session._async_session_factory = async_sessionmaker(
+                    bind=_db_session._async_engine,
+                    class_=AsyncSession,
+                    expire_on_commit=False,
+                    autoflush=False,
+                )
                 _db_session._sqlite_fallback_active = True
             await ensure_sqlite_tables()
             from db.unit_of_work import AsyncUnitOfWork
             from db.models.transaction import TransactionModel
             from sqlalchemy import select
         except ImportError:
-            return (503, {"error": {"code": "SERVICE_UNAVAILABLE", "message": "Database unavailable.", "request_id": req_id}}, False)
+            return (
+                503,
+                {
+                    "error": {
+                        "code": "SERVICE_UNAVAILABLE",
+                        "message": "Database unavailable.",
+                        "request_id": req_id,
+                    }
+                },
+                False,
+            )
         try:
             async with AsyncUnitOfWork() as uow:
                 result = await uow.session.execute(select(TransactionModel))
                 txs = list(result.scalars().all())
-                tx_list = [{"transaction_id": t.transaction_id, "merchant_id": t.merchant_id, "mandate_id": t.mandate_id, "amount_paise": t.amount_paise, "state": t.state, "provider_status": t.provider_status} for t in txs]
+                tx_list = [
+                    {
+                        "transaction_id": t.transaction_id,
+                        "merchant_id": t.merchant_id,
+                        "mandate_id": t.mandate_id,
+                        "amount_paise": t.amount_paise,
+                        "state": t.state,
+                        "provider_status": t.provider_status,
+                    }
+                    for t in txs
+                ]
             return (200, {"count": len(tx_list), "transactions": tx_list}, False)
         except Exception as exc:
-            return (500, {"error": {"code": "INTERNAL_SERVER_ERROR", "message": f"Failed to list transactions: {exc}", "request_id": req_id}}, False)
+            return (
+                500,
+                {
+                    "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": f"Failed to list transactions: {exc}",
+                        "request_id": req_id,
+                    }
+                },
+                False,
+            )
 
     async def _dispatch_outbox(self, req_id: str) -> tuple[int, Any, bool]:
         """List pending outbox events."""
         try:
-            from db.session import initialize_database, get_async_session_factory, ensure_sqlite_tables, check_database_health
+            from db.session import (
+                initialize_database,
+                get_async_session_factory,
+                ensure_sqlite_tables,
+                check_database_health,
+            )
             import db.session as _db_session
+
             if get_async_session_factory() is None:
                 initialize_database(self.settings)
             health = await check_database_health(self.settings)
             if not health.get("connected"):
-                from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-                _db_session._async_engine = create_async_engine("sqlite+aiosqlite:///:memory:", connect_args={"check_same_thread": False}, echo=False)
-                _db_session._async_session_factory = async_sessionmaker(bind=_db_session._async_engine, class_=AsyncSession, expire_on_commit=False, autoflush=False)
+                from sqlalchemy.ext.asyncio import (
+                    create_async_engine,
+                    async_sessionmaker,
+                    AsyncSession,
+                )
+
+                _db_session._async_engine = create_async_engine(
+                    "sqlite+aiosqlite:///:memory:",
+                    connect_args={"check_same_thread": False},
+                    echo=False,
+                )
+                _db_session._async_session_factory = async_sessionmaker(
+                    bind=_db_session._async_engine,
+                    class_=AsyncSession,
+                    expire_on_commit=False,
+                    autoflush=False,
+                )
                 _db_session._sqlite_fallback_active = True
             await ensure_sqlite_tables()
             from db.unit_of_work import AsyncUnitOfWork
         except ImportError:
-            return (503, {"error": {"code": "SERVICE_UNAVAILABLE", "message": "Database unavailable.", "request_id": req_id}}, False)
+            return (
+                503,
+                {
+                    "error": {
+                        "code": "SERVICE_UNAVAILABLE",
+                        "message": "Database unavailable.",
+                        "request_id": req_id,
+                    }
+                },
+                False,
+            )
         try:
             async with AsyncUnitOfWork() as uow:
                 pending = await uow.outbox.get_pending_events(limit=100)
-                pending_list = [{"event_id": e.outbox_id, "event_type": e.event_type, "aggregate_type": e.aggregate_type, "aggregate_id": e.aggregate_id, "created_at": e.created_at.isoformat() if e.created_at else None} for e in pending]
-            return (200, {"pending_count": len(pending_list), "pending_events": pending_list}, False)
+                pending_list = [
+                    {
+                        "event_id": e.outbox_id,
+                        "event_type": e.event_type,
+                        "aggregate_type": e.aggregate_type,
+                        "aggregate_id": e.aggregate_id,
+                        "created_at": e.created_at.isoformat() if e.created_at else None,
+                    }
+                    for e in pending
+                ]
+            return (
+                200,
+                {"pending_count": len(pending_list), "pending_events": pending_list},
+                False,
+            )
         except Exception as exc:
-            return (500, {"error": {"code": "INTERNAL_SERVER_ERROR", "message": f"Failed to list outbox: {exc}", "request_id": req_id}}, False)
+            return (
+                500,
+                {
+                    "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": f"Failed to list outbox: {exc}",
+                        "request_id": req_id,
+                    }
+                },
+                False,
+            )
 
     async def _dispatch_operator_route(
         self,

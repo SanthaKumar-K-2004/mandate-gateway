@@ -121,6 +121,7 @@ async def ensure_sqlite_tables() -> None:
     if not _sqlite_fallback_active or _async_engine is None:
         return
     from db.models.base import Base
+
     # Import all models so their metadata is registered
     import db.models.merchant  # noqa: F401
     import db.models.mandate  # noqa: F401
@@ -135,6 +136,7 @@ async def ensure_sqlite_tables() -> None:
     import db.models.step_up  # noqa: F401
     import db.models.webhook  # noqa: F401
     import db.models.receipt  # noqa: F401
+
     async with _async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     _sqlite_fallback_active = False  # Tables created, no need to re-run
@@ -211,4 +213,3 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
 def get_async_session_factory() -> Optional[async_sessionmaker[AsyncSession]]:
     """Return active async sessionmaker factory."""
     return _async_session_factory
-

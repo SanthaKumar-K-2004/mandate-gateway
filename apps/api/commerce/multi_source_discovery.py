@@ -114,9 +114,7 @@ class MultiSourceDiscoveryEngine:
                     availability="AVAILABLE",
                 )
             else:
-                prod_url = (
-                    "https://world.openfoodfacts.org/product/2000000000018/espresso-roast-coffee-250g"
-                )
+                prod_url = "https://world.openfoodfacts.org/product/2000000000018/espresso-roast-coffee-250g"
                 item = CanonicalProduct.create(
                     product_id="prod_off_coffee_250",
                     title="Espresso Roast Coffee Beans 250g",

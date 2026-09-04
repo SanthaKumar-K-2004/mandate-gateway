@@ -50,9 +50,7 @@ class ForensicRepository(BaseRepository[ForensicEventModel]):
         res = await self._session.execute(stmt)
         return list(res.scalars().all())
 
-    async def list_events_by_correlation_id(
-        self, correlation_id: str
-    ) -> list[ForensicEventModel]:
+    async def list_events_by_correlation_id(self, correlation_id: str) -> list[ForensicEventModel]:
         """Lists forensic events for a correlation ID."""
         stmt = (
             select(ForensicEventModel)
