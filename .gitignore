@@ -41,6 +41,8 @@ out/
 .nuxt/
 .vuepress/
 .cache/
+*.tsbuildinfo
+
 
 # Docker Local State
 .docker/
