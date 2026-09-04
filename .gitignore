@@ -75,4 +75,8 @@ temp/
 *.bak
 *.tar.gz
 video_script.md
+generate_voiceover.py
+*.mp3
+*.mp4
+
 
