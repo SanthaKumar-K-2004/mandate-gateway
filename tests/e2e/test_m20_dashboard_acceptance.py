@@ -89,7 +89,7 @@ class TestM20DashboardAcceptance(unittest.TestCase):
         # 1. Access Dashboard UI
         res_ui = self.client.get("/ui")
         self.assertEqual(res_ui.status_code, 200)
-        self.assertIn("RAZERPAY", res_ui.text)
+        self.assertIn("RAZORPAY", res_ui.text)
 
         # 2. Check System Summary
         headers = {

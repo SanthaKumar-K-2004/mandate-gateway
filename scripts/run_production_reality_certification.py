@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import sys
 
-from apps.api.agent.mcp_server import RazerpayMCPServer
+from apps.api.agent.mcp_server import RazorpayMCPServer
 from apps.api.commerce.connectors.public_platform import PublicPlatformConnector
 from apps.api.commerce.connectors.real_platform import RealPlatformConnector
 from apps.api.commerce.models import ProductVerificationStatus
@@ -70,7 +70,7 @@ def run_production_reality_certification() -> int:
 
     # Stage 4: MCP Client Interoperability
     print("\n[Stage 4/7] External MCP Server Tool Registry Audit...")
-    mcp_server = RazerpayMCPServer()
+    mcp_server = RazorpayMCPServer()
     mcp_response = mcp_server.handle_mcp_request({"method": "tools/list", "id": 1})
     tools = mcp_response.get("result", {}).get("tools", [])
     print(f" -> Discovered MCP Tools Count: {len(tools)}")

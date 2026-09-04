@@ -1,5 +1,5 @@
 """
-RAZERPAY — Commerce Domain Package (M24)
+RAZORPAY — Commerce Domain Package (M24)
 =======================================
 Product Truth Engine, Commerce Connector Network & Verified Checkout.
 """

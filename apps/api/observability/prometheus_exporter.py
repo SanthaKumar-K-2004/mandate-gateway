@@ -53,6 +53,20 @@ class PrometheusMetricsRegistry:
         self.payment_idempotency_conflicts_total: int = 0
         self.payment_order_mismatch_rejections_total: int = 0
 
+        # Razorpay & Protocol Metrics
+        self.razorpay_orders_created_total: int = 0
+        self.razorpay_payments_authorized_total: int = 0
+        self.razorpay_payments_captured_total: int = 0
+        self.razorpay_payments_failed_total: int = 0
+        self.payment_duplicate_prevented_total: int = 0
+        self.payment_replay_blocked_total: int = 0
+        self.payment_authorization_blocked_total: int = 0
+        self.webhook_signature_failed_total: int = 0
+        self.reconciliation_manual_review_total: int = 0
+        self.x402_payment_required_total: int = 0
+        self.x402_payment_authorized_total: int = 0
+        self.agent_policy_block_total: int = 0
+
     def record_http_request(self, method: str, endpoint: str, status_code: int) -> None:
         """Record API request count."""
         with self._lock:
@@ -144,5 +158,27 @@ class PrometheusMetricsRegistry:
         lines.append(
             f"payment_order_mismatch_rejections_total {self.payment_order_mismatch_rejections_total}"
         )
+
+        # Razorpay & Agent Protocol Metrics
+        lines.append("# HELP razorpay_orders_created_total Total count of Razorpay orders created")
+        lines.append("# TYPE razorpay_orders_created_total counter")
+        lines.append(f"razorpay_orders_created_total {self.razorpay_orders_created_total}")
+        lines.append(
+            f"razorpay_payments_authorized_total {self.razorpay_payments_authorized_total}"
+        )
+        lines.append(f"razorpay_payments_captured_total {self.razorpay_payments_captured_total}")
+        lines.append(f"razorpay_payments_failed_total {self.razorpay_payments_failed_total}")
+        lines.append(f"payment_duplicate_prevented_total {self.payment_duplicate_prevented_total}")
+        lines.append(f"payment_replay_blocked_total {self.payment_replay_blocked_total}")
+        lines.append(
+            f"payment_authorization_blocked_total {self.payment_authorization_blocked_total}"
+        )
+        lines.append(f"webhook_signature_failed_total {self.webhook_signature_failed_total}")
+        lines.append(
+            f"reconciliation_manual_review_total {self.reconciliation_manual_review_total}"
+        )
+        lines.append(f"x402_payment_required_total {self.x402_payment_required_total}")
+        lines.append(f"x402_payment_authorized_total {self.x402_payment_authorized_total}")
+        lines.append(f"agent_policy_block_total {self.agent_policy_block_total}")
 
         return "\n".join(lines) + "\n"

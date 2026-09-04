@@ -83,8 +83,12 @@ def scan_repository(root_dir: str = ".") -> bool:
         for filename in filenames:
             rel_path = os.path.relpath(os.path.join(dirpath, filename), root_dir)
 
-            # Skip binary files or specific non-code assets if any
+            # Skip binary files or local ignored environment files (.env)
             if rel_path.endswith((".pyc", ".png", ".jpg", ".ico", ".tar", ".gz")):
+                continue
+            if rel_path == ".env" or (
+                rel_path.startswith(".env.") and not rel_path.endswith(".example")
+            ):
                 continue
 
             files_scanned += 1

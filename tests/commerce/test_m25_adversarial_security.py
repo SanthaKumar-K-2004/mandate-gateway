@@ -62,7 +62,7 @@ class TestM25AdversarialSecurity(unittest.TestCase):
 
         mgr.bind_transaction_to_order(
             binding_id="bind_legit",
-            razerpay_transaction_id="txn_stolen_pay_99",
+            razorpay_transaction_id="txn_stolen_pay_99",
             merchant_order_id="m_ord_legit_01",
             merchant_id="mer_cafe_acme",
             product_id="prod_tea_01",
@@ -77,7 +77,7 @@ class TestM25AdversarialSecurity(unittest.TestCase):
         with self.assertRaises(TransactionBindingError):
             mgr.bind_transaction_to_order(
                 binding_id="bind_attack",
-                razerpay_transaction_id="txn_stolen_pay_99",
+                razorpay_transaction_id="txn_stolen_pay_99",
                 merchant_order_id="m_ord_attacker_99",
                 merchant_id="mer_malicious",
                 product_id="prod_laptop_99",

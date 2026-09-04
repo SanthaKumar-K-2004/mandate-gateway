@@ -1,4 +1,4 @@
-# RAZERPAY — Cross-Merchant Product Comparison Architecture
+# RAZORPAY — Cross-Merchant Product Comparison Architecture
 
 ## Overview
 The `ProductComparisonEngine` ([`apps/api/commerce/product_comparison.py`](file:///home/santhakumar/Desktop/Razorpay/apps/api/commerce/product_comparison.py)) performs evidence-backed cross-merchant evaluations.

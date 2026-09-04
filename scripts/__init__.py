@@ -1,3 +1,3 @@
 """
-RAZERPAY — Scripts Package (M26)
+RAZORPAY — Scripts Package (M26)
 """

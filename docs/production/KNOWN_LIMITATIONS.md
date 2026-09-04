@@ -1,4 +1,4 @@
-# RAZERPAY — Production Known Limitations
+# RAZORPAY — Production Known Limitations
 
 ## Technical Limitations & Boundaries
 

@@ -27,7 +27,7 @@ class TestM20DashboardAPIIntegration(unittest.TestCase):
         """Verify get_dashboard_html returns valid HTML5 document."""
         html = get_dashboard_html()
         self.assertIn("<!DOCTYPE html>", html)
-        self.assertIn("RAZERPAY", html)
+        self.assertIn("RAZORPAY", html)
         self.assertIn("Merchant Operations Dashboard", html)
 
     def test_02_dashboard_ui_endpoint(self) -> None:

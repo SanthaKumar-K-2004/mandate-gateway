@@ -1,4 +1,4 @@
-# RAZERPAY — M26 Production Commerce Reality Matrix & Hardening
+# RAZORPAY — M26 Production Commerce Reality Matrix & Hardening
 
 ## Overview
 Milestone **M26** enforces strict truth-in-labeling across all commerce connectors, network clients, reconciliation engines, and dashboard UIs.
@@ -7,7 +7,7 @@ Milestone **M26** enforces strict truth-in-labeling across all commerce connecto
 
 ## 1. Honest Environment & Capability Classification
 
-Every commerce connector in RAZERPAY explicitly declares both its **Checkout Capability** and **Environment Mode**:
+Every commerce connector in RAZORPAY explicitly declares both its **Checkout Capability** and **Environment Mode**:
 
 | Connector | Domain | Capability | Environment | Description |
 |---|---|---|---|---|

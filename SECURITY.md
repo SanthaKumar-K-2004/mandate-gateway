@@ -4,7 +4,7 @@
 
 > **IMPORTANT DISCLAIMER**: Mandate Gateway is an independent open-source AI commerce safety project. It is **NOT** affiliated with, endorsed by, or connected to **Razorpay Software Private Limited**.
 
-Mandate Gateway uses internal codenames (such as `RAZERPAY`) and a Razorpay-compatible MCP protocol abstraction to model financial boundaries. No live production Razorpay credentials or payment gateway accounts are used or exposed in this repository.
+Mandate Gateway uses internal codenames (such as `RAZORPAY`) and a Razorpay-compatible MCP protocol abstraction to model financial boundaries. No live production Razorpay credentials or payment gateway accounts are used or exposed in this repository.
 
 ---
 

@@ -1,4 +1,4 @@
-# RAZERPAY — Real Merchant Platform Connector (M25)
+# RAZORPAY — Real Merchant Platform Connector (M25)
 
 ## Overview
 The `RealPlatformConnector` ([`apps/api/commerce/connectors/real_platform.py`](file:///home/santhakumar/Desktop/Razorpay/apps/api/commerce/connectors/real_platform.py)) provides direct API integration with authenticated merchant commerce engines (e.g. `cafeacme.local`).

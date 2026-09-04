@@ -35,7 +35,7 @@ class TestM21DeploymentSmoke(unittest.TestCase):
         res = self.client.get("/ui")
         self.assertEqual(res.status_code, 200)
         self.assertIn("text/html", res.headers.get("content-type", ""))
-        self.assertIn("RAZERPAY", res.text)
+        self.assertIn("RAZORPAY", res.text)
 
     def test_03_operations_summary_smoke(self) -> None:
         """Verify GET /internal/operations/summary accepts operator traffic."""

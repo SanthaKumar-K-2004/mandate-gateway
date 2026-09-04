@@ -1,7 +1,7 @@
-# RAZERPAY — Live AI Commerce Architecture (M23)
+# RAZORPAY — Live AI Commerce Architecture (M23)
 
 ## Overview
-Milestone M23 transitions the RAZERPAY AI Agent Platform from mock/demo runtime dependencies to production live integrations (OpenRouter, Gemini REST API, Tavily Live Web Search, Brave Search, and Open-Source Public Search).
+Milestone M23 transitions the RAZORPAY AI Agent Platform from mock/demo runtime dependencies to production live integrations (OpenRouter, Gemini REST API, Tavily Live Web Search, Brave Search, and Open-Source Public Search).
 
 The non-negotiable system invariant remains absolute:
 > **"NO PAYMENT EFFECT MAY ACCIDENTALLY EXECUTE TWICE."**
@@ -22,7 +22,7 @@ The non-negotiable system invariant remains absolute:
           |
           v
 +------------------+     +-------------------+     +---------------------+
-| Human            | --> | RAZERPAY Domain   | --> | Committed Payment   |
+| Human            | --> | RAZORPAY Domain   | --> | Committed Payment   |
 | Confirmation     |     | Authorization     |     | Execution State     |
 +------------------+     +-------------------+     +---------------------+
 ```
@@ -32,4 +32,4 @@ The non-negotiable system invariant remains absolute:
 2. **Live Data Discovery Orchestrator (`apps/api/agent/live_data.py`)**: Multi-provider hierarchy (`TavilyWebSearchProvider` -> `BraveWebSearchProvider` -> `OpenSourceWebSearchProvider`). Extracts product evidence, price evidence, merchant domain, and verification status.
 3. **Product Truth Validator (`apps/api/agent/product_truth_validator.py`)**: Strict truth engine cross-referencing LLM recommendations against verified discovery source records. LLMs CANNOT invent products, prices, or availability.
 4. **Enhanced Cryptographic Confirmation Gate (`apps/api/agent/confirmation_gate.py`)**: Issues single-use HMAC-SHA256 tokens binding `request_id + merchant_id + buyer_id + product_id + product_source + amount_paise + currency + purchase_plan_hash + expires_at`. Replays or parameter alterations are rejected with `ConfirmationError`.
-5. **Payment Middleware Routing (`apps/api/routers/agent.py`)**: Confirmed purchase plans route directly through the existing RAZERPAY authorization, idempotency, risk, state machine, and append-only audit ledger (`AIAuditLogger`).
+5. **Payment Middleware Routing (`apps/api/routers/agent.py`)**: Confirmed purchase plans route directly through the existing RAZORPAY authorization, idempotency, risk, state machine, and append-only audit ledger (`AIAuditLogger`).

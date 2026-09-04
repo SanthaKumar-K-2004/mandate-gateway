@@ -1,5 +1,5 @@
 """
-RAZERPAY — Commerce Connectors Package (M26)
+RAZORPAY — Commerce Connectors Package (M26)
 """
 
 from __future__ import annotations

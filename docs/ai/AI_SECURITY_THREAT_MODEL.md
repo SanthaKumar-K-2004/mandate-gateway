@@ -1,7 +1,7 @@
-# RAZERPAY — AI Agent Security Threat Model & Defense Matrix (M22)
+# RAZORPAY — AI Agent Security Threat Model & Defense Matrix (M22)
 
 ## Threat Model Overview
-Integrating LLMs and AI Agents into payment infrastructure introduces novel security threat vectors. RAZERPAY enforces a zero-trust model where natural language processing is treated as an untrusted input processing layer.
+Integrating LLMs and AI Agents into payment infrastructure introduces novel security threat vectors. RAZORPAY enforces a zero-trust model where natural language processing is treated as an untrusted input processing layer.
 
 ## Defense Matrix
 

@@ -10,13 +10,13 @@ buyer policy mandate controller, real payment methods, and fail-closed human pay
 
 
 def get_dashboard_html() -> str:
-    """Returns full HTML5/CSS3/JS content for the RAZERPAY AI Commerce Control Center UI."""
+    """Returns full HTML5/CSS3/JS content for the RAZORPAY AI Commerce Control Center UI."""
     return r"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAZERPAY — Mandate Gateway (AI Commerce Trust & Settlement Layer)</title>
+    <title>RAZORPAY — Mandate Gateway (AI Commerce Trust & Settlement Layer)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1196,14 +1196,14 @@ def get_dashboard_html() -> str:
             }
 
             document.getElementById('rzp-modal').classList.add('active');
-            window.appendLog('RAZERPAY_PAYMENT', 'Launching Visual Razorpay Checkout Modal for ₹' + window.selectedCartTotalINR.toFixed(2));
+            window.appendLog('RAZORPAY_PAYMENT', 'Launching Visual Razorpay Checkout Modal for ₹' + window.selectedCartTotalINR.toFixed(2));
         };
 
         window.confirmRazorpayPayment = async function() {
             document.getElementById('rzp-modal').classList.remove('active');
 
             const deductAmount = window.selectedCartTotalINR;
-            window.appendLog('RAZERPAY_EXECUTOR', 'Executing payment settlement rail: ' + window.selectedPaymentRail);
+            window.appendLog('RAZORPAY_EXECUTOR', 'Executing payment settlement rail: ' + window.selectedPaymentRail);
             window.appendLog('MANDATE_BINDING', 'Generating cryptographic order binding hash...');
 
             // Show balance float-down visual deduction
@@ -1269,7 +1269,7 @@ def get_dashboard_html() -> str:
                 const data = await res.json();
 
                 const codeEl = document.getElementById('modal-json');
-                document.getElementById('modal-title').innerText = 'RAZERPAY MCP RPC Tool: ' + toolName;
+                document.getElementById('modal-title').innerText = 'RAZORPAY MCP RPC Tool: ' + toolName;
                 codeEl.innerText = JSON.stringify({
                     jsonrpc: "2.0",
                     id: "mcp_rpc_" + Math.floor(Math.random()*100000),
@@ -1318,7 +1318,7 @@ def get_dashboard_html() -> str:
         <div class="brand-group">
             <div class="brand-logo">
                 <div class="brand-badge">R</div>
-                <span>RAZERPAY</span>
+                <span>RAZORPAY</span>
             </div>
             <div class="brand-sub">Mandate Gateway — Merchant Operations Dashboard & AI Commerce Control Center</div>
         </div>
@@ -1572,7 +1572,7 @@ def get_dashboard_html() -> str:
                 </div>
 
                 <div style="font-size: 0.78rem; color: var(--text-secondary); background: rgba(249, 115, 22, 0.08); border: 1px solid rgba(249, 115, 22, 0.25); border-radius: 10px; padding: 0.85rem;">
-                    <strong>Mandate Gateway Determinism Rule:</strong> RAZERPAY never assumes unverified merchant shipping or taxes are ₹0. Unknown components are explicitly flagged before payment authorization.
+                    <strong>Mandate Gateway Determinism Rule:</strong> RAZORPAY never assumes unverified merchant shipping or taxes are ₹0. Unknown components are explicitly flagged before payment authorization.
                 </div>
             </section>
         </main>
@@ -1644,11 +1644,11 @@ def get_dashboard_html() -> str:
                 </div>
             </section>
 
-            <!-- RAZERPAY MCP TOOLS INSPECTOR -->
+            <!-- RAZORPAY MCP TOOLS INSPECTOR -->
             <section class="card">
                 <div class="card-title-row">
                     <div class="card-title">
-                        <span>RAZERPAY MCP Tools</span>
+                        <span>RAZORPAY MCP Tools</span>
                     </div>
                     <span style="font-size: 0.68rem; color: var(--emerald-600); font-family: var(--font-mono); font-weight: 700;">JSON-RPC 2.0</span>
                 </div>
@@ -1675,7 +1675,7 @@ def get_dashboard_html() -> str:
 
     <!-- FOOTER STATUS BAR -->
     <footer style="background: #ffffff; border-top: 1px solid #e2e8f0; padding: 0.9rem 2rem; display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-muted);">
-        <div>● RAZERPAY MANDATE GATEWAY v1.0.0 — REAL-TIME AGENT TRUST & SETTLEMENT</div>
+        <div>● RAZORPAY MANDATE GATEWAY v1.0.0 — REAL-TIME AGENT TRUST & SETTLEMENT</div>
         <div style="font-family: var(--font-mono);">CRYPTOGRAPHIC PROVENANCE: SHA-256 VERIFIED</div>
     </footer>
 
@@ -1691,7 +1691,7 @@ def get_dashboard_html() -> str:
         </div>
     </div>
 
-    <!-- VISUAL RAZERPAY CHECKOUT MODAL -->
+    <!-- VISUAL RAZORPAY CHECKOUT MODAL -->
     <div class="modal-overlay" id="rzp-modal">
         <div class="modal-box" style="padding: 0; max-width: 500px; overflow: hidden;">
             <div class="rzp-modal-header">
@@ -1705,7 +1705,7 @@ def get_dashboard_html() -> str:
                 
                 <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem;">
                     <div>
-                        <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">RAZERPAY ORDER ID</div>
+                        <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">RAZORPAY ORDER ID</div>
                         <div style="font-family: var(--font-mono); font-weight: 800; font-size: 0.9rem; color: var(--text-primary);" id="rzp-order-id">order_rzp_890123</div>
                     </div>
                     <div style="text-align: right;">
@@ -1735,7 +1735,7 @@ def get_dashboard_html() -> str:
                 </div>
 
                 <button class="btn btn-emerald" style="padding: 1rem; font-size: 0.95rem;" onclick="window.confirmRazorpayPayment()">
-                    <span>PAY & SETTLE VIA RAZERPAY NOW ↗</span>
+                    <span>PAY & SETTLE VIA RAZORPAY NOW ↗</span>
                 </button>
             </div>
         </div>

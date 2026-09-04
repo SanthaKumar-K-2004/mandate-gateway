@@ -1,41 +1,41 @@
-# RAZERPAY — Mandate Gateway
-### Autonomous AI Commerce Trust & Payment Safety Protocol
-
-[![Buildathon Track](https://img.shields.io/badge/Razorpay_Raze_Buildathon_2026-Autonomous_AI_Commerce_&_Agent_Payment_Protocols-0052CC?style=for-the-badge&logo=razorpay)](https://github.com/SanthaKumar-K-2004/mandate-gateway)
-[![Current Release](https://img.shields.io/badge/Current_Release-v1.5.0-blue?style=for-the-badge)](docs/RELEASE_READINESS.md)
+# RAZORPAY — Mandate Gateway
+### Autonomous AI Commerce Trust & Payment Safety Protocol[![Buildathon Track](https://img.shields.io/badge/Razorpay_Raze_Buildathon_2026-Autonomous_AI_Commerce_&_Agent_Payment_Protocols-0052CC?style=for-the-badge&logo=razorpay)](https://github.com/SanthaKumar-K-2004/mandate-gateway)
+[![Current Release](https://img.shields.io/badge/Current_Release-v2.0.0-blue?style=for-the-badge)](docs/RELEASE_READINESS.md)
 [![Commit SHA](https://img.shields.io/badge/Commit-6f80dc0-informational?style=for-the-badge)](https://github.com/SanthaKumar-K-2004/mandate-gateway/commit/6f80dc0)
-[![Test Suite](https://img.shields.io/badge/Test_Suite-275_PASSED_/_100%25-brightgreen?style=for-the-badge)](docs/FINAL_SUBMISSION_ACCEPTANCE_TEST.md)
-[![Security Gate](https://img.shields.io/badge/Security_Guard-869_Files_Scanned_/_0_Leaks-success?style=for-the-badge)](SECURITY.md)
+[![Test Suite](https://img.shields.io/badge/Test_Suite-870_PASSED_/_100%25-brightgreen?style=for-the-badge)](docs/FINAL_SUBMISSION_ACCEPTANCE_TEST.md)
+[![Security Gate](https://img.shields.io/badge/Security_Guard-886_Files_Scanned_/_0_Leaks-success?style=for-the-badge)](SECURITY.md)
 
 ---
 
 > **DISCLAIMER & HACKATHON ENTRY NOTICE**
-> **RAZERPAY — Mandate Gateway** is an independent open-source research and engineering submission built by **SanthaKumar K** ([@SanthaKumar-K-2004](https://github.com/SanthaKumar-K-2004)) for the **Razorpay Raze Buildathon 2026** under the *Autonomous AI Commerce & Agent Payment Protocols* track. It is not an official product of, nor is it endorsed by, Razorpay Software Private Limited.
+> **RAZORPAY — Mandate Gateway** is an independent open-source research and engineering submission built by **SanthaKumar K** ([@SanthaKumar-K-2004](https://github.com/SanthaKumar-K-2004)) for the **Razorpay Raze Buildathon 2026** under the *Autonomous AI Commerce & Agent Payment Protocols* track. It is not an official product of, nor is it endorsed by, Razorpay Software Private Limited.
 
 ---
 
 ## ⚡ Judge in 60 Seconds
 
 * **The Problem:** Autonomous AI shopping agents tend to hallucinate product specifications, treat unverified shipping/tax as ₹0, ignore velocity limits, and execute transactions without single-use authorization—creating severe financial and operational risk.
-* **The Solution:** **Mandate Gateway** provides an architectural trust layer between LLM decision engines and commerce backends. It decouples product research from payment authorization, enforces strict multi-item cart optimization, and wraps execution in a fail-closed, cryptographically bound safety pipeline.
+* **The Solution:** **Mandate Gateway** provides an architectural trust layer between LLM decision engines and commerce backends. It decouples product research from payment authorization, enforces strict multi-item cart optimization, wraps execution in a fail-closed safety pipeline, and provides an **Agentic Payment Protocol Layer** (Razorpay Test Mode + x402 HTTP 402 Payment Adapter + UAP-Aligned Authorization Model).
 * **Live Proof:** Live HTTP requests to the **OpenFoodFacts REST API** for multi-item product research, SHA-256 evidence hashing, deterministic budget evaluation, and zero false certainty on unknown fees.
-* **Safety Proof:** HMAC-SHA256 single-use confirmation tokens, DB-persisted execution nonces, replay protection, 1:1 transaction-order binding, and idempotent state reconciliation.
-* **Honest Boundary:** Live API product research and algorithmic optimization are fully operational. No live production real-money PSP credentials (Razorpay/Stripe) are configured; payment execution is safely demonstrated via local sandbox (`cafeacme.local`) and validated HTTPS checkout handoff.
+* **Razorpay Test Integration:** Official Razorpay v1 API connector (`https://api.razorpay.com/v1`) using integer minor units (paise), HMAC-SHA256 signature verification, webhook verification, and test-mode order creation bound 1:1 to purchase plans.
+* **Protocol & Authorization Architecture:** Modular `AgentPaymentProtocol` interface, x402-compatible HTTP `402 Payment Required` negotiation adapter, and UAP-aligned delegated authorization model with spending limits and real-time revocation.
+* **Safety Proof:** HMAC-SHA256 single-use confirmation tokens, DB-persisted execution nonces, replay protection, 1:1 transaction-order binding, and idempotent state reconciliation. Zero LLM involvement in payment execution decisions.
+* **Honest Boundary:** Live API product research, algorithmic optimization, Razorpay Test-Mode API integration, x402 parsing, UAP delegation, and safety barriers are fully operational. No live production real-money PSP credentials are configured (`RAZORPAY_MODE=test` is active default).
 
 ---
 
-## 🎯 What Is Razerpay Mandate Gateway?
+## 🎯 What Is Razorpay Mandate Gateway?
 
-**RAZERPAY — Mandate Gateway** is a safety-first AI commerce trust protocol that researches products, verifies source evidence, optimizes multi-item shopping carts, enforces spending mandates, and prevents unauthorized or duplicated payment execution.
+**RAZORPAY — Mandate Gateway** is a safety-first AI commerce trust protocol that researches products, verifies source evidence, optimizes multi-item shopping carts, enforces spending mandates, provides agentic payment protocol abstraction, and prevents unauthorized or duplicated payment execution.
 
-```
+```text
        NO VERIFIED EVIDENCE  ──►  NO FALSE CERTAINTY
      NO HUMAN CONFIRMATION  ──►  NO PAYMENT EFFECT
     NO SAFE EXECUTION PATH  ──►  FAIL CLOSED
 ```
 
 ### Core Value Proposition
-> An AI commerce trust layer designed to make autonomous shopping safer — by separating research from authorization and treating uncertainty as a first-class state.
+> An AI commerce trust layer designed to make autonomous shopping safer — by separating research from authorization, abstracting agentic payment protocols, and treating uncertainty as a first-class state.
 
 ---
 
@@ -50,12 +50,15 @@
 | **Explainable Recommendation Engine** | 🟢 LIVE | Explicit scoring breakdown (budget compliance, merchant count, subtotal, evidence) |
 | **Unknown Fee Enforcement** | 🟢 ENFORCED | Fee status `UNKNOWN` is never coerced to ₹0; prevents false subtotal claims |
 | **Human Confirmation Gate** | 🟢 ENFORCED | HMAC-SHA256 signed single-use confirmation token required for protected ops |
-| **MCP Safety Boundary** | 🟢 ENFORCED | Public MCP tools restricted to read/research; payment execution tools blocked |
+| **Razorpay Test-Mode Connector** | 🟡 TEST/SANDBOX | Official Razorpay v1 REST API (`https://api.razorpay.com/v1`), integer paise handling |
+| **Razorpay Webhook Verification** | 🟢 LIVE | HMAC-SHA256 webhook signature validation + payload digest verification |
+| **x402 HTTP Payment Capability** | 🔵 PROTOCOL_COMPATIBLE | HTTP `402 Payment Required` requirement parsing, proof generation, replay protection |
+| **UAP-Aligned Authorization Model** | 🟢 LIVE | Delegated authority tokens, category/merchant/velocity limits, instant revocation |
+| **Deterministic Payment Policy Engine** | 🟢 ENFORCED | Spending limits, product verification gate, risk classifier (`LOW`, `MEDIUM`, `HIGH`, `BLOCKED`) |
+| **MCP Safety Boundary** | 🟢 ENFORCED | Public MCP tools restricted to read/research/timeline; payment execution tools blocked |
 | **5-Layer Payment Replay Protection** | 🟢 ENFORCED | Nonces, request fingerprints, transaction-order binding, reconciliation ledger |
-| **Full-Stack Web Interface** | 🟢 LIVE | Next.js 14 glassmorphism command hub (`/`, `/buyer`, `/mandates`, `/transactions`, `/audit`) |
-| **Sandbox Merchant & Payment Execution** | 🟡 SANDBOX | Local mock execution engine (`cafeacme.local`) for end-to-end verification |
-| **Validated HTTPS Checkout Handoff** | 🟢 LIVE | Secure HTTPS URL generation for browser handoff without direct API settlement |
-| **Real-Money Razorpay Settlement** | 🔴 NOT ENABLED | No production PSP API keys configured; architectural adapter boundary ready |
+| **Full-Stack Web Interface** | 🟢 LIVE | Next.js 14 glassmorphism command hub with Purchase Authorization & Event Timeline |
+| **Real-Money Razorpay Settlement** | 🔴 NOT AVAILABLE | `RAZORPAY_MODE=test` default; production live credentials require explicit setup |D | No production PSP API keys configured; architectural adapter boundary ready |
 | **Real Merchant Order / Inventory APIs** | 🔴 NOT ENABLED | Relies on OpenFoodFacts public catalog data and local sandbox merchant |
 
 ---
@@ -361,7 +364,7 @@ To maintain complete transparency for hackathon evaluation:
 
 ---
 
-## 🌟 Why Is Razerpay Mandate Gateway Different?
+## 🌟 Why Is Razorpay Mandate Gateway Different?
 
 1. **Research ≠ Authorization:** Separates the LLM's intelligence from execution authority.
 2. **Explicit Uncertainty:** Treats `UNKNOWN` data as a first-class state rather than coercing to zero.

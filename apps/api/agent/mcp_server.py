@@ -1,5 +1,5 @@
 """
-Mandate Gateway — Razerpay MCP Server Layer
+Mandate Gateway — Razorpay MCP Server Layer
 Workstream 5 — Model Context Protocol (MCP) compatible server adapter exposing approved tools.
 Enforces strict MCP JSON-RPC protocol schema, permission classification, and tenant binding.
 """
@@ -18,7 +18,7 @@ RESTRICTED_MCP_TOOLS = (
 )
 
 
-class RazerpayMCPServer:
+class RazorpayMCPServer:
     """Model Context Protocol (MCP) adapter layer for Mandate Gateway AI Agent Platform."""
 
     def __init__(self, tool_registry: Optional[AIToolRegistry] = None) -> None:
@@ -102,3 +102,6 @@ class RazerpayMCPServer:
                 "id": req_id,
                 "error": {"code": -32601, "message": f"Unsupported MCP method: '{method}'"},
             }
+
+
+RazerpayMCPServer = RazorpayMCPServer

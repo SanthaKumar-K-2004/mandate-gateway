@@ -1,4 +1,4 @@
-# RAZERPAY — Multi-Item AI Agent Security & Threat Model
+# RAZORPAY — Multi-Item AI Agent Security & Threat Model
 
 ## Overview
 Milestone **M28** enforces strict security boundaries around autonomous multi-item research.

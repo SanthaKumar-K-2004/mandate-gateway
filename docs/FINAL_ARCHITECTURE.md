@@ -33,7 +33,7 @@ User Input (Natural Language)
                        ▼                                ▼
 ┌─────────────────────────────────────┐    ┌────────────────────────────────┐
 │      MCP Protocol Server Layer      │    │   Multi-Item Intent Extractor   │
-│   RazerpayMCPServer                 │    │   MultiItemIntentExtractor      │
+│   RazorpayMCPServer                 │    │   MultiItemIntentExtractor      │
 │   JSON-RPC 2.0 Interface            │    │   ShoppingRequest Model        │
 │   • 13 discovery tools exposed      │    │   CartOptimizationStrategy     │
 │   • 3 execution tools BLOCKED       │    └───────────────┬────────────────┘
@@ -104,6 +104,24 @@ User Input (Natural Language)
                                       │
                                       ▼
 ┌───────────────────────────────────────────────────────────────────────────┐
+│                    Agentic Payment Protocol & Policy Engine               │
+│   AgentPaymentProtocol  ·  AgentPaymentPolicyEngine                      │
+│   • Deterministic policy: spending limits, product verification gate      │
+│   • Zero LLM involvement in payment execution decisions                   │
+│   • Risk Classifier: LOW / MEDIUM / HIGH / BLOCKED                        │
+│                                                                           │
+│   ┌─────────────────────┬─────────────────────┬──────────────────────┐    │
+│   │  Razorpay Connector │   x402 Payment      │   UAP Authorization  │    │
+│   │  (Test Mode / v1)   │   Adapter (HTTP 402)│   Layer (Delegated)  │    │
+│   │  • https://api.     │   • Parse 402 headers│  • Delegation tokens │    │
+│   │    razorpay.com/v1  │   • Proof generation│  • Spending limits   │    │
+│   │  • Minor units paise│   • Replay protection│ • Revocation status │    │
+│   │  • Webhook HMAC     │   • Hash binding    │  • Scope checks      │    │
+│   └─────────────────────┴─────────────────────┴──────────────────────┘    │
+└─────────────────────────────────────┬─────────────────────────────────────┘
+                                      │
+                                      ▼
+┌───────────────────────────────────────────────────────────────────────────┐
 │                         Payment Safety Layer                              │
 │   AuthorizationEngine  ·  BudgetReservationEngine                         │
 │   NonceEngine  ·  StepUpChallengeEngine  ·  ReplayProtection              │
@@ -122,9 +140,9 @@ User Input (Natural Language)
 │   • Ed25519 signed action receipts (immutable audit trail)                │
 │                                                                           │
 │   ExecutionEngine                                                         │
-│   • State machine: PENDING → AUTHORIZED → CAPTURED / FAILED               │
+│   • State machine: CREATED → AUTHORIZED → CAPTURED / FAILED / REFUNDED    │
 │   • ROLLED_BACK on pre-capture failure                                    │
-│   • Fail-closed state transitions                                         │
+│   • Fail-closed state transitions (UNKNOWN maps to manual review)        │
 └─────────────────────────────────────┬─────────────────────────────────────┘
                                       │
                                       ▼
@@ -153,6 +171,32 @@ User Input (Natural Language)
 │   /health + /ready Probes          Audit Ledger (SHA-256 Hash Chain)       │
 └───────────────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## Agentic Payment Protocol Layer & Subsystems
+
+### 1. Razorpay Test-Mode Connector (`apps/api/commerce/payments/razorpay_client.py`)
+- Official v1 REST API integration (`https://api.razorpay.com/v1`).
+- Operates strictly in minor integer units (paise: ₹299 = 29900 paise) to prevent floating-point calculation errors.
+- Enforces HMAC-SHA256 signature verification for payment payloads and webhooks (`X-Razorpay-Signature`).
+- Secret Redaction: `RAZORPAY_KEY_SECRET` and `RAZORPAY_WEBHOOK_SECRET` wrapped in `SecretString` to prevent leakage in logs, exceptions, or responses.
+
+### 2. x402 HTTP Payment Adapter (`apps/api/commerce/payments/x402.py`)
+- Protocol-compatible adapter for HTTP `402 Payment Required` negotiation workflows.
+- Parses 402 requirement headers, binds payment specifications (resource, recipient, amount, currency, network), generates proof payloads, and validates signatures.
+- Includes proof replay prevention cache to prevent double-spending of proof tokens.
+
+### 3. UAP-Aligned Authorization Layer (`apps/api/commerce/payments/uap.py`)
+- Delegated authority framework for AI agents.
+- Supports authorization lifecycle: `ACTIVE`, `REVOKED`, `EXPIRED`, `CONSUMED`, `SUSPENDED`.
+- Enforces per-transaction limits, daily cumulative limits, category velocity, and merchant scope boundaries.
+- Immediate fail-closed behavior on revoked or expired authorization tokens.
+
+### 4. Agent Payment Policy Engine (`apps/api/commerce/payments/policy.py`)
+- Deterministic evaluation engine for payment requests.
+- Evaluates agent identity, request payload, spending limits, product evidence verification status, and human confirmation tokens.
+- Deterministic Risk Classifier: `LOW`, `MEDIUM`, `HIGH`, `BLOCKED`. Zero LLM involvement in payment authority decisions.
 
 ---
 

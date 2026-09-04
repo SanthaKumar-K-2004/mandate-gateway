@@ -88,7 +88,7 @@ class OpenRouterCompatibleProvider(LLMProvider):
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
             "HTTP-Referer": "https://razorpay.mandate-gateway.local",
-            "X-Title": "RAZERPAY Mandate Gateway",
+            "X-Title": "RAZORPAY Mandate Gateway",
         }
         payload = {
             "model": self.model_name,

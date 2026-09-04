@@ -11,7 +11,7 @@ import hashlib
 import hmac
 import unittest
 
-from sdk.python.razerpay import RazerpayWebhookVerifier
+from sdk.python.razorpay import RazorpayWebhookVerifier
 
 
 class TestM19WebhookSecurity(unittest.TestCase):
@@ -23,7 +23,7 @@ class TestM19WebhookSecurity(unittest.TestCase):
         raw_payload = b'{"event":"payment.captured","amount_paise":5000}'
         sig = hmac.new(secret.encode("utf-8"), raw_payload, hashlib.sha256).hexdigest()
 
-        is_valid = RazerpayWebhookVerifier.verify_signature(raw_payload, sig, secret)
+        is_valid = RazorpayWebhookVerifier.verify_signature(raw_payload, sig, secret)
         self.assertTrue(is_valid)
 
     def test_02_forged_signature_rejection(self) -> None:
@@ -31,7 +31,7 @@ class TestM19WebhookSecurity(unittest.TestCase):
         secret = "whsec_live_key_998877"
         raw_payload = b'{"event":"payment.captured","amount_paise":5000}'
 
-        is_valid = RazerpayWebhookVerifier.verify_signature(
+        is_valid = RazorpayWebhookVerifier.verify_signature(
             raw_payload, "deadbeefcafebabe1234567890abcdef", secret
         )
         self.assertFalse(is_valid)
@@ -44,7 +44,7 @@ class TestM19WebhookSecurity(unittest.TestCase):
 
         sig = hmac.new(secret.encode("utf-8"), raw_payload_original, hashlib.sha256).hexdigest()
 
-        is_valid = RazerpayWebhookVerifier.verify_signature(raw_payload_tampered, sig, secret)
+        is_valid = RazorpayWebhookVerifier.verify_signature(raw_payload_tampered, sig, secret)
         self.assertFalse(is_valid)
 
 

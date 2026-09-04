@@ -1,11 +1,11 @@
-# RAZERPAY — Checkout Capability Model (M24)
+# RAZORPAY — Checkout Capability Model (M24)
 
 ## Capability Classification Matrix
 
 | Capability State | Description | Payment Path | Technical Honesty Rule |
 | :--- | :--- | :--- | :--- |
-| `VERIFIED_API` | Direct merchant API integration established and authorized. | Direct RAZERPAY API Payment | RAZERPAY handles full API checkout. |
-| `CHECKOUT_HANDOFF` | Unintegrated public web store. Product verified, direct API unavailable. | Signed Redirect Handoff Package | RAZERPAY generates signed redirect handoff package for merchant site. |
+| `VERIFIED_API` | Direct merchant API integration established and authorized. | Direct RAZORPAY API Payment | RAZORPAY handles full API checkout. |
+| `CHECKOUT_HANDOFF` | Unintegrated public web store. Product verified, direct API unavailable. | Signed Redirect Handoff Package | RAZORPAY generates signed redirect handoff package for merchant site. |
 | `DISCOVERY_ONLY` | Product found in search discovery, but detail/checkout URL unavailable. | Blocked | Browsing only. Purchase execution prohibited. |
 | `UNSUPPORTED` | Merchant domain untrusted or invalid. | Blocked | Blocked. |
 

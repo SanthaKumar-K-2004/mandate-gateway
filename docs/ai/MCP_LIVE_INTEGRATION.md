@@ -1,8 +1,8 @@
-# RAZERPAY — Model Context Protocol (MCP) Live Integration Guide (M23)
+# RAZORPAY — Model Context Protocol (MCP) Live Integration Guide (M23)
 
 ## Exposed MCP Tools & Permission Matrix
 
-External AI clients (Claude Desktop, Cursor, Custom AI Agents) interact with RAZERPAY via the MCP adapter (`RazerpayMCPServer` in `apps/api/agent/mcp_server.py`).
+External AI clients (Claude Desktop, Cursor, Custom AI Agents) interact with RAZORPAY via the MCP adapter (`RazorpayMCPServer` in `apps/api/agent/mcp_server.py`).
 
 | Tool Name | Permission Tier | Description | Discovery (`tools/list`) |
 |---|---|---|---|

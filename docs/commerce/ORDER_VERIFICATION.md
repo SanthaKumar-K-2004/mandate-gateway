@@ -1,4 +1,4 @@
-# RAZERPAY — Order Verification Engine (M24)
+# RAZORPAY — Order Verification Engine (M24)
 
 ## Authoritative Order Outcome Tracking
 

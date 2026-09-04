@@ -163,7 +163,7 @@ class OpenSourceWebSearchProvider(WebSearchProvider):
             f"https://world.openfoodfacts.org/cgi/search.pl?search_terms={encoded_q}"
             f"&search_simple=1&action=process&json=1&page_size={max_results}"
         )
-        headers = {"User-Agent": "RazerpayMandateGateway/1.0"}
+        headers = {"User-Agent": "RazorpayMandateGateway/1.0"}
 
         try:
             req = urllib.request.Request(url, headers=headers, method="GET")

@@ -1,4 +1,4 @@
-# RAZERPAY — Commerce Transaction Reconciliation Architecture
+# RAZORPAY — Commerce Transaction Reconciliation Architecture
 
 ## Overview
 The `CommerceReconciliationEngine` ([`apps/api/commerce/reconciliation.py`](file:///home/santhakumar/Desktop/Razorpay/apps/api/commerce/reconciliation.py)) automatically resolves uncertain payment and order states.

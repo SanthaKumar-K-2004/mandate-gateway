@@ -1,5 +1,5 @@
 """
-M22 Razerpay MCP Server Unit Test Suite
+M22 Razorpay MCP Server Unit Test Suite
 ========================================
 Workstream 5 — Verifies Model Context Protocol (MCP) tool discovery ('tools/list')
 and tool execution ('tools/call') adhering to MCP JSON-RPC standards.
@@ -8,14 +8,14 @@ and tool execution ('tools/call') adhering to MCP JSON-RPC standards.
 from __future__ import annotations
 
 import unittest
-from apps.api.agent.mcp_server import RazerpayMCPServer
+from apps.api.agent.mcp_server import RazorpayMCPServer
 
 
 class TestM22MCPServer(unittest.TestCase):
-    """Razerpay MCP server test suite."""
+    """Razorpay MCP server test suite."""
 
     def setUp(self) -> None:
-        self.mcp = RazerpayMCPServer()
+        self.mcp = RazorpayMCPServer()
 
     def test_01_mcp_tools_list(self) -> None:
         """Verify MCP tools/list returns list of allowlisted tools excluding execute_payment."""

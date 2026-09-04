@@ -1,4 +1,4 @@
-# RAZERPAY — Observability Guide
+# RAZORPAY — Observability Guide
 
 ## Overview
 Mandate Gateway exposes Prometheus metrics at `GET /metrics` and structured JSON logs.

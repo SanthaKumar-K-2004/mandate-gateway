@@ -21,7 +21,7 @@ class TestTransactionBinding(unittest.TestCase):
 
         binding = mgr.bind_transaction_to_order(
             binding_id="bind_01",
-            razerpay_transaction_id="txn_razorpay_101",
+            razorpay_transaction_id="txn_razorpay_101",
             merchant_order_id="m_ord_acme_101",
             merchant_id="mer_cafe_acme",
             product_id="prod_tea_01",
@@ -32,7 +32,7 @@ class TestTransactionBinding(unittest.TestCase):
             connector_id="connector_cafe_acme_api",
         )
 
-        self.assertEqual(binding.razerpay_transaction_id, "txn_razorpay_101")
+        self.assertEqual(binding.razorpay_transaction_id, "txn_razorpay_101")
         self.assertEqual(binding.merchant_order_id, "m_ord_acme_101")
 
         # Verify dual lookups
@@ -42,7 +42,7 @@ class TestTransactionBinding(unittest.TestCase):
 
         b2 = mgr.get_binding_by_order("m_ord_acme_101")
         self.assertIsNotNone(b2)
-        self.assertEqual(b2.razerpay_transaction_id, "txn_razorpay_101")  # type: ignore
+        self.assertEqual(b2.razorpay_transaction_id, "txn_razorpay_101")  # type: ignore
 
     def test_02_duplicate_transaction_rebinding_rejected(self) -> None:
         """Verify attempting to bind an existing transaction ID to a different order is rejected."""
@@ -50,7 +50,7 @@ class TestTransactionBinding(unittest.TestCase):
 
         mgr.bind_transaction_to_order(
             binding_id="bind_01",
-            razerpay_transaction_id="txn_razorpay_101",
+            razorpay_transaction_id="txn_razorpay_101",
             merchant_order_id="m_ord_acme_101",
             merchant_id="mer_cafe_acme",
             product_id="prod_tea_01",
@@ -64,7 +64,7 @@ class TestTransactionBinding(unittest.TestCase):
         with self.assertRaises(TransactionBindingError):
             mgr.bind_transaction_to_order(
                 binding_id="bind_02",
-                razerpay_transaction_id="txn_razorpay_101",  # Same payment transaction!
+                razorpay_transaction_id="txn_razorpay_101",  # Same payment transaction!
                 merchant_order_id="m_ord_acme_999",  # Different order!
                 merchant_id="mer_cafe_acme",
                 product_id="prod_tea_01",

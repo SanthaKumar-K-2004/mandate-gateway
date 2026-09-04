@@ -1,4 +1,4 @@
-# RAZERPAY — LLM Provider Configuration Guide (M23)
+# RAZORPAY — LLM Provider Configuration Guide (M23)
 
 ## Provider Selection & Environment Variables
 
@@ -7,14 +7,14 @@ Provider selection is environment-driven via `LLM_PROVIDER`:
 ### 1. OpenRouter Integration
 ```bash
 export LLM_PROVIDER=openrouter
-export OPENROUTER_API_KEY=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
+export OPENROUTER_API_KEY=sk-or-v1-your-openrouter-api-key-here
 ```
 Uses fast/free models: `google/gemini-2.0-flash-exp:free`, `meta-llama/llama-3.3-70b-instruct:free`, `qwen/qwen-2.5-72b-instruct`.
 
 ### 2. Gemini REST API Integration
 ```bash
 export LLM_PROVIDER=gemini
-export GEMINI_API_KEY=AQ.Ab8RN6LDMNGJNzjMudBKcg8mS_MFgfZSTCLhBHJvnzMbhTlBbA
+export GEMINI_API_KEY=your-gemini-api-key-here
 ```
 Uses Gemini 2.0 Flash (`gemini-2.0-flash`) or Gemini 1.5 Flash (`gemini-1.5-flash`).
 

@@ -33,6 +33,22 @@ from apps.api.commerce.product_truth_engine import ProductTruthEngine
 from apps.api.commerce.recommendation_engine import DeterministicRecommendationEngine
 from apps.api.commerce.reconciliation import CommerceReconciliationEngine
 from apps.api.commerce.transaction_binding import CommerceTransactionBindingManager
+from apps.api.commerce.payments import (
+    AgentPaymentPolicyEngine,
+    PolicyEvaluationContext,
+    RazorpayClient,
+    RazorpayPaymentProtocolAdapter,
+    UAPAuthorizationLayer,
+    UAPPaymentProtocolAdapter,
+    X402PaymentAdapter,
+    X402PaymentProtocolAdapter,
+    get_timeline_manager,
+)
+from apps.api.ai.llm.engine import LLMDecisionEngine
+from apps.api.ai.risk.combined import CombinedRiskIntelligenceEngine
+
+_llm_engine = LLMDecisionEngine()
+_risk_engine = CombinedRiskIntelligenceEngine()
 
 router = APIRouter(prefix="/api/v1/commerce", tags=["Commerce Truth & Checkout"])
 
@@ -61,6 +77,16 @@ _recommendation_engine = DeterministicRecommendationEngine()
 _cart_research_engine = CartResearchEngine(discovery_engine=_discovery_engine)
 _cart_optimizer = CartOptimizer()
 
+# Agentic Payment Protocol Instances
+_razorpay_client = RazorpayClient()
+_policy_engine = AgentPaymentPolicyEngine()
+_uap_layer = UAPAuthorizationLayer()
+_x402_adapter = X402PaymentAdapter()
+_rzp_protocol = RazorpayPaymentProtocolAdapter(_razorpay_client, _policy_engine)
+_x402_protocol = X402PaymentProtocolAdapter(_x402_adapter, _policy_engine)
+_uap_protocol = UAPPaymentProtocolAdapter(_uap_layer, _policy_engine)
+_timeline_mgr = get_timeline_manager()
+
 
 class VerifyProductRequest(BaseModel):
     product_id: Optional[str] = Field(None, description="Candidate product ID")
@@ -86,7 +112,7 @@ class CreateOrderRequest(BaseModel):
     buyer_id: str = Field(..., description="Authenticated buyer ID")
     preparation_id: str = Field(..., description="Prepared checkout session ID")
     payment_transaction_id: str = Field(
-        ..., description="Authorized RAZERPAY payment transaction ID"
+        ..., description="Authorized RAZORPAY payment transaction ID"
     )
     confirmation_token: str = Field(..., description="Verified human confirmation token")
     raw_candidate: Dict[str, Any] = Field(..., description="Candidate product payload")
@@ -232,7 +258,7 @@ async def create_merchant_order(payload: CreateOrderRequest) -> Dict[str, Any]:
     # Enforce 1:1 Payment ↔ Merchant Order Binding
     binding = _tx_binder_mgr.bind_transaction_to_order(
         binding_id=f"bind_{uuid.uuid4().hex[:10]}",
-        razerpay_transaction_id=payload.payment_transaction_id,
+        razorpay_transaction_id=payload.payment_transaction_id,
         merchant_order_id=order_rec["merchant_order_id"],
         merchant_id=product.merchant.merchant_id,
         product_id=product.product_id,
@@ -553,4 +579,405 @@ async def optimize_shopping_cart(req: ShoppingResearchRequestModel) -> Dict[str,
         "shopping_request": shop_req.to_dict(),
         "optimization_result": opt_res.to_dict(),
         "explanation": explanation,
+    }
+
+
+# -----------------------------------------------------------------------------
+# Razorpay Test-Mode & Agentic Payment Protocol Endpoints
+# -----------------------------------------------------------------------------
+
+
+class RazorpayOrderRequestModel(BaseModel):
+    amount_paise: int = Field(..., description="Amount in minor units (paise)")
+    currency: str = Field("INR", description="Currency code")
+    receipt: str = Field(..., description="Internal receipt or transaction ID")
+    notes: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    confirmation_token: str = Field(..., description="Verified human confirmation token")
+    agent_id: str = Field("shopping_agent_01", description="Agent Identity ID")
+    merchant_id: str = Field("mer_cafe_acme", description="Target merchant ID")
+    category: str = Field("grocery", description="Product category")
+    uap_token: Optional[str] = Field(None, description="Optional UAP delegation token")
+
+
+class RazorpayVerifyRequestModel(BaseModel):
+    order_id: str = Field(..., description="Razorpay order ID")
+    payment_id: str = Field(..., description="Razorpay payment ID")
+    signature: str = Field(..., description="Razorpay payment signature")
+    transaction_id: str = Field(..., description="Internal transaction ID")
+
+
+class PolicyEvaluationRequestModel(BaseModel):
+    agent_id: str = Field("shopping_agent_01", description="Agent Identity ID")
+    request_id: str = Field(..., description="Request ID")
+    user_id: str = Field("buyer_01", description="User ID")
+    merchant_id: str = Field("mer_cafe_acme", description="Merchant ID")
+    merchant_name: str = Field("Cafe Acme", description="Merchant name")
+    category: str = Field("grocery", description="Product category")
+    currency: str = Field("INR", description="Currency")
+    amount_paise: int = Field(..., description="Amount in paise")
+    provider: str = Field("razorpay_test", description="Payment provider name")
+    is_product_verified: bool = Field(True, description="Product truth verification status")
+    has_human_confirmation: bool = Field(True, description="Human confirmation status")
+
+
+class UAPTokenRequestModel(BaseModel):
+    agent_id: str = Field("shopping_agent_01", description="Agent Identity ID")
+    user_id: str = Field("buyer_01", description="User ID")
+    max_amount_paise: int = Field(50000, description="Max transaction amount in paise")
+    daily_limit_paise: int = Field(200000, description="Daily limit in paise")
+
+
+class X402PaymentRequestModel(BaseModel):
+    resource_url: str = Field(..., description="Target 402 resource URL")
+    status_code: int = Field(402, description="HTTP status code")
+    headers: Dict[str, str] = Field(default_factory=dict)
+    body: Dict[str, Any] = Field(default_factory=dict)
+    agent_id: str = Field("shopping_agent_01", description="Agent ID")
+    confirmation_token: str = Field(..., description="Human confirmation token")
+    transaction_id: str = Field(..., description="Internal transaction ID")
+
+
+@router.get(
+    "/payment-capabilities", summary="Get Payment Capability Matrix", status_code=status.HTTP_200_OK
+)
+async def get_payment_capabilities() -> Dict[str, Any]:
+    """Retrieve full capability matrix across all payment protocols."""
+    return {
+        "status": "SUCCESS",
+        "capabilities": {
+            "razorpay": _rzp_protocol.get_capabilities(),
+            "x402": _x402_protocol.get_capabilities(),
+            "uap": _uap_protocol.get_capabilities(),
+        },
+    }
+
+
+@router.post(
+    "/policy/evaluate", summary="Evaluate Agent Payment Policy", status_code=status.HTTP_200_OK
+)
+async def evaluate_agent_payment_policy(req: PolicyEvaluationRequestModel) -> Dict[str, Any]:
+    """Evaluate payment request against deterministic Agent Payment Policy Engine."""
+    ctx = PolicyEvaluationContext(
+        agent_id=req.agent_id,
+        request_id=req.request_id,
+        user_id=req.user_id,
+        merchant_id=req.merchant_id,
+        merchant_name=req.merchant_name,
+        category=req.category,
+        currency=req.currency,
+        amount_paise=req.amount_paise,
+        provider=req.provider,
+        is_product_verified=req.is_product_verified,
+        has_human_confirmation=req.has_human_confirmation,
+    )
+    eval_res = _policy_engine.evaluate(ctx)
+    return {
+        "status": "SUCCESS",
+        "allowed": eval_res.allowed,
+        "risk_level": eval_res.risk_level.value,
+        "reason": eval_res.reason,
+        "block_code": eval_res.block_code,
+        "policy_id": eval_res.policy_id,
+    }
+
+
+@router.post(
+    "/uap/issue-token",
+    summary="Issue UAP Delegated Authorization Token",
+    status_code=status.HTTP_200_OK,
+)
+async def issue_uap_token(req: UAPTokenRequestModel) -> Dict[str, Any]:
+    """Issue a UAP-aligned delegated authorization policy and token."""
+    auth_policy = _uap_layer.issue_authorization(
+        agent_id=req.agent_id,
+        user_id=req.user_id,
+        max_amount_paise=req.max_amount_paise,
+        daily_limit_paise=req.daily_limit_paise,
+    )
+    return {
+        "status": "SUCCESS",
+        "authorization_id": auth_policy.authorization_id,
+        "token": auth_policy.token,
+        "status_code": auth_policy.status.value,
+        "expiration_timestamp": auth_policy.expiration_timestamp,
+        "max_amount_paise": auth_policy.max_amount_paise,
+    }
+
+
+@router.post(
+    "/uap/revoke-token", summary="Revoke UAP Authorization Token", status_code=status.HTTP_200_OK
+)
+async def revoke_uap_token(authorization_id: str) -> Dict[str, Any]:
+    """Revoke an active UAP authorization policy token."""
+    success = _uap_layer.revoke_authorization(authorization_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="UAP authorization token not found.")
+    return {"status": "SUCCESS", "message": f"Authorization {authorization_id} revoked."}
+
+
+@router.post(
+    "/razorpay/create-order", summary="Create Razorpay Test Order", status_code=status.HTTP_200_OK
+)
+async def create_razorpay_order(req: RazorpayOrderRequestModel) -> Dict[str, Any]:
+    """Create a Razorpay Test Mode order after policy validation & human authorization."""
+    # 1. Evaluate Policy Gate
+    eval_ctx = PolicyEvaluationContext(
+        agent_id=req.agent_id,
+        request_id=req.receipt,
+        user_id="buyer_01",
+        merchant_id=req.merchant_id,
+        merchant_name=req.merchant_id,
+        category=req.category,
+        currency=req.currency,
+        amount_paise=req.amount_paise,
+        provider="razorpay_test",
+        is_product_verified=True,
+        has_human_confirmation=bool(req.confirmation_token),
+    )
+
+    if req.uap_token:
+        eval_res = _uap_protocol.evaluate_authorization(eval_ctx, req.uap_token)
+    else:
+        eval_res = _rzp_protocol.evaluate_authorization(eval_ctx)
+
+    if not eval_res.allowed:
+        _timeline_mgr.record_event(
+            req.receipt,
+            stage="POLICY_BLOCKED",
+            label="Payment Policy Blocked",
+            detail=eval_res.reason,
+            status="FAILED",
+            is_failed=True,
+        )
+        raise HTTPException(
+            status_code=400,
+            detail=f"Payment policy block [{eval_res.block_code}]: {eval_res.reason}",
+        )
+
+    # 2. Execute Order Creation via Razorpay Client
+    try:
+        order = _razorpay_client.create_test_order(
+            amount_paise=req.amount_paise,
+            currency=req.currency,
+            receipt=req.receipt,
+            notes=req.notes,
+        )
+        _policy_engine.record_spending(req.agent_id, req.amount_paise)
+        _timeline_mgr.record_event(
+            req.receipt,
+            stage="RAZORPAY_ORDER_CREATED",
+            label="Razorpay Order Created",
+            detail=f"Order {order.order_id} created for {req.amount_paise} paise in {order.mode.value} mode",
+        )
+        return {
+            "status": "SUCCESS",
+            "order": {
+                "order_id": order.order_id,
+                "amount_paise": order.amount_paise,
+                "currency": order.currency,
+                "receipt": order.receipt,
+                "status": order.status,
+                "mode": order.mode.value,
+                "created_at": order.created_at,
+            },
+            "risk_level": eval_res.risk_level.value,
+        }
+    except Exception as err:
+        _timeline_mgr.record_event(
+            req.receipt,
+            stage="ORDER_CREATION_FAILED",
+            label="Order Creation Failed",
+            detail=str(err),
+            status="FAILED",
+            is_failed=True,
+        )
+        raise HTTPException(status_code=400, detail=str(err))
+
+
+@router.post(
+    "/razorpay/verify-payment",
+    summary="Verify Razorpay Payment Signature",
+    status_code=status.HTTP_200_OK,
+)
+async def verify_razorpay_payment(req: RazorpayVerifyRequestModel) -> Dict[str, Any]:
+    """Verify Razorpay payment HMAC-SHA256 signature and reconcile order status."""
+    is_valid = _razorpay_client.verify_payment_signature(
+        order_id=req.order_id,
+        payment_id=req.payment_id,
+        signature=req.signature,
+    )
+
+    if not is_valid:
+        _timeline_mgr.record_event(
+            req.transaction_id,
+            stage="SIGNATURE_VERIFICATION_FAILED",
+            label="Signature Failed",
+            detail=f"Signature verification failed for payment {req.payment_id}",
+            status="FAILED",
+            is_failed=True,
+        )
+        raise HTTPException(status_code=400, detail="Invalid Razorpay payment signature.")
+
+    p_status = _razorpay_client.get_payment_status(req.payment_id)
+
+    _timeline_mgr.record_event(
+        req.transaction_id,
+        stage="PAYMENT_VERIFIED",
+        label="Payment Verified & Reconciled",
+        detail=f"Payment {req.payment_id} verified cleanly with status '{p_status.value}'",
+    )
+
+    return {
+        "status": "SUCCESS",
+        "verified": True,
+        "payment_id": req.payment_id,
+        "order_id": req.order_id,
+        "provider_status": p_status.value,
+    }
+
+
+@router.post(
+    "/x402/pay", summary="Execute x402-Compatible HTTP Payment", status_code=status.HTTP_200_OK
+)
+async def execute_x402_payment(req: X402PaymentRequestModel) -> Dict[str, Any]:
+    """Parse HTTP 402 requirement, evaluate policy, and generate proof token."""
+    try:
+        requirement = _x402_adapter.parse_402_header_or_body(
+            resource_url=req.resource_url,
+            status_code=req.status_code,
+            headers=req.headers,
+            body=req.body,
+        )
+
+        eval_ctx = PolicyEvaluationContext(
+            agent_id=req.agent_id,
+            request_id=req.transaction_id,
+            user_id="buyer_01",
+            merchant_id="merchant_x402",
+            merchant_name="x402 Resource Provider",
+            category="general",
+            currency=requirement.currency,
+            amount_paise=requirement.amount_paise,
+            provider="x402",
+            is_product_verified=True,
+            has_human_confirmation=bool(req.confirmation_token),
+        )
+        eval_res = _x402_protocol.evaluate_authorization(eval_ctx)
+
+        if not eval_res.allowed:
+            raise HTTPException(status_code=400, detail=f"x402 policy block: {eval_res.reason}")
+
+        proof = _x402_adapter.generate_payment_proof(
+            requirement=requirement,
+            transaction_id=req.transaction_id,
+            agent_id=req.agent_id,
+        )
+
+        _x402_adapter.verify_and_settle_proof(proof, requirement)
+
+        _timeline_mgr.record_event(
+            req.transaction_id,
+            stage="X402_PROOF_GENERATED",
+            label="x402 Payment Settled",
+            detail=f"x402 proof generated for requirement {requirement.requirement_hash[:8]}",
+        )
+
+        return {
+            "status": "SUCCESS",
+            "requirement_hash": requirement.requirement_hash,
+            "proof_token": proof.proof_token,
+            "settled": True,
+        }
+    except Exception as err:
+        raise HTTPException(status_code=400, detail=str(err))
+
+
+@router.get(
+    "/timeline/{transaction_id}",
+    summary="Get Payment Event Timeline",
+    status_code=status.HTTP_200_OK,
+)
+async def get_payment_timeline(transaction_id: str) -> Dict[str, Any]:
+    """Retrieve full real-time event timeline for a transaction."""
+    events = _timeline_mgr.get_timeline(transaction_id)
+    if not events:
+        # Default initialization for demo
+        events = _timeline_mgr.create_default_timeline(
+            transaction_id, "Find coffee and biscuits under ₹300", 29900
+        )
+
+    return {
+        "status": "SUCCESS",
+        "transaction_id": transaction_id,
+        "events_count": len(events),
+        "events": [
+            {
+                "event_id": e.event_id,
+                "timestamp": e.timestamp,
+                "stage": e.stage,
+                "label": e.label,
+                "detail": e.detail,
+                "status": e.status,
+                "is_failed": e.is_failed,
+            }
+            for e in events
+        ],
+    }
+
+
+class AIDecisionRequest(BaseModel):
+    prompt: str = Field(..., description="Natural language shopping request")
+    budget_paise: int = Field(default=30000, description="Budget boundary in minor paise")
+
+
+class AIRiskEvalRequest(BaseModel):
+    amount_paise: int = Field(..., description="Transaction amount in paise")
+    budget_paise: int = Field(default=30000, description="Total budget in paise")
+    product_verified: bool = Field(
+        default=True, description="Whether product evidence is source-verified"
+    )
+    merchant_risk_score: float = Field(default=0.1, description="Merchant risk rating 0.0-1.0")
+    velocity_attempt_count: int = Field(
+        default=1, description="Attempts in current velocity window"
+    )
+    confirmation_timing_sec: float = Field(
+        default=5.0, description="Time taken to confirm in seconds"
+    )
+    cart_item_count: int = Field(default=2, description="Number of items in cart")
+    prompt_injection_detected: bool = Field(
+        default=False, description="Prompt injection signal flag"
+    )
+    payment_protocol: str = Field(default="razorpay", description="Payment protocol used")
+    retry_failure_count: int = Field(default=0, description="Previous failure count")
+
+
+@router.post(
+    "/ai/decision",
+    summary="LLM Commerce Decision & Intent Extraction",
+    status_code=status.HTTP_200_OK,
+)
+async def evaluate_ai_decision(req: AIDecisionRequest) -> Dict[str, Any]:
+    """Execute LLM decision reasoning and prompt injection inspection."""
+    decision = _llm_engine.process_shopping_request(
+        prompt=req.prompt, budget_paise=req.budget_paise
+    )
+    return {
+        "status": "SUCCESS",
+        "decision": decision.model_dump(),
+        "is_safe": decision.is_safe_for_planning(),
+    }
+
+
+@router.post(
+    "/ai/risk-eval",
+    summary="Combined ML & Neural Risk Intelligence Evaluation",
+    status_code=status.HTTP_200_OK,
+)
+async def evaluate_ai_risk(req: AIRiskEvalRequest) -> Dict[str, Any]:
+    """Evaluate transaction risk using ML Logistic Classifier and Neural Autoencoder Model."""
+    payload = req.model_dump()
+    risk_summary = _risk_engine.evaluate_risk(payload)
+    return {
+        "status": "SUCCESS",
+        "risk_intelligence": risk_summary,
     }

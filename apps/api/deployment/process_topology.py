@@ -20,7 +20,7 @@ class ProcessRole(str, Enum):
 
 
 class ProcessTopologyManager:
-    """Manages process identity, role isolation, and execution contracts for Razerpay runtime services."""
+    """Manages process identity, role isolation, and execution contracts for Razorpay runtime services."""
 
     def __init__(self, role: ProcessRole = ProcessRole.API_SERVICE) -> None:
         self.role = role

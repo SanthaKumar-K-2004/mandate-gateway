@@ -1,4 +1,4 @@
-# RAZERPAY — Final Production Test Certification
+# RAZORPAY — Final Production Test Certification
 
 ## Test Suite Execution Breakdown
 

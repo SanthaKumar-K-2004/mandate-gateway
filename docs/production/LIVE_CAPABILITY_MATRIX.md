@@ -1,4 +1,4 @@
-# RAZERPAY — Live Connector Capability Matrix
+# RAZORPAY — Live Connector Capability Matrix
 
 ## Matrix Classifications
 

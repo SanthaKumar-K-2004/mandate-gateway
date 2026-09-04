@@ -1,4 +1,4 @@
-# RAZERPAY — Product Truth Engine Architecture (M24)
+# RAZORPAY — Product Truth Engine Architecture (M24)
 
 ## Overview
 The **Product Truth Engine** (`ProductTruthEngine` in `apps/api/commerce/product_truth_engine.py`) enforces strict validation rules ensuring that a discovered search candidate is a genuine, single SKU product with verified live pricing before any purchase proposal is generated.

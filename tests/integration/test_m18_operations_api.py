@@ -54,7 +54,7 @@ class TestM18OperationsAPI(unittest.IsolatedAsyncioTestCase):
 
         await self.app(scope, receive, send)
         self.assertEqual(response_status, 200)
-        self.assertIn(b"RAZERPAY", response_body)
+        self.assertIn(b"RAZORPAY", response_body)
         self.assertIn(b"Executive Operations Dashboard", response_body)
 
     async def test_demo_journey_execution(self) -> None:

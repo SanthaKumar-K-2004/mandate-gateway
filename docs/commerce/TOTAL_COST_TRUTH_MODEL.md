@@ -1,4 +1,4 @@
-# RAZERPAY — Total Cost Truth Model
+# RAZORPAY — Total Cost Truth Model
 
 ## Overview
 The `CartCostEngine` ([`apps/api/commerce/cart_cost_engine.py`](file:///home/santhakumar/Desktop/Razorpay/apps/api/commerce/cart_cost_engine.py)) calculates exact known product costs and enforces strict truth-in-labeling for unverified fees.

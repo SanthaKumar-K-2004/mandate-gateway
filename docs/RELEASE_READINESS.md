@@ -3,7 +3,7 @@
 ## Release Profile
 **Project Name**: Mandate Gateway (AI Commerce Safety Agent)  
 **Public Branding**: Mandate Gateway — Verified AI Commerce Agent  
-**Release Target**: `v1.0.1` (Audit-Hardened Patch Release) / `v1.0.0` (Frozen Release)  
+**Release Target**: `v2.0.0` (Agentic Payment Protocol & Razorpay Test Integration Release)
 **PROJECT_CONTEXT.md SHA-256 Checksum**: `2b62d52aa707bc9bb5df60d93b04f60933562e69af8068c46cc3b6cdc2eb670a`  
 
 > **Disclaimer Notice**: Mandate Gateway is an independent open-source AI commerce safety project. It is **NOT** affiliated with, endorsed by, or connected to **Razorpay Software Private Limited**.
@@ -16,15 +16,23 @@
 ```bash
 PYTHONPATH=. python3 -m unittest discover -s tests -p "test_*.py"
 ```
-- **Tests Executed**: **844**
-- **Passed**: 842
+- **Tests Executed**: **870**
+- **Passed**: 868
 - **Skipped**: 2 (Environment-specific integration skips)
 - **Failed**: 0
 - **Errors**: 0
 
+### Security & Protocol Test Suites
+```bash
+PYTHONPATH=. python3 -m unittest discover -s tests/security -p "test_*.py"
+```
+- **Security Tests Executed**: **281**
+- **Passed**: 281
+- **Failed**: 0
+
 ### Targeted Certification Suites
-- **Production Chaos Matrix**: 15 test methods covering 18 production chaos failure scenarios passed.
-- **Secret Redaction Suite**: 2 test methods verifying secret sanitization passed.
+- **Production Chaos Matrix**: 18 test methods covering production chaos failure scenarios passed.
+- **Secret Redaction Suite**: Verifies zero secret leaks in repr/logs/exceptions passed.
 - **Production Reality Certification**: 7 / 7 stages passed (`scripts/run_production_reality_certification.py`).
 - **MCP Client Interoperability Suite**: 5 / 5 steps passed (`scripts/mcp_client_test_runner.py`).
 
@@ -59,6 +67,10 @@ Mandate Gateway distinguishes live, sandbox, and handoff capabilities explicitly
 | Provider / Connector | Target Domain | Capability Classification | Mode | Real Money Movement? |
 |----------------------|--------------|---------------------------|------|----------------------|
 | `PublicPlatformConnector` | `world.openfoodfacts.org` | `LIVE_CATALOG_API` | **LIVE** | ❌ No (Live Product Intelligence API) |
+| `RazorpayClient` (Test) | `https://api.razorpay.com/v1` | `TEST / SANDBOX` | **TEST** | ❌ No (Official Razorpay Test API) |
+| `RazorpayClient` (Live) | `https://api.razorpay.com/v1` | `NOT AVAILABLE` | **LIVE** | 🔴 Disabled (Requires Production Keys) |
+| `X402PaymentAdapter` | HTTP `402 Payment Required` | `PROTOCOL_COMPATIBLE` | **PROTOCOL_ADAPTER** | ❌ No (Protocol Proof Layer) |
+| `UAPAuthorizationLayer` | Internal Delegated Tokens | `UAP_ALIGNED` | **AUTHORIZATION** | ❌ No (Policy & Delegation Engine) |
 | `RealPlatformConnector` | `cafeacme.local` | `VERIFIED_API` | **SANDBOX** | ❌ No (Authenticated Sandbox API) |
 | `GenericWebCheckoutConnector` | Validated HTTPS Merchant URLs | `CHECKOUT_HANDOFF` | **LIVE** | ❌ No (Redirect Handoff URL Only) |
 
@@ -68,9 +80,10 @@ Mandate Gateway distinguishes live, sandbox, and handoff capabilities explicitly
 
 1. **Catalog Scope**: Live discovery is configured against OpenFoodFacts API (grocery and food products).
 2. **Delivery & Tax Fee Truth**: Shipping and tax fees are unavailable via public catalog APIs and are explicitly rendered as `UNKNOWN` rather than estimated.
-3. **Sandbox Merchant**: `cafeacme.local` is a local sandbox merchant endpoint requiring local DNS resolution for sandbox testing.
-4. **No Real PSP Gateway Wiring**: No live production Razorpay or Stripe credentials are configured.
+3. **Razorpay Test Mode**: `RAZORPAY_MODE=test` is active by default; real money is never moved without explicit production setup.
+4. **Protocol Adapters**: x402 and UAP layers operate as standard-aligned architectural adapters within Mandate Gateway's safety boundary.
 5. **Development Persistence**: In default local development mode, SQLite in-process datastores are used unless Docker Compose (`docker-compose.production.yml`) with PostgreSQL/Redis is launched.
+
 
 ---
 

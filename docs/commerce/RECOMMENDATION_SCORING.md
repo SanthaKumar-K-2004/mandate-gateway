@@ -1,4 +1,4 @@
-# RAZERPAY — Deterministic Recommendation Engine Scoring Model
+# RAZORPAY — Deterministic Recommendation Engine Scoring Model
 
 ## Overview
 The `DeterministicRecommendationEngine` ([`apps/api/commerce/recommendation_engine.py`](file:///home/santhakumar/Desktop/Razorpay/apps/api/commerce/recommendation_engine.py)) computes composite recommendation scores deterministically.

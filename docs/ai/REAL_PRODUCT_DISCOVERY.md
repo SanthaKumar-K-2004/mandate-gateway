@@ -1,7 +1,7 @@
-# RAZERPAY — Real Product Discovery Architecture (M23)
+# RAZORPAY — Real Product Discovery Architecture (M23)
 
 ## Overview
-RAZERPAY transitions product discovery from mock data to real-time live external sources using `LiveDataOrchestrator` and `ProductTruthValidator`.
+RAZORPAY transitions product discovery from mock data to real-time live external sources using `LiveDataOrchestrator` and `ProductTruthValidator`.
 
 ## Provider Hierarchy
 1. **Tavily Search API (`TavilyWebSearchProvider`)**: Real-time web product search (`TAVILY_API_KEY`).

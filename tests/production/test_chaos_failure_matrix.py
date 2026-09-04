@@ -202,7 +202,7 @@ class TestChaosFailureMatrix(unittest.TestCase):
 
         binding = self.tx_binder_mgr.bind_transaction_to_order(
             binding_id=f"bind_{uuid.uuid4().hex[:8]}",
-            razerpay_transaction_id="tx_dup_10",
+            razorpay_transaction_id="tx_dup_10",
             merchant_order_id="ord_dup_10",
             merchant_id="merchant_cafe",
             product_id="prod_coffee_01",
@@ -213,14 +213,14 @@ class TestChaosFailureMatrix(unittest.TestCase):
             connector_id="connector_cafe_acme_api",
         )
         self.assertIsNotNone(binding)
-        self.assertIsNotNone(binding.razerpay_transaction_id)
+        self.assertIsNotNone(binding.razorpay_transaction_id)
 
         # Attempt duplicate binding of same transaction — must raise TransactionBindingError
         duplicate_raised = False
         try:
             self.tx_binder_mgr.bind_transaction_to_order(
                 binding_id=f"bind_{uuid.uuid4().hex[:8]}",
-                razerpay_transaction_id="tx_dup_10",
+                razorpay_transaction_id="tx_dup_10",
                 merchant_order_id="ord_dup_10_other",  # Different order — must be rejected
                 merchant_id="merchant_cafe",
                 product_id="prod_coffee_01",

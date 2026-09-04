@@ -2,7 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "RAZERPAY Mandate Gateway — AI Commerce Control Center",
+  title: "RAZORPAY Mandate Gateway — AI Commerce Control Center",
   description: "Verified zero-LLM payment authorization, multi-merchant product discovery, total cost truth model, and cryptographic transaction settlement.",
 };
 

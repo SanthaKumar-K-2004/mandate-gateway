@@ -1,4 +1,4 @@
-# RAZERPAY — Commerce Webhook Security (M25)
+# RAZORPAY — Commerce Webhook Security (M25)
 
 ## Overview
 `CommerceWebhookHandler` ([`apps/api/commerce/webhooks.py`](file:///home/santhakumar/Desktop/Razorpay/apps/api/commerce/webhooks.py)) verifies incoming merchant webhook events (`order.created`, `order.confirmed`, `order.cancelled`, `payment.accepted`, `payment.failed`).

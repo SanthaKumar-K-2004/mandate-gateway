@@ -1,7 +1,7 @@
-# RAZERPAY — Live Commerce Integration Testing Policy
+# RAZORPAY — Live Commerce Integration Testing Policy
 
 ## Overview
-RAZERPAY enforces a strict live testing policy to ensure real network calls do not execute unintended financial transactions during routine unit tests or CI/CD builds.
+RAZORPAY enforces a strict live testing policy to ensure real network calls do not execute unintended financial transactions during routine unit tests or CI/CD builds.
 
 ---
 

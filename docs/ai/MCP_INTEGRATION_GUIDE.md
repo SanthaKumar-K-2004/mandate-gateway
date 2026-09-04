@@ -1,7 +1,7 @@
-# RAZERPAY — Model Context Protocol (MCP) Integration Guide (M22)
+# RAZORPAY — Model Context Protocol (MCP) Integration Guide (M22)
 
 ## Introduction
-RAZERPAY exposes an allowlisted set of Model Context Protocol (MCP) compatible tools allowing external AI agent clients (e.g. Claude Desktop, Cursor, Custom Agents) to safely inspect catalog products, check buyer budget status, query transaction state, and formulate purchase plans.
+RAZORPAY exposes an allowlisted set of Model Context Protocol (MCP) compatible tools allowing external AI agent clients (e.g. Claude Desktop, Cursor, Custom Agents) to safely inspect catalog products, check buyer budget status, query transaction state, and formulate purchase plans.
 
 ## Supported MCP JSON-RPC Methods
 

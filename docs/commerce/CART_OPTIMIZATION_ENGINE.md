@@ -1,4 +1,4 @@
-# RAZERPAY — Bounded Cart Combination Optimizer
+# RAZORPAY — Bounded Cart Combination Optimizer
 
 ## Overview
 The `CartOptimizer` ([`apps/api/commerce/cart_optimizer.py`](file:///home/santhakumar/Desktop/Razorpay/apps/api/commerce/cart_optimizer.py)) evaluates multi-item cart combinations.

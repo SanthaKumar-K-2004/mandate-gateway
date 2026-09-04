@@ -604,7 +604,7 @@
   - Request ID propagation middleware & `X-Request-ID` header.
   - Idempotency key header validation & payload fingerprint verification.
   - Webhook subscription endpoints (`/api/webhooks/subscriptions`, `/api/webhooks/deliveries`) & outbox integration.
-  - Official Python Developer SDK in `sdk/python/razerpay` (`RazerpayClient`, `RazerpayConfig`, `RazerpayWebhookVerifier`, `exceptions.py`).
+  - Official Python Developer SDK in `sdk/python/razorpay` (`RazorpayClient`, `RazorpayConfig`, `RazorpayWebhookVerifier`, `exceptions.py`).
   - Developer Integration Guide in `docs/developer/DEVELOPER_GUIDE.md`.
   - Quality Gates (`make check`): 100% PASS (757 total automated tests PASS 100%).
 - [x] **M20 — Merchant Operations Dashboard & Production Control Center** — **COMPLETE / FROZEN**

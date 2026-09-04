@@ -1,6 +1,6 @@
-# Razerpay Mandate Gateway — Developer Integration & Quickstart Guide
+# Razorpay Mandate Gateway — Developer Integration & Quickstart Guide
 
-Welcome to the **Razerpay Mandate Gateway Developer Platform**. This guide covers full integration patterns for integrating autonomous payment mandates, API authentication, idempotency controls, action receipt verification, and webhook delivery.
+Welcome to the **Razorpay Mandate Gateway Developer Platform**. This guide covers full integration patterns for integrating autonomous payment mandates, API authentication, idempotency controls, action receipt verification, and webhook delivery.
 
 ---
 
@@ -125,7 +125,7 @@ POST /api/v1/webhooks/subscriptions
 Content-Type: application/json
 
 {
-  "url": "https://merchant.example.com/webhooks/razerpay",
+  "url": "https://merchant.example.com/webhooks/razorpay",
   "events": ["payment.captured", "payment.failed"],
   "secret": "whsec_super_secret_key"
 }
@@ -141,9 +141,9 @@ HMAC-SHA256(raw_request_body, secret)
 Verify signature in Python using the official SDK:
 
 ```python
-from razerpay import RazerpayWebhookVerifier
+from razorpay import RazorpayWebhookVerifier
 
-is_valid = RazerpayWebhookVerifier.verify_signature(
+is_valid = RazorpayWebhookVerifier.verify_signature(
     raw_payload=request_body_bytes,
     signature=headers["X-Razorpay-Signature"],
     secret="whsec_super_secret_key"
@@ -155,9 +155,9 @@ is_valid = RazerpayWebhookVerifier.verify_signature(
 ## 9. Python SDK Usage Example
 
 ```python
-from razerpay import RazerpayClient, RazerpayConfig
+from razorpay import RazorpayClient, RazorpayConfig
 
-client = RazerpayClient(RazerpayConfig(
+client = RazorpayClient(RazorpayConfig(
     base_url="http://localhost:8000",
     api_key="rzp_live_demo_token_123",
     merchant_id="mer_acme_corp"

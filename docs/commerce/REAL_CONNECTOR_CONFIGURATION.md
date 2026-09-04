@@ -1,4 +1,4 @@
-# RAZERPAY — Real Merchant Connector Configuration Guide
+# RAZORPAY — Real Merchant Connector Configuration Guide
 
 ## Overview
 Merchant connectors are dynamically configured via environment variables.

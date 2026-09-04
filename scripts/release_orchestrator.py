@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Razerpay Production Release Orchestrator & Deployment Validation Pipeline.
+Razorpay Production Release Orchestrator & Deployment Validation Pipeline.
 Section M16 — Workstream 7: Release Orchestration.
 """
 
@@ -25,7 +25,7 @@ class ReleaseOrchestrator:
 
     async def execute_pipeline(self) -> bool:
         logger.info("============================================================")
-        logger.info(" RAZERPAY PRODUCTION RELEASE ORCHESTRATOR & DEPLOYMENT PIPELINE")
+        logger.info(" RAZORPAY PRODUCTION RELEASE ORCHESTRATOR & DEPLOYMENT PIPELINE")
         logger.info("============================================================")
 
         stages = [

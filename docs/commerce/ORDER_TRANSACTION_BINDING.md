@@ -1,7 +1,7 @@
-# RAZERPAY — Cart, Order & Payment Binding Architecture (M25)
+# RAZORPAY — Cart, Order & Payment Binding Architecture (M25)
 
 ## Overview
-To prevent product substitution attacks (e.g. confirming cheap Product A but ordering expensive Product B) and payment-order mismatch, RAZERPAY implements cryptographic order binding and strict 1:1 transaction binding.
+To prevent product substitution attacks (e.g. confirming cheap Product A but ordering expensive Product B) and payment-order mismatch, RAZORPAY implements cryptographic order binding and strict 1:1 transaction binding.
 
 ## Cryptographic Order Binding (`CommerceOrderBinder`)
 Computes `order_binding_hash`:

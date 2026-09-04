@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import unittest
 
-from apps.api.agent.mcp_server import RazerpayMCPServer
+from apps.api.agent.mcp_server import RazorpayMCPServer
 from apps.api.commerce.connectors.base import CommerceConnectorError
 from apps.api.commerce.connectors.public_platform import PublicPlatformConnector
 from apps.api.commerce.product_truth_engine import ProductTruthEngine
@@ -17,7 +17,7 @@ class TestM26AdversarialSecurity(unittest.TestCase):
 
     def test_adv_01_mcp_autonomous_payment_tool_exclusion(self) -> None:
         """Verify autonomous direct payment tools are strictly excluded from MCP tools/list."""
-        server = RazerpayMCPServer()
+        server = RazorpayMCPServer()
         resp = server.handle_mcp_request({"jsonrpc": "2.0", "id": 1, "method": "tools/list"})
 
         tools = resp["result"]["tools"]

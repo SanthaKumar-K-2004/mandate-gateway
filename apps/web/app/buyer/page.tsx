@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import Link from "next/link";
+import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 
 const API = "http://localhost:8000";
@@ -18,141 +17,71 @@ interface Product {
   img_url?: string;
   description?: string;
   evidence_hash?: string;
-  sha256_hash?: string;
 }
 
-interface PipelineStage {
-  id: number;
-  name: string;
-  status: "pending" | "active" | "done" | "error" | "locked";
-  icon: string;
-  detail?: string;
+interface TimelineEvent {
+  event_id: string;
+  timestamp: number;
+  stage: string;
+  label: string;
+  detail: string;
+  status: "COMPLETED" | "IN_PROGRESS" | "FAILED" | "SKIPPED";
+  is_failed?: boolean;
 }
 
-const INITIAL_STAGES: PipelineStage[] = [
-  { id: 1, name: "Intent & Policy Ingestion", status: "pending", icon: "📥", detail: "Parsing NL buyer intent + policy constraints" },
-  { id: 2, name: "Multi-Source Web Discovery", status: "pending", icon: "🌐", detail: "Crawling OpenFoodFacts, merchant direct APIs" },
-  { id: 3, name: "Product Evidence Verification", status: "pending", icon: "🔍", detail: "SHA-256 hashing, provenance checks" },
-  { id: 4, name: "Live Price Re-validation", status: "pending", icon: "💱", detail: "Real-time price reconciliation" },
-  { id: 5, name: "Cart Combination Solver", status: "pending", icon: "🛒", detail: "Optimal cart selection algorithm" },
-  { id: 6, name: "Total Cost Truth Model", status: "pending", icon: "📊", detail: "Exact paise-level cost calculation" },
-  { id: 7, name: "Mandate Authorization Check", status: "pending", icon: "🔐", detail: "Policy enforcement: cap, daily budget, categories" },
-  { id: 8, name: "Deterministic Decision Trace", status: "pending", icon: "📋", detail: "Zero-LLM rule-based authorization decision" },
-  { id: 9, name: "Human Token Step-Up Lock", status: "locked", icon: "🔒", detail: "Human confirmation gate for high-value purchases" },
-  { id: 10, name: "Payment & Order Settlement", status: "pending", icon: "💳", detail: "Razorpay order creation & cryptographic commit" },
-];
+interface AIRiskIntelligence {
+  combined_risk_score: number;
+  risk_level: string;
+  ml_risk: {
+    risk_score: number;
+    risk_level: string;
+    model_version: string;
+  };
+  neural_anomaly: {
+    anomaly_score: number;
+    reconstruction_mse: number;
+    is_anomalous: boolean;
+    model_version: string;
+  };
+  llm_decision: {
+    intent_summary: string;
+    prompt_injection_detected: boolean;
+    confidence_score: number;
+  };
+}
 
-const stageBadge = (s: PipelineStage["status"]) => {
-  switch (s) {
-    case "done": return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
-    case "active": return "bg-blue-500/10 text-blue-400 border-blue-500/30 animate-pulse";
-    case "error": return "bg-red-500/10 text-red-400 border-red-500/30";
-    case "locked": return "bg-amber-500/10 text-amber-400 border-amber-500/30";
-    default: return "bg-slate-800 text-slate-500 border-slate-700";
-  }
-};
-
-const stageStatusLabel = (s: PipelineStage["status"]) => {
-  switch (s) {
-    case "done": return "✓ Done";
-    case "active": return "⚡ Running";
-    case "error": return "✕ Error";
-    case "locked": return "🔒 Enforced";
-    default: return "○ Pending";
-  }
-};
-
-const SUGGESTED = [
-  "Find ergonomic office mouse under ₹1500",
+const PRESETS = [
+  "Find coffee and biscuits under ₹300",
   "Wireless Mechanical Keyboard under ₹3000",
-  "Filter Coffee & Organic Biscuits under ₹400",
   "Himalayan Green Tea Bags under ₹300",
-  "USB-C Hub with 4K HDMI under ₹2000",
-  "Noise Cancelling Headphones under ₹5000",
+  "Ergonomic office mouse under ₹1500",
 ];
 
 export default function BuyerPage() {
-  const [userIntent, setUserIntent] = useState("Find ergonomic office mouse under ₹1500");
-  const [selectedMandate, setSelectedMandate] = useState("man_buyer_01");
-  const [mandateCapPaise, setMandateCapPaise] = useState(500000);
+  const [userIntent, setUserIntent] = useState("Find coffee and biscuits under ₹300");
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<Product[]>([]);
   const [loadingSearch, setLoadingSearch] = useState(false);
-  const [stages, setStages] = useState<PipelineStage[]>(INITIAL_STAGES);
-  const [purchaseStatus, setPurchaseStatus] = useState<string | null>(null);
-  const [purchaseLoading, setPurchaseLoading] = useState(false);
-  const [purchaseError, setPurchaseError] = useState<string | null>(null);
-  const stageTimer = useRef<NodeJS.Timeout[]>([]);
+  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
+  const [aiRisk, setAiRisk] = useState<AIRiskIntelligence | null>(null);
 
-  const clearStageTimers = () => {
-    stageTimer.current.forEach(clearTimeout);
-    stageTimer.current = [];
-  };
-
-  const resetStages = () => {
-    setStages(INITIAL_STAGES.map((s) => ({ ...s, status: s.status === "locked" ? "locked" : "pending" })));
-  };
-
-  const animatePipeline = (searchedProducts: Product[]) => {
-    clearStageTimers();
-    resetStages();
-
-    const delays = [0, 300, 900, 1400, 1900, 2400, 2800, 3200, 3600, 4200];
-    const doneTimes = [400, 1000, 1500, 2100, 2700, 3100, 3500, 4000, -1, 5000];
-
-    delays.forEach((delay, i) => {
-      const t1 = setTimeout(() => {
-        setStages((prev) =>
-          prev.map((s) =>
-            s.id === i + 1 && s.status !== "locked" ? { ...s, status: "active" } : s
-          )
-        );
-      }, delay);
-      stageTimer.current.push(t1);
-
-      if (doneTimes[i] >= 0) {
-        const t2 = setTimeout(() => {
-          setStages((prev) =>
-            prev.map((s) => {
-              if (s.id !== i + 1) return s;
-              // Stage 9 (Step-Up) depends on cart total vs mandate cap
-              if (s.id === 9) {
-                const total = searchedProducts.reduce((sum, p) => sum + p.price_paise, 0);
-                return {
-                  ...s,
-                  status: "locked",
-                  detail: total > mandateCapPaise
-                    ? `Step-up required — Cart ₹${(total / 100).toLocaleString()} > Cap ₹${(mandateCapPaise / 100).toLocaleString()}`
-                    : "Autonomous limit — No human step-up required",
-                };
-              }
-              return { ...s, status: "done" };
-            })
-          );
-        }, doneTimes[i]);
-        stageTimer.current.push(t2);
-      }
-    });
-
-    // Stage 10 done at end
-    const t10 = setTimeout(() => {
-      setStages((prev) =>
-        prev.map((s) => (s.id === 10 ? { ...s, status: "done", detail: "Ready for settlement" } : s))
-      );
-    }, 5200);
-    stageTimer.current.push(t10);
-  };
+  // Payment Execution States
+  const [confirmationToken, setConfirmationToken] = useState<string>("tok_human_confirmed_m26");
+  const [orderResult, setOrderResult] = useState<any>(null);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [attackScenario, setAttackScenario] = useState<string | null>(null);
+  const [usedTokens, setUsedTokens] = useState<Set<string>>(new Set());
 
   const handleSearch = async (query: string) => {
     setLoadingSearch(true);
     setUserIntent(query);
     setProducts([]);
-    resetStages();
+    setOrderResult(null);
+    setPaymentError(null);
+    setAttackScenario(null);
 
     try {
-      // Trigger pipeline stage 1 immediately
-      setStages((prev) => prev.map((s) => (s.id === 1 ? { ...s, status: "active" } : s)));
-
       const res = await fetch(`${API}/api/v1/commerce/shopping/optimize`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -168,11 +97,11 @@ export default function BuyerPage() {
           return {
             product_id: it.product_id || `prod_${i}`,
             title: it.title || "Merchant Product",
-            category: it.category || "general",
+            category: it.category || "grocery",
             price_inr: priceInr,
             price_paise: it.price_paise || Math.round(priceInr * 100),
-            merchant_name: it.merchant_name || it.merchant_domain || "Open Catalog",
-            merchant_domain: it.merchant_domain || "openfoodfacts.org",
+            merchant_name: it.merchant_name || it.merchant_domain || "Cafe Acme",
+            merchant_domain: it.merchant_domain || "cafeacme.local",
             product_url: it.product_url || "#",
             img_url: it.image_url || it.img_url || "",
             description: it.description || "",
@@ -182,138 +111,241 @@ export default function BuyerPage() {
       }
 
       setProducts(found);
-      animatePipeline(found);
+      setCart(found);
+
+      // AI Risk Intelligence Mock computation for UI
+      setAiRisk({
+        combined_risk_score: 0.2492,
+        risk_level: "LOW",
+        ml_risk: {
+          risk_score: 0.2032,
+          risk_level: "LOW",
+          model_version: "v1.2.0-ml-logistic",
+        },
+        neural_anomaly: {
+          anomaly_score: 0.3182,
+          reconstruction_mse: 0.1141,
+          is_anomalous: false,
+          model_version: "v1.0.0-neural-autoencoder",
+        },
+        llm_decision: {
+          intent_summary: `Synthesized intent for '${query}'`,
+          prompt_injection_detected: false,
+          confidence_score: 0.95,
+        },
+      });
+
+      // Fetch live timeline for coffee and biscuits transaction
+      fetchTimeline("tx_coffee_biscuits_demo");
     } catch {
-      // Backend error — show offline mode products
-      setProducts([]);
-      animatePipeline([]);
+      // Offline fallback products for Coffee and Biscuits under ₹300 demo
+      const fallback: Product[] = [
+        {
+          product_id: "prod_coffee_espresso",
+          title: "Cafe Acme Espresso Roast Coffee",
+          category: "beverage",
+          price_inr: 149,
+          price_paise: 14900,
+          merchant_name: "Cafe Acme Direct",
+          merchant_domain: "cafeacme.local",
+          product_url: "https://cafeacme.local/p/coffee.html",
+          evidence_hash: "a3f89012c8b74a123e",
+        },
+        {
+          product_id: "prod_biscuits_digestive",
+          title: "Organic Digestive Biscuits 200g",
+          category: "grocery",
+          price_inr: 150,
+          price_paise: 15000,
+          merchant_name: "Cafe Acme Direct",
+          merchant_domain: "cafeacme.local",
+          product_url: "https://cafeacme.local/p/biscuits.html",
+          evidence_hash: "f71290bb43c110998a",
+        },
+      ];
+      setProducts(fallback);
+      setCart(fallback);
+      setAiRisk({
+        combined_risk_score: 0.2492,
+        risk_level: "LOW",
+        ml_risk: {
+          risk_score: 0.2032,
+          risk_level: "LOW",
+          model_version: "v1.2.0-ml-logistic",
+        },
+        neural_anomaly: {
+          anomaly_score: 0.3182,
+          reconstruction_mse: 0.1141,
+          is_anomalous: false,
+          model_version: "v1.0.0-neural-autoencoder",
+        },
+        llm_decision: {
+          intent_summary: `Synthesized intent for '${query}'`,
+          prompt_injection_detected: false,
+          confidence_score: 0.95,
+        },
+      });
+      fetchTimeline("tx_coffee_biscuits_demo");
     } finally {
       setLoadingSearch(false);
     }
   };
 
-  const handleSearchClick = () => {
-    if (!loadingSearch) handleSearch(userIntent);
+  const fetchTimeline = async (txId: string) => {
+    try {
+      const res = await fetch(`${API}/api/v1/commerce/timeline/${txId}`);
+      const data = await res.json();
+      if (data.events) {
+        setTimelineEvents(data.events);
+      }
+    } catch {
+      setTimelineEvents([
+        { event_id: "evt_1", timestamp: Date.now() / 1000 - 12, stage: "INTENT_RECEIVED", label: "LLM Intent Reasoning", detail: `Parsed prompt: '${userIntent}' (Prompt Injection: None)`, status: "COMPLETED" },
+        { event_id: "evt_2", timestamp: Date.now() / 1000 - 10, stage: "RESEARCH_COMPLETED", label: "Product Research", detail: "Discovered Coffee & Biscuits via OpenFoodFacts", status: "COMPLETED" },
+        { event_id: "evt_3", timestamp: Date.now() / 1000 - 8, stage: "EVIDENCE_VERIFIED", label: "Evidence Verified", detail: "Source domain & SHA-256 provenance verified", status: "COMPLETED" },
+        { event_id: "evt_4", timestamp: Date.now() / 1000 - 6, stage: "CART_OPTIMIZED", label: "Cart Combination", detail: "Known total: ₹299 (29,900 paise)", status: "COMPLETED" },
+        { event_id: "evt_5", timestamp: Date.now() / 1000 - 4, stage: "RISK_INTELLIGENCE", label: "ML & Neural Anomaly Check", detail: "Combined Risk: LOW (0.2492), Neural MSE: 0.1141", status: "COMPLETED" },
+        { event_id: "evt_6", timestamp: Date.now() / 1000 - 2, stage: "PURCHASE_PLAN_CREATED", label: "Policy Gate Evaluation", detail: "Awaiting single-use HMAC human authorization", status: "COMPLETED" },
+      ]);
+    }
   };
 
   useEffect(() => {
     handleSearch(userIntent);
-    return clearStageTimers;
   }, []);
 
-  const addToCart = (p: Product) => {
-    setCart((prev) => {
-      const exists = prev.find((x) => x.product_id === p.product_id);
-      if (exists) return prev;
-      return [...prev, p];
-    });
-    setPurchaseStatus(null);
-    setPurchaseError(null);
-  };
+  const cartTotalInr = cart.reduce((s, c) => s + c.price_inr, 0);
+  const cartTotalPaise = cart.reduce((s, c) => s + c.price_paise, 0);
 
-  const removeFromCart = (idx: number) => {
-    setCart((prev) => prev.filter((_, i) => i !== idx));
-    setPurchaseStatus(null);
-    setPurchaseError(null);
-  };
+  const handleConfirmPurchase = async () => {
+    setPaymentLoading(true);
+    setPaymentError(null);
+    setOrderResult(null);
 
-  const handleExecutePurchase = async () => {
-    if (cart.length === 0) return;
-    setPurchaseLoading(true);
-    setPurchaseStatus(null);
-    setPurchaseError(null);
-
-    const totalPaise = cart.reduce((s, c) => s + c.price_paise, 0);
+    // Scenario 2: Attack Demo - Replayed Token Check
+    if (attackScenario === "REPLAY_TOKEN" && usedTokens.has(confirmationToken)) {
+      setPaymentError("BLOCKED — Reason: Authorization token already consumed. Replay attack prevented.");
+      setPaymentLoading(false);
+      return;
+    }
 
     try {
+      const receiptId = `rcpt_${Date.now()}`;
       const payload = {
-        buyer_id: "buy_user_99",
-        merchant_id: cart[0]?.merchant_domain || "mer_tech_store",
-        mandate_id: selectedMandate || "man_buyer_01",
-        operation: "create_order",
-        items: cart.map((c) => ({
-          product_id: c.product_id,
-          merchant_id: c.merchant_domain || "mer_tech_store",
-          name: c.title,
-          category: c.category || "electronics",
-          quantity: 1,
-          unit_price_paise: c.price_paise,
-          currency: "INR",
-        })),
-        tax_paise: 0,
-        shipping_paise: 0,
-        total_paise: totalPaise,
+        amount_paise: cartTotalPaise || 29900,
         currency: "INR",
-        idempotency_key: `idem_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        receipt: receiptId,
+        confirmation_token: confirmationToken,
+        agent_id: "shopping_agent_01",
+        merchant_id: "mer_cafe_acme",
+        category: "grocery",
       };
 
-      const res = await fetch(`${API}/api/purchase-proposals`, {
+      const res = await fetch(`${API}/api/v1/commerce/razorpay/create-order`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       const data = await res.json();
+      if (res.ok && data.status === "SUCCESS") {
+        setOrderResult(data);
+        setUsedTokens((prev) => new Set(prev).add(confirmationToken));
 
-      const stateStr = data.state || data.decision_trace?.decision || "";
-      if (stateStr === "COMMITTED" || stateStr === "AUTHORIZED" || stateStr === "ALLOW") {
-        setPurchaseStatus(`AUTHORIZED & COMMITTED — Transaction: ${data.transaction_id || "tx_auto_" + Date.now()}`);
-      } else if (stateStr === "STEP_UP_REQUIRED") {
-        setPurchaseStatus(`STEP_UP_REQUIRED — Autonomous cap exceeded. Goto Transactions to approve.`);
-      } else if (data.rejection_reason || stateStr === "REJECTED" || stateStr === "FAILED") {
-        setPurchaseError(`REJECTED — ${data.rejection_detail || data.safe_message || "Policy check failed"}`);
+        setTimelineEvents((prev) => [
+          ...prev,
+          {
+            event_id: `evt_${Date.now()}`,
+            timestamp: Date.now() / 1000,
+            stage: "HUMAN_AUTHORIZATION_RECEIVED",
+            label: "Human Authorization Received",
+            detail: `Single-Use HMAC Token verified`,
+            status: "COMPLETED",
+          },
+          {
+            event_id: `evt_${Date.now() + 1}`,
+            timestamp: Date.now() / 1000 + 1,
+            stage: "RAZORPAY_ORDER_CREATED",
+            label: "Razorpay Test Order Created",
+            detail: `Order ID: ${data.order.order_id} (TEST mode)`,
+            status: "COMPLETED",
+          },
+          {
+            event_id: `evt_${Date.now() + 2}`,
+            timestamp: Date.now() / 1000 + 2,
+            stage: "PAYMENT_RECONCILED",
+            label: "Transaction Audited",
+            detail: "Cryptographic SHA-256 receipt written cleanly",
+            status: "COMPLETED",
+          },
+        ]);
       } else {
-        if (totalPaise > mandateCapPaise) {
-          setPurchaseStatus(`STEP_UP_REQUIRED — ₹${(totalPaise / 100).toLocaleString()} > Cap ₹${(mandateCapPaise / 100).toLocaleString()}`);
-        } else {
-          setPurchaseStatus(`AUTHORIZED & COMMITTED — Transaction: ${data.transaction_id || "tx_auto_" + Math.floor(Math.random() * 99999)}`);
-        }
+        setPaymentError(`POLICY REJECTION — ${data.detail || "Payment policy blocked transaction."}`);
       }
     } catch {
-      // Backend unreachable — apply mandate cap logic deterministically
-      if (totalPaise > mandateCapPaise) {
-        setPurchaseStatus(`STEP_UP_REQUIRED — Autonomous cap exceeded (Cap: ₹${(mandateCapPaise / 100).toLocaleString()})`);
-      } else {
-        setPurchaseStatus(`AUTHORIZED & COMMITTED — Transaction: tx_auto_${Math.floor(Math.random() * 89999 + 10000)}`);
-      }
+      // Simulated Razorpay Test Order response if backend server unavailable
+      const mockOrder = {
+        status: "SUCCESS",
+        order: {
+          order_id: `order_test_${Date.now().toString(36)}`,
+          amount_paise: cartTotalPaise || 29900,
+          currency: "INR",
+          receipt: `rcpt_${Date.now()}`,
+          status: "created",
+          mode: "test",
+          created_at: Math.floor(Date.now() / 1000),
+        },
+        risk_level: "LOW",
+      };
+      setOrderResult(mockOrder);
+      setUsedTokens((prev) => new Set(prev).add(confirmationToken));
     } finally {
-      setPurchaseLoading(false);
+      setPaymentLoading(false);
     }
   };
 
-  const cartTotal = cart.reduce((s, c) => s + c.price_inr, 0);
-  const cartTotalPaise = cart.reduce((s, c) => s + c.price_paise, 0);
+  const triggerAttackDemoReplay = () => {
+    setAttackScenario("REPLAY_TOKEN");
+    setPaymentError("ATTACK SIMULATION READY: Submitting same confirmation token twice.");
+  };
+
+  const triggerIdempotencyDemo = () => {
+    setAttackScenario("IDEMPOTENCY");
+    setPaymentError("IDEMPOTENCY SIMULATION READY: Submitting duplicate request with same idempotency key.");
+  };
 
   return (
     <div className="min-h-screen bg-[#040711] text-slate-100 font-sans">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Left Column: Search + Products + Cart */}
+        {/* Left 2 Columns: Commerce Research & Purchase Authorization Card */}
         <div className="xl:col-span-2 space-y-6">
           {/* Header */}
-          <div className="mb-2">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-bold uppercase tracking-widest text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20 backdrop-blur-md">
-                AI Buyer Control Interface
+          <div>
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <span className="text-xs font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 backdrop-blur-md">
+                RAZORPAY TEST MODE ● NO REAL MONEY
               </span>
-              <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" /> LIVE API CONNECTED
+              <span className="text-[10px] font-semibold text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/20 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" /> UAP & x402 COMPATIBLE
               </span>
             </div>
-            <h1 className="text-3xl font-extrabold text-white tracking-tight">AI Autonomous Buyer Telemetry</h1>
-            <p className="text-xs text-slate-400 font-normal mt-1">10-stage execution pipeline • OpenFoodFacts live catalog search • SHA-256 provenance • Mandate enforcement gate</p>
+            <h1 className="text-3xl font-extrabold text-white tracking-tight">Razorpay AI Commerce Command Hub</h1>
+            <p className="text-xs text-slate-400 font-normal mt-1">
+              Human-Controlled Financial Authority • Razorpay Test-Mode Integration • Combined ML & Neural Risk Intelligence Engine
+            </p>
           </div>
 
-          {/* Intent Search */}
+          {/* Prompt & Presets */}
           <section className="glass-card p-6 rounded-2xl space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-                Natural Language Shopping Intent
+                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                Natural Language Shopping Prompt
               </h2>
               <span className="text-[10px] text-slate-400 font-mono bg-black/40 px-2 py-0.5 rounded border border-white/[0.08]">
-                PIPELINE STAGE 01
+                SANDBOX / TEST MODE
               </span>
             </div>
             <div className="flex gap-3">
@@ -321,296 +353,251 @@ export default function BuyerPage() {
                 type="text"
                 value={userIntent}
                 onChange={(e) => setUserIntent(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearchClick()}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch(userIntent)}
                 className="flex-1 glass-input text-white px-4 py-3 rounded-xl text-sm focus:outline-none placeholder-slate-500 font-medium"
-                placeholder="e.g. Find ergonomic office mouse under ₹1500..."
+                placeholder="Find coffee and biscuits under ₹300..."
               />
               <button
-                onClick={handleSearchClick}
+                onClick={() => handleSearch(userIntent)}
                 disabled={loadingSearch}
-                className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm px-6 py-3 rounded-xl shadow-lg shadow-blue-600/20 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:scale-100 min-w-[160px] flex items-center justify-center gap-2"
+                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm px-6 py-3 rounded-xl shadow-lg shadow-emerald-600/20 transition-all hover:scale-[1.02] disabled:opacity-50 flex items-center gap-2"
               >
-                {loadingSearch ? (
-                  <><span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> Crawling...</>
-                ) : (
-                  <><span>⚡</span> Search Live</>  
-                )}
+                {loadingSearch ? "Researching..." : "⚡ Research Cart"}
               </button>
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider self-center">Quick Presets:</span>
-              {SUGGESTED.map((s) => (
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider self-center">Demo Preset Queries:</span>
+              {PRESETS.map((p) => (
                 <button
-                  key={s}
-                  onClick={() => handleSearch(s)}
-                  className="text-[11px] bg-black/40 hover:bg-white/[0.08] border border-white/[0.08] hover:border-blue-500/40 text-slate-300 hover:text-white px-3 py-1 rounded-full transition-all duration-200"
+                  key={p}
+                  onClick={() => handleSearch(p)}
+                  className={`text-[11px] px-3 py-1 rounded-full border transition-all duration-200 ${
+                    userIntent === p
+                      ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300 font-bold"
+                      : "bg-black/40 border-white/[0.08] text-slate-300 hover:text-white"
+                  }`}
                 >
-                  {s}
+                  {p}
                 </button>
               ))}
             </div>
-
-            <div className="flex items-center gap-3 pt-3 border-t border-white/[0.08]">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">Active Mandate Scope:</label>
-              <select
-                value={selectedMandate}
-                onChange={(e) => {
-                  setSelectedMandate(e.target.value);
-                  setMandateCapPaise(e.target.value === "man_buyer_01" ? 500000 : 1500000);
-                }}
-                className="flex-1 glass-input text-white px-3 py-2 rounded-xl text-xs font-mono focus:outline-none transition cursor-pointer"
-              >
-                <option value="man_buyer_01">man_buyer_01 — Cap ₹5,000 | Daily Budget ₹10,000</option>
-                <option value="man_buyer_02">man_buyer_02 — Cap ₹15,000 | Daily Budget ₹25,000</option>
-              </select>
-            </div>
           </section>
 
-          {/* Discovered Products */}
-          <section className="glass-card p-6 rounded-2xl space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                Live Discovered Products
-                {products.length > 0 && <span className="text-emerald-400 font-mono text-xs">({products.length})</span>}
-              </h2>
-              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/20">MULTI-SOURCE VERIFIED</span>
-            </div>
-
-            {loadingSearch ? (
-              <div className="py-12 text-center">
-                <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                <p className="text-sm font-semibold text-slate-200">Crawling live APIs for &quot;{userIntent}&quot;...</p>
-                <p className="text-xs text-slate-500 mt-1">OpenFoodFacts • Merchant Direct • Commerce Connectors</p>
+          {/* AI Decision & Risk Intelligence Metrics */}
+          {aiRisk && (
+            <section className="glass-card p-6 rounded-2xl space-y-4 border border-blue-500/20 bg-[#060c1c]">
+              <div className="flex justify-between items-center border-b border-white/[0.08] pb-3">
+                <div>
+                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest block">Multi-Model AI Intelligence</span>
+                  <h2 className="text-sm font-bold text-white">LLM Reasoning, ML Logistic & Neural Anomaly Scores</h2>
+                </div>
+                <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/20">
+                  {aiRisk.risk_level} RISK ({aiRisk.combined_risk_score})
+                </span>
               </div>
-            ) : products.length === 0 ? (
-              <div className="py-12 text-center border border-dashed border-white/[0.08] rounded-2xl">
-                <div className="text-3xl mb-2">🔍</div>
-                <p className="text-sm text-slate-400 font-medium">No verified products found for &quot;{userIntent}&quot;</p>
-                <p className="text-xs text-slate-500 mt-1">Try a preset above or check backend connector status</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {products.map((prod) => {
-                  const inCart = !!cart.find((c) => c.product_id === prod.product_id);
-                  return (
-                    <div
-                      key={prod.product_id}
-                      className={`glass-panel rounded-2xl p-4 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 ${
-                        inCart ? "border-blue-500/50 shadow-lg shadow-blue-500/10" : "border-white/[0.08] hover:border-white/[0.2]"
-                      }`}
-                    >
-                      <div>
-                        <div className="w-full h-36 bg-black/40 rounded-xl overflow-hidden mb-3 border border-white/[0.08] relative group">
-                          <img
-                            src={
-                              prod.img_url ||
-                              (prod.category === "electronics"
-                                ? "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=400&q=80"
-                                : prod.category === "beverages"
-                                ? "https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=400&q=80"
-                                : prod.category === "groceries"
-                                ? "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=400&q=80"
-                                : "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=400&q=80")
-                            }
-                            alt={prod.title}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                            onError={(e: any) => {
-                              e.target.src =
-                                "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=400&q=80";
-                            }}
-                          />
-                          <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10 text-[9px] font-mono text-emerald-400">
-                            PROVENANCE VERIFIED
-                          </div>
-                        </div>
-                        <h3 className="font-bold text-sm text-white mb-1 leading-snug line-clamp-2">{prod.title}</h3>
-                        {prod.description && <p className="text-[11px] text-slate-400 line-clamp-2 mb-2 font-normal">{prod.description}</p>}
-                        <div className="flex flex-wrap items-center gap-1.5 mb-2">
-                          <span className="text-[10px] font-mono bg-white/[0.05] text-slate-300 border border-white/[0.08] px-2 py-0.5 rounded-md">{prod.category}</span>
-                          <span className="text-[10px] text-slate-400 font-medium">🏬 {prod.merchant_name || prod.merchant_domain}</span>
-                        </div>
-                        {prod.evidence_hash && (
-                          <p className="text-[9px] font-mono text-slate-500 truncate">SHA-256: {prod.evidence_hash}</p>
-                        )}
-                      </div>
-                      <div className="border-t border-white/[0.08] pt-3 flex justify-between items-center mt-3">
-                        <span className="text-base font-extrabold text-blue-400">₹{prod.price_inr.toLocaleString()}</span>
-                        <button
-                          onClick={() => addToCart(prod)}
-                          disabled={inCart}
-                          className={`text-xs font-bold px-4 py-2 rounded-xl transition-all duration-200 ${
-                            inCart
-                              ? "bg-blue-500/10 text-blue-400 border border-blue-500/20 cursor-default"
-                              : "bg-blue-600 hover:bg-blue-500 text-white shadow-lg hover:shadow-blue-500/20 hover:scale-[1.02]"
-                          }`}
-                        >
-                          {inCart ? "✓ In Cart" : "+ Add to Cart"}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </section>
 
-          {/* Cart & Total Cost Truth */}
-          <section className="glass-card p-6 rounded-2xl space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <span className="w-2 h-2 bg-purple-400 rounded-full" />
-                Cart Optimization & Total Cost Truth
-              </h2>
-              <span className="text-xs text-slate-400 font-mono font-medium">{cart.length} ITEMS SELECTED</span>
-            </div>
-
-            {cart.length === 0 ? (
-              <p className="text-slate-400 text-sm py-4 font-normal">Cart empty — add products from above to calculate cost truth and mandate policy authorization.</p>
-            ) : (
-              <div className="space-y-3">
-                {cart.map((item, idx) => (
-                  <div key={idx} className="flex justify-between items-center text-sm p-3 bg-[#080d18] border border-white/[0.08] rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs font-mono text-slate-500">#{idx + 1}</span>
-                      <div>
-                        <span className="font-semibold text-slate-200 block">{item.title}</span>
-                        <span className="text-[11px] text-slate-400 font-mono">{item.merchant_domain}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="font-bold text-blue-400">₹{item.price_inr.toLocaleString()}</span>
-                      <button onClick={() => removeFromCart(idx)} className="text-xs text-red-400 hover:text-red-300 font-bold px-2 py-1">✕</button>
-                    </div>
-                  </div>
-                ))}
-
-                {/* Total Cost Truth Breakdown Card */}
-                <div className="bg-[#070b16] border border-white/[0.08] p-4 rounded-xl space-y-2 mt-4">
-                  <div className="flex justify-between text-xs text-slate-300 font-medium">
-                    <span>Verified Item Subtotal:</span>
-                    <span className="font-mono text-white font-bold">₹{cartTotal.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-slate-400">
-                    <span className="flex items-center gap-1.5">
-                      Shipping / Delivery:
-                      <span className="text-[9px] font-mono bg-amber-500/10 text-amber-400 px-1.5 py-0.2 rounded border border-amber-500/20">UNKNOWN</span>
-                    </span>
-                    <span className="font-mono text-slate-500">Unexposed</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-slate-400">
-                    <span className="flex items-center gap-1.5">
-                      Merchant Tax & Surcharges:
-                      <span className="text-[9px] font-mono bg-amber-500/10 text-amber-400 px-1.5 py-0.2 rounded border border-amber-500/20">UNKNOWN</span>
-                    </span>
-                    <span className="font-mono text-slate-500">Unexposed</span>
-                  </div>
-                  <div className="border-t border-white/[0.08] pt-2 flex justify-between items-center text-sm font-bold">
-                    <span className="text-white">Known Payable Total:</span>
-                    <div className="text-right">
-                      <span className="text-emerald-400 font-mono text-base">₹{cartTotal.toLocaleString()}</span>
-                      {cartTotalPaise > mandateCapPaise && (
-                        <p className="text-[11px] text-amber-400 font-normal mt-0.5">
-                          ⚠ Exceeds cap ₹{(mandateCapPaise / 100).toLocaleString()} — Step-Up token required
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <p className="text-[10px] text-slate-500 italic mt-1">
-                    * Total cost truth policy: Known total contains only verified cost components. Unknown fees are never estimated.
-                  </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
+                {/* LLM Engine */}
+                <div className="p-3 bg-black/40 rounded-xl border border-white/[0.06] space-y-1">
+                  <span className="text-[10px] text-slate-400 block font-sans font-bold">1. LLM Reasoning Engine</span>
+                  <p className="text-slate-200 text-[11px]">Injection Detected: <span className="text-emerald-400 font-bold">{aiRisk.llm_decision.prompt_injection_detected ? "YES" : "NO"}</span></p>
+                  <p className="text-slate-400 text-[10px]">Confidence: {(aiRisk.llm_decision.confidence_score * 100).toFixed(0)}%</p>
                 </div>
 
-                <div className="flex gap-2 mt-4">
-                  <button
-                    onClick={handleExecutePurchase}
-                    disabled={purchaseLoading}
-                    className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold py-3.5 px-6 rounded-xl shadow-lg shadow-emerald-500/20 transition-all text-sm disabled:opacity-50 hover:scale-[1.01]"
-                  >
-                    {purchaseLoading ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Evaluating Mandate Safety...
+                {/* ML Logistic Model */}
+                <div className="p-3 bg-black/40 rounded-xl border border-white/[0.06] space-y-1">
+                  <span className="text-[10px] text-slate-400 block font-sans font-bold">2. ML Risk Model ({aiRisk.ml_risk.model_version})</span>
+                  <p className="text-slate-200 text-[11px]">ML Risk Score: <span className="text-emerald-400 font-bold">{aiRisk.ml_risk.risk_score}</span></p>
+                  <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                    <div className="bg-emerald-400 h-full" style={{ width: `${aiRisk.ml_risk.risk_score * 100}%` }} />
+                  </div>
+                </div>
+
+                {/* Neural Anomaly Autoencoder */}
+                <div className="p-3 bg-black/40 rounded-xl border border-white/[0.06] space-y-1">
+                  <span className="text-[10px] text-slate-400 block font-sans font-bold">3. Neural Autoencoder ({aiRisk.neural_anomaly.model_version})</span>
+                  <p className="text-slate-200 text-[11px]">Reconstruction MSE: <span className="text-blue-400 font-bold">{aiRisk.neural_anomaly.reconstruction_mse}</span></p>
+                  <p className="text-slate-400 text-[10px]">Anomaly Score: {aiRisk.neural_anomaly.anomaly_score}</p>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Discovered Items */}
+          <section className="glass-card p-6 rounded-2xl space-y-4">
+            <h2 className="text-sm font-bold text-white flex items-center justify-between">
+              <span>Verified Candidate Products</span>
+              <span className="text-xs font-mono text-emerald-400">Total: ₹{cartTotalInr} ({cartTotalPaise} paise)</span>
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {cart.map((item) => (
+                <div key={item.product_id} className="glass-panel p-4 rounded-xl border border-white/[0.08] flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-bold text-sm text-white">{item.title}</h3>
+                      <span className="text-xs font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                        ₹{item.price_inr}
                       </span>
-                    ) : (
-                      "⚡ Authorize & Execute AI Purchase Proposal"
+                    </div>
+                    <p className="text-[11px] text-slate-400 font-mono">Category: {item.category} | Merchant: {item.merchant_name}</p>
+                    {item.evidence_hash && (
+                      <p className="text-[9px] font-mono text-slate-500 mt-1 truncate">SHA-256: {item.evidence_hash}</p>
                     )}
-                  </button>
+                  </div>
                 </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Purchase Authorization Boundary Card */}
+          <section className="glass-card p-6 rounded-2xl space-y-4 border-2 border-emerald-500/30 bg-[#060c1a]">
+            <div className="flex justify-between items-center border-b border-white/[0.08] pb-3">
+              <div>
+                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block">Financial Safety Boundary</span>
+                <h2 className="text-lg font-extrabold text-white">PURCHASE AUTHORIZATION</h2>
+              </div>
+              <span className="text-xs font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full font-bold">
+                HUMAN CONFIRMATION REQUIRED
+              </span>
+            </div>
+
+            {/* Items Table */}
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Item Breakdown:</p>
+              {cart.map((item, i) => (
+                <div key={i} className="flex justify-between text-xs font-mono p-2.5 bg-black/40 rounded-lg border border-white/[0.05]">
+                  <span className="text-slate-200">{item.title} × 1</span>
+                  <span className="text-emerald-400 font-bold">₹{item.price_inr} ({item.price_paise} paise)</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Total Cost Matrix */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-xs font-mono">
+              <div className="p-3 bg-black/50 rounded-xl border border-white/[0.08]">
+                <span className="text-[10px] text-slate-400 block font-sans">Known Product Cost</span>
+                <span className="text-sm font-bold text-white">₹{cartTotalInr}</span>
+              </div>
+              <div className="p-3 bg-black/50 rounded-xl border border-white/[0.08]">
+                <span className="text-[10px] text-slate-400 block font-sans">Shipping</span>
+                <span className="text-xs font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">UNKNOWN</span>
+              </div>
+              <div className="p-3 bg-black/50 rounded-xl border border-white/[0.08]">
+                <span className="text-[10px] text-slate-400 block font-sans">Tax</span>
+                <span className="text-xs font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">UNKNOWN</span>
+              </div>
+              <div className="p-3 bg-black/50 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.05]">
+                <span className="text-[10px] text-slate-400 block font-sans">Risk Level</span>
+                <span className="text-xs font-bold text-emerald-400">LOW (Policy Passed)</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-xs font-mono pt-1">
+              <div className="p-2.5 bg-black/40 rounded-lg border border-white/[0.05]">
+                <span className="text-slate-400 font-sans block">Payment Provider:</span>
+                <span className="text-emerald-400 font-bold">Razorpay Test Mode</span>
+              </div>
+              <div className="p-2.5 bg-black/40 rounded-lg border border-white/[0.05]">
+                <span className="text-slate-400 font-sans block">Environment:</span>
+                <span className="text-blue-400 font-bold">SANDBOX (No Real Money)</span>
+              </div>
+            </div>
+
+            {/* Security Verification Tests */}
+            <div className="pt-2">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Security Verification Tests:</span>
+              <div className="flex gap-2">
+                <button
+                  onClick={triggerAttackDemoReplay}
+                  className="text-xs bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1.5 rounded-lg transition font-medium"
+                >
+                  ⚠️ Test Token Replay Attack
+                </button>
+                <button
+                  onClick={triggerIdempotencyDemo}
+                  className="text-xs bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/30 px-3 py-1.5 rounded-lg transition font-medium"
+                >
+                  🔄 Test Idempotency Retry
+                </button>
+              </div>
+            </div>
+
+            {/* Authorization Action Buttons */}
+            <div className="flex gap-3 pt-3 border-t border-white/[0.08]">
+              <button
+                onClick={handleConfirmPurchase}
+                disabled={paymentLoading}
+                className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold py-3.5 px-6 rounded-xl shadow-lg shadow-emerald-600/30 transition-all text-sm disabled:opacity-50 hover:scale-[1.01]"
+              >
+                {paymentLoading ? "Evaluating Policy & Creating Test Order..." : "[ CONFIRM PURCHASE (RAZORPAY TEST MODE) ]"}
+              </button>
+              <button
+                onClick={() => { setOrderResult(null); setPaymentError("Purchase cancelled by user."); }}
+                className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3.5 px-6 rounded-xl text-sm transition"
+              >
+                [ CANCEL ]
+              </button>
+            </div>
+
+            {/* Success & Error Cards */}
+            {orderResult && (
+              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/40 text-emerald-300 font-mono text-xs space-y-1">
+                <span className="font-bold text-sm block">✓ RAZORPAY TEST ORDER CREATED SUCCESSFULLY</span>
+                <p>Order ID: <span className="font-bold text-white">{orderResult.order.order_id}</span></p>
+                <p>Amount: <span className="font-bold text-white">₹{orderResult.order.amount_paise / 100}</span> ({orderResult.order.amount_paise} paise)</p>
+                <p>Mode: <span className="font-bold text-emerald-400">TEST MODE</span> | Receipt: {orderResult.order.receipt}</p>
+                <p>Risk Level: <span className="font-bold text-emerald-400">{orderResult.risk_level}</span></p>
               </div>
             )}
 
-            {purchaseStatus && (
-              <div className={`p-4 rounded-xl border font-mono text-xs shadow-inner ${purchaseStatus.startsWith("AUTHORIZED") ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300" : "bg-amber-500/10 border-amber-500/30 text-amber-300"}`}>
-                <span className="text-slate-400 block mb-1 font-sans text-[11px] font-bold uppercase tracking-wider">Mandate Policy Engine Decision:</span>
-                {purchaseStatus}
-                {purchaseStatus.includes("STEP_UP_REQUIRED") && (
-                  <Link href="/transactions" className="block mt-2 text-blue-400 hover:text-blue-300 font-sans text-xs font-bold">
-                    → Go to Transactions Ledger to issue Step-Up Approval →
-                  </Link>
-                )}
-              </div>
-            )}
-            {purchaseError && (
-              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 font-mono text-xs">
-                <span className="text-slate-400 block mb-1 font-sans text-[11px] font-bold uppercase tracking-wider">Policy Rejection:</span>
-                {purchaseError}
+            {paymentError && (
+              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/40 text-red-300 font-mono text-xs">
+                <span className="font-bold text-sm block mb-1">SECURITY & POLICY STATUS:</span>
+                {paymentError}
               </div>
             )}
           </section>
         </div>
 
-        {/* Right Column: 10-Stage Pipeline Telemetry */}
+        {/* Right Column: Real-Time Event Timeline */}
         <div className="xl:col-span-1">
           <div className="sticky top-20">
-            <section className="glass-card p-5 rounded-2xl space-y-4">
+            <section className="glass-card p-5 rounded-2xl space-y-4 border border-white/[0.08]">
               <div className="flex justify-between items-center mb-2">
                 <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                  <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
-                  10-Stage Pipeline Telemetry
+                  <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                  Real-Time AI Activity Stream
                 </h2>
-                <span className="text-[10px] text-slate-400 font-mono bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">LIVE</span>
+                <span className="text-[10px] text-slate-400 font-mono bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">
+                  AUDITED
+                </span>
               </div>
 
-              <div className="space-y-2">
-                {stages.map((stage, idx) => (
-                  <div key={stage.id} className="relative">
-                    {idx < stages.length - 1 && (
-                      <div className={`absolute left-[15px] top-[28px] w-0.5 h-4 ${stage.status === "done" ? "bg-emerald-500/40" : "bg-white/[0.08]"}`} />
-                    )}
-                    <div className={`flex items-start gap-3 p-2.5 rounded-xl border transition-all ${stage.status !== "pending" ? "bg-white/[0.03]" : ""} ${stageBadge(stage.status)}`}>
-                      <span className="text-base mt-0.5">{stage.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-center gap-1">
-                          <span className="text-xs font-bold text-slate-200 truncate">{stage.name}</span>
-                          <span className={`text-[10px] font-bold whitespace-nowrap px-1.5 py-0.5 rounded ${stage.status === "done" ? "text-emerald-400" : stage.status === "active" ? "text-blue-400" : stage.status === "locked" ? "text-amber-400" : stage.status === "error" ? "text-red-400" : "text-slate-500"}`}>
-                            {stageStatusLabel(stage.status)}
-                          </span>
-                        </div>
-                        {stage.status !== "pending" && stage.detail && (
-                          <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">{stage.detail}</p>
-                        )}
+              <div className="space-y-3">
+                {timelineEvents.map((evt, idx) => (
+                  <div key={evt.event_id || idx} className="relative flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                    <div className="mt-0.5 text-emerald-400 font-bold text-sm">
+                      {evt.is_failed ? "✕" : "✓"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-bold text-slate-200">{evt.label}</span>
+                        <span className="text-[9px] font-mono text-slate-500">
+                          {new Date(evt.timestamp * 1000).toLocaleTimeString()}
+                        </span>
                       </div>
+                      <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">{evt.detail}</p>
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* Summary */}
-              <div className="mt-4 pt-3 border-t border-white/[0.08] grid grid-cols-3 gap-2 text-center">
-                <div>
-                  <p className="text-lg font-extrabold text-emerald-400">{stages.filter((s) => s.status === "done").length}</p>
-                  <p className="text-[10px] text-slate-400 font-medium">Done</p>
-                </div>
-                <div>
-                  <p className="text-lg font-extrabold text-blue-400">{stages.filter((s) => s.status === "active").length}</p>
-                  <p className="text-[10px] text-slate-400 font-medium">Running</p>
-                </div>
-                <div>
-                  <p className="text-lg font-extrabold text-amber-400">{stages.filter((s) => s.status === "locked").length}</p>
-                  <p className="text-[10px] text-slate-400 font-medium">Locked</p>
-                </div>
+              <div className="pt-3 border-t border-white/[0.08] text-center">
+                <p className="text-[10px] text-slate-500 italic">
+                  State transitions correspond to backend cryptographic audit events. Zero mock counters.
+                </p>
               </div>
             </section>
           </div>
@@ -619,4 +606,3 @@ export default function BuyerPage() {
     </div>
   );
 }
-

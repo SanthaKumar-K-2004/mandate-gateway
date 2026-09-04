@@ -82,7 +82,7 @@ class BackupSnapshot:
 class BackupRestoreManager:
     """
     Certification engine for export, wipe, restoration, and 13-stage verification
-    of Razerpay Mandate Gateway persistence snapshots.
+    of Razorpay Mandate Gateway persistence snapshots.
     """
 
     @classmethod

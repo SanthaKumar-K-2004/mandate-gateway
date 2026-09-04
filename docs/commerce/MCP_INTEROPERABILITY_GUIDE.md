@@ -1,7 +1,7 @@
-# RAZERPAY — External Model Context Protocol (MCP) Interoperability Guide
+# RAZORPAY — External Model Context Protocol (MCP) Interoperability Guide
 
 ## Overview
-Razerpay exposes its AI commerce and protection tools via the standard Model Context Protocol (MCP) over JSON-RPC 2.0.
+Razorpay exposes its AI commerce and protection tools via the standard Model Context Protocol (MCP) over JSON-RPC 2.0.
 
 ---
 

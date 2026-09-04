@@ -143,11 +143,11 @@ def run_live_commerce_pilot() -> int:
     assert token_verified, "Confirmation token verification failed!"
     print(" [✓] Stage 6 Passed: Human confirmation verified.")
 
-    # 7. RAZERPAY Protected Payment Execution
-    print("\n[Stage 7/10] RAZERPAY Protected Payment Execution...")
+    # 7. RAZORPAY Protected Payment Execution
+    print("\n[Stage 7/10] RAZORPAY Protected Payment Execution...")
     payment_transaction_id = f"txn_rzp_live_{uuid.uuid4().hex[:10]}"
     print(f" -> Authorized Transaction ID: {payment_transaction_id}")
-    print(" [✓] Stage 7 Passed: RAZERPAY payment authorization committed.")
+    print(" [✓] Stage 7 Passed: RAZORPAY payment authorization committed.")
 
     # 8. Cryptographic Binding & Direct Merchant Order Creation
     print("\n[Stage 8/10] Direct Merchant Order Creation & Cryptographic Binding...")
@@ -176,7 +176,7 @@ def run_live_commerce_pilot() -> int:
     tx_binder_mgr = CommerceTransactionBindingManager()
     binding = tx_binder_mgr.bind_transaction_to_order(
         binding_id=f"bind_{uuid.uuid4().hex[:8]}",
-        razerpay_transaction_id=payment_transaction_id,
+        razorpay_transaction_id=payment_transaction_id,
         merchant_order_id=merchant_order["merchant_order_id"],
         merchant_id=product.merchant.merchant_id,
         product_id=product.product_id,

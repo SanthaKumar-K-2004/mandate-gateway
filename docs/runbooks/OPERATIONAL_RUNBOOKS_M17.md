@@ -1,7 +1,7 @@
 # OPERATIONAL RUNBOOKS — DISASTER RECOVERY & RELEASE CERTIFICATION (M17)
 
 ## Executive Summary
-This document provides production operator instructions for diagnosing, recovering, and verifying Razerpay Mandate Gateway operations across 12 disaster recovery and operational failure scenarios.
+This document provides production operator instructions for diagnosing, recovering, and verifying Razorpay Mandate Gateway operations across 12 disaster recovery and operational failure scenarios.
 
 All operational procedures must strictly preserve the primary invariant:
 > **"NO PAYMENT EFFECT MAY ACCIDENTALLY EXECUTE TWICE."**

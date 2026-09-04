@@ -96,7 +96,7 @@ class AIToolRegistry:
 
         return tool.handler(**arguments)
 
-    def _register_default_tools(self) -> None:
+    def _register_default_tools(self) -> None:  # noqa: C901
         """Populate initial allowlisted tools."""
 
         # 1. search_products (SAFE_READ)
@@ -592,6 +592,115 @@ class AIToolRegistry:
                         "total_budget_paise": {"type": "integer"},
                     },
                     "required": ["prompt"],
+                },
+            )
+        )
+
+        # 16. get_payment_capabilities (SAFE_READ)
+        def _get_payment_capabilities() -> Dict[str, Any]:
+            from apps.api.commerce.payments import (
+                AgentPaymentPolicyEngine,
+                RazorpayClient,
+                RazorpayPaymentProtocolAdapter,
+                UAPAuthorizationLayer,
+                UAPPaymentProtocolAdapter,
+                X402PaymentAdapter,
+                X402PaymentProtocolAdapter,
+            )
+
+            rzp = RazorpayPaymentProtocolAdapter(RazorpayClient(), AgentPaymentPolicyEngine())
+            x402 = X402PaymentProtocolAdapter(X402PaymentAdapter(), AgentPaymentPolicyEngine())
+            uap = UAPPaymentProtocolAdapter(UAPAuthorizationLayer(), AgentPaymentPolicyEngine())
+            return {
+                "status": "SUCCESS",
+                "capabilities": {
+                    "razorpay": rzp.get_capabilities(),
+                    "x402": x402.get_capabilities(),
+                    "uap": uap.get_capabilities(),
+                },
+            }
+
+        self.register(
+            ToolDefinition(
+                name="get_payment_capabilities",
+                description="Get system payment capabilities across Razorpay Test Mode, x402, and UAP protocols.",
+                permission=ToolPermission.SAFE_READ,
+                handler=_get_payment_capabilities,
+                input_schema={"type": "object", "properties": {}},
+            )
+        )
+
+        # 17. get_agent_payment_policy (SAFE_READ)
+        def _get_agent_payment_policy(agent_id: str = "shopping_agent_01") -> Dict[str, Any]:
+            from apps.api.commerce.payments import AgentPaymentPolicyEngine
+
+            engine = AgentPaymentPolicyEngine()
+            pol = engine.get_policy(agent_id)
+            return {
+                "status": "SUCCESS",
+                "policy_id": pol.policy_id,
+                "agent_id": pol.agent_id,
+                "per_transaction_limit_paise": pol.limits.per_transaction_limit_paise,
+                "daily_limit_paise": pol.limits.daily_limit_paise,
+                "require_human_confirmation": pol.require_human_confirmation,
+                "require_verified_product": pol.require_verified_product,
+                "max_allowed_risk_level": pol.max_allowed_risk_level.value,
+            }
+
+        self.register(
+            ToolDefinition(
+                name="get_agent_payment_policy",
+                description=(
+                    "Query active spending limits, risk thresholds, and confirmation "
+                    "requirements for an agent."
+                ),
+                permission=ToolPermission.SAFE_READ,
+                handler=_get_agent_payment_policy,
+                input_schema={
+                    "type": "object",
+                    "properties": {"agent_id": {"type": "string"}},
+                },
+            )
+        )
+
+        # 18. get_payment_timeline (SAFE_READ)
+        def _get_payment_timeline(transaction_id: str) -> Dict[str, Any]:
+            from apps.api.commerce.payments import get_timeline_manager
+
+            mgr = get_timeline_manager()
+            events = mgr.get_timeline(transaction_id)
+            if not events:
+                events = mgr.create_default_timeline(
+                    transaction_id, "Find coffee and biscuits under ₹300", 29900
+                )
+            return {
+                "status": "SUCCESS",
+                "transaction_id": transaction_id,
+                "events_count": len(events),
+                "events": [
+                    {
+                        "event_id": e.event_id,
+                        "timestamp": e.timestamp,
+                        "stage": e.stage,
+                        "label": e.label,
+                        "detail": e.detail,
+                        "status": e.status,
+                        "is_failed": e.is_failed,
+                    }
+                    for e in events
+                ],
+            }
+
+        self.register(
+            ToolDefinition(
+                name="get_payment_timeline",
+                description="Retrieve real-time step-by-step transaction execution timeline events.",
+                permission=ToolPermission.SAFE_READ,
+                handler=_get_payment_timeline,
+                input_schema={
+                    "type": "object",
+                    "properties": {"transaction_id": {"type": "string"}},
+                    "required": ["transaction_id"],
                 },
             )
         )

@@ -1,4 +1,4 @@
-# RAZERPAY — Security Release Checklist
+# RAZORPAY — Security Release Checklist
 
 ## Production Security Preflight
 

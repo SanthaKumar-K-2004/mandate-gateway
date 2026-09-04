@@ -2,7 +2,7 @@
 """
 Mandate Gateway — External MCP Client Interoperability Test Runner (M26)
 Workstream 3 — Simulates an external Model Context Protocol (MCP) client
-communicating via JSON-RPC 2.0 with RazerpayMCPServer.
+communicating via JSON-RPC 2.0 with RazorpayMCPServer.
 """
 
 from __future__ import annotations
@@ -10,7 +10,7 @@ from __future__ import annotations
 import sys
 from typing import Any, Dict
 
-from apps.api.agent.mcp_server import RazerpayMCPServer
+from apps.api.agent.mcp_server import RazorpayMCPServer
 
 
 def run_mcp_client_interoperability_suite() -> int:
@@ -19,7 +19,7 @@ def run_mcp_client_interoperability_suite() -> int:
     print(" Mandate Gateway — External MCP Client Interoperability Suite")
     print("============================================================")
 
-    server = RazerpayMCPServer()
+    server = RazorpayMCPServer()
 
     # Step 1: Execute 'tools/list' JSON-RPC call
     print("\n[Step 1] Sending 'tools/list' JSON-RPC request...")

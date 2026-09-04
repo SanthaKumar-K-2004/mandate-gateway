@@ -1,3 +1,3 @@
 """
-RAZERPAY — Commerce Domain Test Package (M24)
+RAZORPAY — Commerce Domain Test Package (M24)
 """

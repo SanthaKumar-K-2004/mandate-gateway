@@ -62,7 +62,7 @@ class CommerceReconciliationRecord:
 
 class CommerceReconciliationEngine:
     """
-    Automated reconciliation authority for RAZERPAY commerce transactions.
+    Automated reconciliation authority for RAZORPAY commerce transactions.
     Idempotently queries payment gateway ledgers and merchant order ledgers.
     """
 

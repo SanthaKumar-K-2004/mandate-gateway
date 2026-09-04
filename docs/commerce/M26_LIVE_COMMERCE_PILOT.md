@@ -1,4 +1,4 @@
-# RAZERPAY — M26 Live Commerce Pilot Architecture & Certification
+# RAZORPAY — M26 Live Commerce Pilot Architecture & Certification
 
 ## Executive Overview
 Milestone **M26** establishes genuine public web commerce platform connectivity (`PublicPlatformConnector`), external Model Context Protocol (MCP) interoperability, real-time AI Purchase Journey dashboard tracking, and end-to-end certification of the 10-stage autonomous purchase flow.
@@ -37,7 +37,7 @@ Milestone **M26** establishes genuine public web commerce platform connectivity 
       │
 7. CONFIRMATION_GATE      HumanConfirmationGate (HMAC-SHA256 Token)
       │
-8. PAYMENT_PROTECTED      RAZERPAY Idempotent Authorized Payment Execution
+8. PAYMENT_PROTECTED      RAZORPAY Idempotent Authorized Payment Execution
       │
 9. MERCHANT_ORDER         Direct API Order Creation & 1:1 Transaction Binding
       │

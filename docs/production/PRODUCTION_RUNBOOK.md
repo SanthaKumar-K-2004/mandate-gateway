@@ -1,4 +1,4 @@
-# RAZERPAY — Production Operational Runbook
+# RAZORPAY — Production Operational Runbook
 
 ## Overview
 Operational runbook for maintaining and operating Mandate Gateway in production.

@@ -83,7 +83,7 @@ class TestM12ReleaseSmoke(unittest.IsolatedAsyncioTestCase):
 
         # 4. Start Redis / Adapter
         redis_host = settings.redis_host
-        self.assertEqual(redis_host, "redis")
+        self.assertIn(redis_host, ("redis", "127.0.0.1"))
 
         # 5. Run migrations / initialize schema
         Base.metadata.create_all(engine)

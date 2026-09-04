@@ -1,7 +1,7 @@
-# RAZERPAY — M28 Autonomous Multi-Item Cart Research Architecture
+# RAZORPAY — M28 Autonomous Multi-Item Cart Research Architecture
 
 ## Overview
-Milestone **M28** upgrades the RAZERPAY AI Commerce Agent into an autonomous multi-item research and dynamic cart intelligence system.
+Milestone **M28** upgrades the RAZORPAY AI Commerce Agent into an autonomous multi-item research and dynamic cart intelligence system.
 
 ---
 

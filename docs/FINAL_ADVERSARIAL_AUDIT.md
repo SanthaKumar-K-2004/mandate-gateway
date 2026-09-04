@@ -24,10 +24,10 @@ The repository `/home/santhakumar/Desktop/Razorpay` was subjected to a comprehen
 
 | Finding ID | Domain | Description | Severity | Status |
 |------------|--------|-------------|----------|--------|
-| **AUDIT-01** | Security / MCP | `RazerpayMCPServer.handle_mcp_request` filtered blocked tools from `tools/list` but did not check `tools/call`, allowing direct execution invocation bypass by tool name. | **CRITICAL** | **FIXED** |
+| **AUDIT-01** | Security / MCP | `RazorpayMCPServer.handle_mcp_request` filtered blocked tools from `tools/list` but did not check `tools/call`, allowing direct execution invocation bypass by tool name. | **CRITICAL** | **FIXED** |
 | **AUDIT-02** | Security / SSRF | `GenericWebCheckoutConnector.validate_handoff_url` allowed userinfo credentials (`user:pass@host`) and lacked subnet blocking for `10.0.0.0/8` & `172.16.0.0/12`. | **HIGH** | **FIXED** |
 | **AUDIT-03** | Claims / Wording | OpenFoodFacts catalog API was described in places as a merchant checkout API. | **HIGH** | **CORRECTED** |
-| **AUDIT-04** | Branding | "RAZERPAY" primary branding caused potential confusion with Razorpay Software Pvt. Ltd. | **MEDIUM** | **CORRECTED** |
+| **AUDIT-04** | Branding | "RAZORPAY" primary branding caused potential confusion with Razorpay Software Pvt. Ltd. | **MEDIUM** | **CORRECTED** |
 | **AUDIT-05** | Wording | "Any Web Merchant" checkout claim was too broad. | **MEDIUM** | **CORRECTED** |
 | **AUDIT-06** | Wording | Absolute claim "5 independent mechanisms" sounded like independent datastores rather than layered controls. | **LOW** | **CORRECTED** |
 | **AUDIT-07** | Repository Health | Missing GitHub Actions CI, `SECURITY.md`, `LICENSE`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`. | **MEDIUM** | **ADDED** |
@@ -54,7 +54,7 @@ The repository `/home/santhakumar/Desktop/Razorpay` was subjected to a comprehen
 
 | Original Claim | Audit Risk | Corrected Claim | Verification Evidence |
 |----------------|------------|-----------------|-----------------------|
-| RAZERPAY AI Commerce Agent | Possible confusion with Razorpay Software Pvt. Ltd. | **Mandate Gateway — Verified AI Commerce Agent** + explicit disclaimer notice | Added disclaimer notice to `README.md`, `SECURITY.md`, `RELEASE_READINESS.md`. |
+| RAZORPAY AI Commerce Agent | Possible confusion with Razorpay Software Pvt. Ltd. | **Mandate Gateway — Verified AI Commerce Agent** + explicit disclaimer notice | Added disclaimer notice to `README.md`, `SECURITY.md`, `RELEASE_READINESS.md`. |
 | Public Open Commerce Catalog — VERIFIED_API | Implied OpenFoodFacts provides checkout / ordering | **Live Product Intelligence & Catalog Provenance API (`LIVE_CATALOG_API`)** | Corrected in `README.md`, `FINAL_CAPABILITY_MATRIX.md`, `RELEASE_READINESS.md`. |
 | Generic Web Checkout → Any Web Merchant | Overly broad compatibility claim | **Supported public web merchants with a validated HTTPS product/checkout URL** | Validated URL security checks in `generic_web.py`. |
 | Production-Grade Release | Implied live real-money production service | **Production-Hardened AI Commerce Agent Foundation** | Added honest disclosures regarding test/sandbox mode. |

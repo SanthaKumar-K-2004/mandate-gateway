@@ -1,14 +1,14 @@
-# RAZERPAY — M27 Multi-Merchant Connector Network & Comparison Architecture
+# RAZORPAY — M27 Multi-Merchant Connector Network & Comparison Architecture
 
 ## Overview
-Milestone **M27** expands RAZERPAY into a resilient multi-merchant commerce network.
+Milestone **M27** expands RAZORPAY into a resilient multi-merchant commerce network.
 
 ---
 
 ## 1. Multi-Merchant Network Topology
 
 ```text
-RAZERPAY Commerce Network
+RAZORPAY Commerce Network
 │
 ├── Connector Registry (CommerceConnectorRegistry)
 │
@@ -21,7 +21,7 @@ RAZERPAY Commerce Network
 ├── Product Deduplication Engine (ProductDeduplicator)
 ├── Cross-Merchant Comparison Engine (ProductComparisonEngine)
 ├── Deterministic Recommendation Engine (DeterministicRecommendationEngine)
-└── RAZERPAY Payment & Checkout Pipeline
+└── RAZORPAY Payment & Checkout Pipeline
 ```
 
 ---

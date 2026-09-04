@@ -1,4 +1,4 @@
-# RAZERPAY — Production Deployment Guide
+# RAZORPAY — Production Deployment Guide
 
 ## Overview
 This document provides production deployment instructions for Mandate Gateway.
@@ -16,7 +16,7 @@ This document provides production deployment instructions for Mandate Gateway.
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/razerpay/mandate-gateway.git
+git clone https://github.com/razorpay/mandate-gateway.git
 cd mandate-gateway
 
 # 2. Configure production environment

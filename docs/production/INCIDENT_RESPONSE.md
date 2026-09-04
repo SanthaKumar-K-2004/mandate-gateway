@@ -1,4 +1,4 @@
-# RAZERPAY — Incident Response Playbook
+# RAZORPAY — Incident Response Playbook
 
 ## Emergency Scenarios & Remediation
 

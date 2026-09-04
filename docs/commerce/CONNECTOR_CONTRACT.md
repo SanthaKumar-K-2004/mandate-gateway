@@ -1,7 +1,7 @@
-# RAZERPAY — Commerce Connector Interface Contract
+# RAZORPAY — Commerce Connector Interface Contract
 
 ## Overview
-Every commerce connector in RAZERPAY implements the abstract contract defined in [`apps/api/commerce/connectors/base.py`](file:///home/santhakumar/Desktop/Razorpay/apps/api/commerce/connectors/base.py).
+Every commerce connector in RAZORPAY implements the abstract contract defined in [`apps/api/commerce/connectors/base.py`](file:///home/santhakumar/Desktop/Razorpay/apps/api/commerce/connectors/base.py).
 
 ---
 

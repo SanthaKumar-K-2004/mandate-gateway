@@ -8,9 +8,9 @@ payment submission, webhook signature verification, and error handling.
 from __future__ import annotations
 
 import unittest
-from sdk.python.razerpay import (
-    RazerpayClient,
-    RazerpayConfig,
+from sdk.python.razorpay import (
+    RazorpayClient,
+    RazorpayConfig,
     ValidationError,
 )
 
@@ -19,12 +19,12 @@ class TestM19PythonSDK(unittest.TestCase):
     """Python Developer SDK acceptance suite."""
 
     def setUp(self) -> None:
-        self.config = RazerpayConfig(
+        self.config = RazorpayConfig(
             base_url="http://localhost:8000",
             api_key="rzp_test_sdk_key_99",
             merchant_id="mer_sdk_test",
         )
-        self.client = RazerpayClient(self.config)
+        self.client = RazorpayClient(self.config)
 
     def test_01_mandate_creation(self) -> None:
         """Verify SDK mandate creation produces valid MandateResponse object."""

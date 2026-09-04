@@ -32,9 +32,13 @@ help:
 	@echo "   make security           - Execute security test suite"
 	@echo "   make secret-scan        - Run repository security secret scanner"
 	@echo "   make architecture-check - Run architecture regression guard"
+	@echo "   make demo               - Launch the Razorpay AI Commerce live interactive demo"
 	@echo "   make check              - Master Quality Gate: Run all checks sequentially (FAIL-CLOSED)"
 	@echo "   make clean              - Clean temporary build artifacts & caches"
 	@echo "============================================================"
+
+demo:
+	@PYTHONPATH=. $(PYTHON) scripts/run_live_demo.py
 
 preflight:
 	@echo "Running local preflight environment checks..."

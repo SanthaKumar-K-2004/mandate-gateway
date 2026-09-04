@@ -1,4 +1,4 @@
-# RAZERPAY — Commerce Connector Architecture (M24)
+# RAZORPAY — Commerce Connector Architecture (M24)
 
 ## Abstract Connector Interface
 All merchant integrations implement the `CommerceConnector` abstract base class ([`apps/api/commerce/connectors/base.py`](file:///home/santhakumar/Desktop/Razorpay/apps/api/commerce/connectors/base.py)):
