@@ -69,10 +69,24 @@ class AgentPaymentPolicyEngine:
             policy_id="pol_default_shopping",
             agent_id="shopping_agent_01",
             limits=AgentSpendingLimits(
-                per_transaction_limit_paise=50000,  # ₹500
-                daily_limit_paise=200000,  # ₹2,000
+                per_transaction_limit_paise=150000,  # ₹1,500
+                daily_limit_paise=500000,  # ₹5,000
                 allowed_currencies={"INR"},
-                allowed_categories={"grocery", "beverage", "electronics", "general"},
+                allowed_categories={
+                    "grocery",
+                    "groceries",
+                    "beverage",
+                    "beverages",
+                    "electronics",
+                    "general",
+                    "dairy",
+                    "office",
+                    "stationery",
+                    "clothing",
+                    "food",
+                    "retail",
+                    "supplies",
+                },
             ),
             require_human_confirmation=True,
             require_verified_product=True,
@@ -217,7 +231,13 @@ class AgentPaymentPolicyEngine:
             )
 
         # Rule 6: Allowed Category Check
-        if limits.allowed_categories and ctx.category.lower() not in limits.allowed_categories:
+        cat_clean = ctx.category.lower().strip()
+        cat_singular = cat_clean.rstrip("s")
+        if (
+            limits.allowed_categories
+            and cat_clean not in limits.allowed_categories
+            and cat_singular not in limits.allowed_categories
+        ):
             return PolicyEvaluationResult(
                 allowed=False,
                 risk_level=RiskLevel.MEDIUM,

@@ -78,7 +78,7 @@ class TestPaymentPolicyEngine(unittest.TestCase):
             merchant_name="Cafe Acme",
             category="grocery",
             currency="INR",
-            amount_paise=60000,  # ₹600 > ₹500 limit
+            amount_paise=160000,  # ₹1,600 > ₹1,500 limit
             provider="razorpay_test",
             is_product_verified=True,
             has_human_confirmation=True,
@@ -91,7 +91,7 @@ class TestPaymentPolicyEngine(unittest.TestCase):
         # Spend ₹400 first
         self.engine.record_spending("shopping_agent_01", 40000)
 
-        # Attempt another ₹400 (Total ₹800 < ₹2,000 limit) -> PASS
+        # Attempt another ₹400 (Total ₹800 < ₹5,000 limit) -> PASS
         ctx1 = PolicyEvaluationContext(
             agent_id="shopping_agent_01",
             request_id="req_005",
@@ -110,10 +110,10 @@ class TestPaymentPolicyEngine(unittest.TestCase):
         # Record second spend (Total now ₹800)
         self.engine.record_spending("shopping_agent_01", 40000)
 
-        # Record spend up to ₹1,800
-        self.engine.record_spending("shopping_agent_01", 100000)
+        # Record spend up to ₹4,800
+        self.engine.record_spending("shopping_agent_01", 400000)
 
-        # Attempt another ₹300 (Total ₹2,100 > ₹2,000 limit) -> FAIL
+        # Attempt another ₹300 (Total ₹5,100 > ₹5,000 limit) -> FAIL
         ctx2 = PolicyEvaluationContext(
             agent_id="shopping_agent_01",
             request_id="req_006",

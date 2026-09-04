@@ -65,7 +65,23 @@ class AgentSpendingLimits:
     per_transaction_limit_paise: int = 50000  # ₹500
     daily_limit_paise: int = 200000  # ₹2,000
     allowed_currencies: Set[str] = field(default_factory=lambda: {"INR"})
-    allowed_categories: Set[str] = field(default_factory=lambda: {"grocery", "general", "beverage"})
+    allowed_categories: Set[str] = field(
+        default_factory=lambda: {
+            "grocery",
+            "groceries",
+            "general",
+            "beverage",
+            "beverages",
+            "electronics",
+            "dairy",
+            "office",
+            "stationery",
+            "clothing",
+            "food",
+            "retail",
+            "supplies",
+        }
+    )
     allowed_merchants: Set[str] = field(
         default_factory=set
     )  # Empty means all allowed unless scoped
