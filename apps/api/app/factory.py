@@ -853,6 +853,7 @@ def create_fastapi_app(settings: Optional[Settings] = None) -> Any:
     try:
         from fastapi import FastAPI, Request, HTTPException
         from fastapi.exceptions import RequestValidationError
+        from fastapi.middleware.cors import CORSMiddleware
         from fastapi.responses import JSONResponse
 
         from apps.api.routers.agent import agent_router
@@ -877,6 +878,14 @@ def create_fastapi_app(settings: Optional[Settings] = None) -> Any:
             title=app_settings.app_name,
             version="1.0.0",
             description="Mandate Gateway — Autonomous AI Commerce Authorization & Policy Engine",
+        )
+
+        api_app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
         )
 
         @api_app.middleware("http")
