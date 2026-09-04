@@ -22,7 +22,7 @@ class TestM23RealProviderIntegration(unittest.TestCase):
 
     def test_01_openrouter_provider_health_and_secret_masking(self) -> None:
         """Verify OpenRouter provider masks secret key in repr and health status."""
-        key = "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"
+        key = "sk-or-v1-test-mock-secret-key-string-for-unit-testing-masking-1234567890"
         provider = OpenRouterCompatibleProvider(api_key=key)
 
         health = provider.check_health()
@@ -55,7 +55,7 @@ class TestM23RealProviderIntegration(unittest.TestCase):
 
     def test_03_tavily_search_provider_live_or_fallback(self) -> None:
         """Verify Tavily web search provider initializes and executes search."""
-        key = "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"
+        key = os.environ.get("TAVILY_API_KEY", "tvly-dev-test-key-placeholder")
         provider = TavilyWebSearchProvider(api_key=key)
         try:
             results = provider.search("coffee", max_results=2)

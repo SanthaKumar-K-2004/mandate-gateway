@@ -344,9 +344,7 @@ class LiveDataOrchestrator:
     """Orchestrates multi-provider live search with failover hierarchy and circuit breaking."""
 
     def __init__(self) -> None:
-        self.tavily_key = os.environ.get(
-            "TAVILY_API_KEY", "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"
-        )
+        self.tavily_key = os.environ.get("TAVILY_API_KEY", "")
         self.brave_key = os.environ.get("BRAVE_SEARCH_API_KEY")
         self.providers: List[WebSearchProvider] = []
 
