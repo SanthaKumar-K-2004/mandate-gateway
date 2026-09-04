@@ -1,15 +1,20 @@
-# Mandate Gateway — Verified AI Commerce Agent
+# 🛡️ Mandate Gateway — Autonomous AI Commerce Trust Protocol
 
-> **A production-hardened AI commerce agent foundation for verified product research, fail-closed product truth, safe cart optimization, and human-gated purchase execution.**
+> **Official Entry for Razorpay Raze Buildathon 2026**  
+> **Track**: **Autonomous AI Commerce & Agent Payment Protocols**  
+> **Developer / Author**: **SanthaKumar K** ([@SanthaKumar-K-2004](https://github.com/SanthaKumar-K-2004))  
 
+[![Razorpay Raze Buildathon 2026](https://img.shields.io/badge/Razorpay%20Raze%20Buildathon-2026-orange?style=for-the-badge&logo=razorpay)](https://github.com/SanthaKumar-K-2004/mandate-gateway)
+[![Developer](https://img.shields.io/badge/Developer-SanthaKumar%20K-emerald?style=for-the-badge&logo=github)](https://github.com/SanthaKumar-K-2004)
+[![Track](https://img.shields.io/badge/Track-Autonomous%20AI%20Commerce-indigo?style=for-the-badge)](https://github.com/SanthaKumar-K-2004/mandate-gateway)
 [![CI Quality Gate](https://github.com/SanthaKumar-K-2004/mandate-gateway/actions/workflows/ci.yml/badge.svg)](https://github.com/SanthaKumar-K-2004/mandate-gateway/actions/workflows/ci.yml)
 [![Master Quality Gate](https://img.shields.io/badge/make%20check-PASSING-brightgreen)](docs/RELEASE_READINESS.md)
-[![Test Suite](https://img.shields.io/badge/tests-842%20passed%2C%202%20skipped-brightgreen)](tests/)
-[![Version](https://img.shields.io/badge/version-v1.0.0-blue)](https://github.com/SanthaKumar-K-2004/mandate-gateway/releases/tag/v1.0.0)
-[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![Version](https://img.shields.io/badge/version-v2.0.0-blue)](https://github.com/SanthaKumar-K-2004/mandate-gateway/releases/tag/v2.0.0)
+
+> **A production-hardened AI commerce agent foundation for verified product research, fail-closed product truth, safe cart optimization, deterministic mandate authorization, and human-gated purchase execution.**
 
 > [!IMPORTANT]
-> **Disclaimer Notice**: Mandate Gateway is an independent open-source AI commerce safety project. It is **NOT** affiliated with, endorsed by, or connected to **Razorpay Software Private Limited**.
+> **Disclaimer Notice**: Mandate Gateway is an independent open-source AI commerce safety project developed by **SanthaKumar K** for the **Razorpay Raze Buildathon 2026**. It is built on top of Razorpay API standards and is **NOT** directly affiliated with, endorsed by, or connected to **Razorpay Software Private Limited**.
 
 ---
 
@@ -259,6 +264,18 @@ PYTHONPATH=. python3 scripts/mcp_client_test_runner.py
 
 ---
 
+## 🏆 Razorpay Raze Buildathon 2026 Submission
+
+- **Project Name**: Mandate Gateway — Autonomous AI Commerce Trust Protocol
+- **Competition**: **Razorpay Raze Buildathon 2026**
+- **Track**: **Autonomous AI Commerce & Agent Payment Protocols**
+- **Developer / Creator**: **SanthaKumar K**
+- **GitHub Profile**: [@SanthaKumar-K-2004](https://github.com/SanthaKumar-K-2004)
+- **Repository**: [SanthaKumar-K-2004/mandate-gateway](https://github.com/SanthaKumar-K-2004/mandate-gateway)
+
+---
+
 ## 📄 License
 
 MIT License — see [`LICENSE`](LICENSE) for details.
+
