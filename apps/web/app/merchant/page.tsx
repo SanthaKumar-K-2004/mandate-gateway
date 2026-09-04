@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import Navbar from "../components/Navbar";
 
 const API = "http://localhost:8000";
 const MERCHANT_ID = "mer_tech_store";
@@ -143,28 +144,18 @@ export default function MerchantPage() {
 
   return (
     <div className="min-h-screen bg-[#090d16] text-slate-100 font-sans pb-16">
-      {/* Navbar */}
-      <header className="border-b border-slate-800/80 px-8 py-5 flex justify-between items-center bg-[#0d1322]">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="w-9 h-9 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center font-black text-lg text-white shadow-lg shadow-purple-500/20">
-            M
-          </Link>
+      <Navbar />
+
+      <main className="max-w-6xl mx-auto px-8 py-8 space-y-6">
+        <div className="flex justify-between items-center pb-4 border-b border-slate-800">
           <div>
-            <h1 className="text-lg font-extrabold text-white m-0">MERCHANT POLICY</h1>
-            <p className="text-xs text-slate-400 m-0">Configure autonomous AI commerce rules & operational guardrails</p>
+            <h1 className="text-2xl font-extrabold text-white">MERCHANT POLICY & CATALOG CENTER</h1>
+            <p className="text-xs text-slate-400">Configure autonomous AI commerce rules & store product catalog</p>
           </div>
-        </div>
-        <div className="flex items-center gap-3">
           <span className={`text-xs font-bold px-3 py-1.5 rounded-full border ${aiEnabled ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-red-500/10 text-red-400 border-red-500/30"}`}>
             {aiEnabled ? "● AI COMMERCE ENABLED" : "○ AI COMMERCE DISABLED"}
           </span>
-          <Link href="/" className="text-xs font-bold text-slate-400 hover:text-white bg-slate-800 px-3.5 py-2 rounded-lg border border-slate-700">
-            ← Hub
-          </Link>
         </div>
-      </header>
-
-      <main className="max-w-6xl mx-auto px-8 py-8 space-y-6">
         {/* Policy Config */}
         <section className="bg-[#111827] border border-slate-800 p-6 rounded-2xl shadow-xl space-y-6">
           <div className="flex justify-between items-center">

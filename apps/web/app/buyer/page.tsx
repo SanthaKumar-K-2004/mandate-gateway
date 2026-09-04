@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Navbar from "../components/Navbar";
 
 const API = "http://localhost:8000";
 
@@ -273,22 +274,8 @@ export default function BuyerPage() {
   const cartTotalPaise = cart.reduce((s, c) => s + c.price_paise, 0);
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 font-sans pb-16">
-      {/* Navbar */}
-      <header className="border-b border-slate-800/80 px-8 py-5 flex justify-between items-center bg-[#0d1322]">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center font-black text-lg text-white shadow-lg shadow-blue-500/20">
-            A
-          </Link>
-          <div>
-            <h1 className="text-lg font-extrabold text-white m-0">AI BUYER PORTAL</h1>
-            <p className="text-xs text-slate-400 m-0">Natural Language Intent → Live Discovery → Mandate Settlement</p>
-          </div>
-        </div>
-        <Link href="/" className="text-xs font-bold text-slate-400 hover:text-white bg-slate-800 px-3.5 py-2 rounded-lg border border-slate-700">
-          ← Back to Control Hub
-        </Link>
-      </header>
+    <div className="min-h-screen bg-[#090d16] text-slate-100 font-sans">
+      <Navbar />
 
       <main className="max-w-7xl mx-auto px-8 py-8 grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Left Column: Search + Products */}

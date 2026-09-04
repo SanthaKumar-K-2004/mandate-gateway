@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import Navbar from "../components/Navbar";
 
 const API = "http://localhost:8000";
 
@@ -138,28 +139,18 @@ export default function TransactionsPage() {
 
   return (
     <div className="min-h-screen bg-[#090d16] text-slate-100 font-sans pb-16">
-      {/* Navbar */}
-      <header className="border-b border-slate-800/80 px-8 py-5 flex justify-between items-center bg-[#0d1322]">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="w-9 h-9 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center font-black text-lg text-white shadow-lg shadow-cyan-500/20">
-            T
-          </Link>
-          <div>
-            <h1 className="text-lg font-extrabold text-white m-0">TRANSACTION LEDGER</h1>
-            <p className="text-xs text-slate-400 m-0">Cryptographic state machine • SHA-256 evidence • Razorpay execution trace</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <button onClick={fetchTransactions} className="text-xs font-bold text-slate-400 hover:text-white bg-slate-800 px-3.5 py-2 rounded-lg border border-slate-700">
-            ↻ Refresh
-          </button>
-          <Link href="/" className="text-xs font-bold text-slate-400 hover:text-white bg-slate-800 px-3.5 py-2 rounded-lg border border-slate-700">
-            ← Hub
-          </Link>
-        </div>
-      </header>
+      <Navbar />
 
       <main className="max-w-6xl mx-auto px-8 py-8 space-y-6">
+        <div className="flex justify-between items-center pb-4 border-b border-slate-800">
+          <div>
+            <h1 className="text-2xl font-extrabold text-white">TRANSACTION & SECURITY AUDIT LEDGER</h1>
+            <p className="text-xs text-slate-400">Cryptographic state machine • SHA-256 evidence • 5-layer safety trace</p>
+          </div>
+          <button onClick={fetchTransactions} className="text-xs font-bold text-slate-400 hover:text-white bg-slate-800 px-3.5 py-2 rounded-lg border border-slate-700">
+            ↻ Refresh Ledger
+          </button>
+        </div>
         {/* Stats Row */}
         {transactions.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

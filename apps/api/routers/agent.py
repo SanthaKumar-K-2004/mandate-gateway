@@ -207,6 +207,29 @@ if HAS_FASTAPI:  # noqa: C901
             "message": "Payment execution authorized and committed cleanly via human confirmation.",
         }
 
+    @agent_router.post("/mcp", summary="Model Context Protocol (MCP) JSON-RPC Gateway")
+    async def mcp_jsonrpc_gateway(payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle MCP JSON-RPC 2.0 requests (tools/list, tools/call) enforcing security boundaries."""
+        from apps.api.agent.mcp_server import RazerpayMCPServer
+
+        server = RazerpayMCPServer()
+        return server.handle_mcp_request(payload)
+
+    @agent_router.get("/mcp/tools", summary="List Approved Model Context Protocol Tools")
+    async def list_mcp_tools_endpoint() -> Dict[str, Any]:
+        """Return list of all approved MCP tools, descriptions, permissions, and schemas."""
+        from apps.api.agent.mcp_server import RazerpayMCPServer
+
+        server = RazerpayMCPServer()
+        res = server.handle_mcp_request({"jsonrpc": "2.0", "id": 1, "method": "tools/list"})
+        tools = res.get("result", {}).get("tools", [])
+        return {
+            "status": "SUCCESS",
+            "protocol": "Model Context Protocol (MCP) JSON-RPC 2.0",
+            "count": len(tools),
+            "tools": tools,
+        }
+
 else:
 
     class DummyRouter:
