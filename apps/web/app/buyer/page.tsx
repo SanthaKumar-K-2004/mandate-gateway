@@ -274,20 +274,32 @@ export default function BuyerPage() {
   const cartTotalPaise = cart.reduce((s, c) => s + c.price_paise, 0);
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 font-sans">
+    <div className="min-h-screen bg-[#050810] text-slate-100 font-sans">
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-8 py-8 grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <main className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Left Column: Search + Products */}
         <div className="xl:col-span-2 space-y-6">
+          {/* Header */}
+          <div className="mb-2">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs font-black uppercase tracking-widest text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">AI Buyer Telemetry</span>
+              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" /> LIVE API
+              </span>
+            </div>
+            <h1 className="text-2xl font-black text-white">AI Buyer Control Interface</h1>
+            <p className="text-xs text-slate-500">10-Stage pipeline • OpenFoodFacts live search • SHA-256 provenance • Mandate enforcement gate</p>
+          </div>
+
           {/* Intent Search */}
-          <section className="bg-[#111827] border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4">
+          <section className="bg-[#0c1120] border border-[#1e2d40] p-6 rounded-2xl shadow-xl space-y-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
                 <span className="w-2 h-2 bg-blue-500 rounded-full" />
-                1. Natural Language Shopping Intent
+                Natural Language Shopping Intent
               </h2>
-              <span className="text-xs text-slate-500 font-mono">STEP 01</span>
+              <span className="text-[10px] text-slate-600 font-mono bg-[#0a0f1e] px-2 py-0.5 rounded border border-[#1a2535]">PIPELINE STAGE 01</span>
             </div>
             <div className="flex gap-3">
               <input
@@ -295,124 +307,124 @@ export default function BuyerPage() {
                 value={userIntent}
                 onChange={(e) => setUserIntent(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearchClick()}
-                className="flex-1 bg-[#0d1322] border border-slate-700 text-white px-4 py-3 rounded-xl text-sm focus:outline-none focus:border-blue-500 transition"
-                placeholder="Type any shopping request e.g. Find ergonomic office mouse under ₹1500..."
+                className="flex-1 bg-[#080d18] border border-[#1e2d40] text-white px-4 py-3 rounded-xl text-sm focus:outline-none focus:border-blue-500/60 transition placeholder-slate-600"
+                placeholder="e.g. Find ergonomic office mouse under ₹1500..."
               />
               <button
                 onClick={handleSearchClick}
                 disabled={loadingSearch}
-                className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm px-6 py-3 rounded-xl shadow-lg transition disabled:opacity-50 min-w-[160px]"
+                className="bg-blue-600 hover:bg-blue-500 text-white font-black text-sm px-6 py-3 rounded-xl shadow-lg shadow-blue-600/20 transition-all hover:scale-105 disabled:opacity-50 disabled:scale-100 min-w-[160px] flex items-center justify-center gap-2"
               >
                 {loadingSearch ? (
-                  <span className="flex items-center gap-2 justify-center">
-                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Crawling...
-                  </span>
+                  <><span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> Crawling...</>
                 ) : (
-                  "⚡ Search Live Products"
+                  <><span>⚡</span> Search Live</>  
                 )}
               </button>
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <span className="text-xs text-slate-500 font-semibold self-center">Presets:</span>
+              <span className="text-[10px] text-slate-600 font-bold uppercase tracking-wider self-center">Quick Presets:</span>
               {SUGGESTED.map((s) => (
                 <button
                   key={s}
                   onClick={() => handleSearch(s)}
-                  className="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 px-3 py-1 rounded-full transition"
+                  className="text-[11px] bg-[#080d18] hover:bg-[#0f1628] border border-[#1e2d40] hover:border-blue-500/30 text-slate-400 hover:text-white px-3 py-1 rounded-full transition"
                 >
                   {s}
                 </button>
               ))}
             </div>
 
-            <div className="flex items-center gap-4 pt-3 border-t border-slate-800/80 text-sm">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">Active Mandate:</label>
+            <div className="flex items-center gap-3 pt-3 border-t border-[#1e2d40]">
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Active Mandate:</label>
               <select
                 value={selectedMandate}
                 onChange={(e) => {
                   setSelectedMandate(e.target.value);
                   setMandateCapPaise(e.target.value === "man_buyer_01" ? 500000 : 1500000);
                 }}
-                className="flex-1 bg-[#0d1322] border border-slate-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold focus:outline-none"
+                className="flex-1 bg-[#080d18] border border-[#1e2d40] text-white px-3 py-2 rounded-xl text-xs font-mono focus:outline-none focus:border-blue-500/50 transition"
               >
-                <option value="man_buyer_01">man_buyer_01 — Single Cap ₹5,000 | Daily ₹10,000</option>
-                <option value="man_buyer_02">man_buyer_02 — Single Cap ₹15,000 | Daily ₹25,000</option>
+                <option value="man_buyer_01">man_buyer_01 — Cap ₹5,000 | Daily ₹10,000</option>
+                <option value="man_buyer_02">man_buyer_02 — Cap ₹15,000 | Daily ₹25,000</option>
               </select>
             </div>
           </section>
 
           {/* Discovered Products */}
-          <section className="bg-[#111827] border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4">
+          <section className="bg-[#0c1120] border border-[#1e2d40] p-6 rounded-2xl shadow-xl space-y-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <span className="w-2 h-2 bg-emerald-500 rounded-full" />
-                2. Discovered Merchant Products ({products.length})
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                Live Discovered Products
+                {products.length > 0 && <span className="text-emerald-400 font-mono text-xs">({products.length})</span>}
               </h2>
-              <span className="text-xs text-emerald-400 font-mono font-bold">MULTI-SOURCE LIVE API</span>
+              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">MULTI-SOURCE API</span>
             </div>
 
             {loadingSearch ? (
-              <div className="py-12 text-center text-slate-400 text-sm">
-                <div className="inline-block w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-3" />
-                <p className="font-semibold">Crawling merchant APIs for "{userIntent}"...</p>
-                <p className="text-xs text-slate-600 mt-1">OpenFoodFacts • Direct Merchant APIs • Commerce Connectors</p>
+              <div className="py-12 text-center">
+                <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                <p className="text-sm font-semibold text-slate-300">Crawling live APIs for &quot;{userIntent}&quot;...</p>
+                <p className="text-xs text-slate-600 mt-1">OpenFoodFacts • Merchant Direct • Commerce Connectors</p>
               </div>
             ) : products.length === 0 ? (
-              <div className="py-12 text-center text-slate-500 text-sm border border-dashed border-slate-800 rounded-xl space-y-2">
-                <p>No verified products discovered for "{userIntent}".</p>
-                <p className="text-xs text-slate-600">The backend commerce API returned no matches. Try a different query.</p>
+              <div className="py-12 text-center border border-dashed border-[#1e2d40] rounded-xl">
+                <div className="text-3xl mb-2">🔍</div>
+                <p className="text-sm text-slate-500">No verified products for &quot;{userIntent}&quot;</p>
+                <p className="text-xs text-slate-700 mt-1">Try a different query or check backend connectivity</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {products.map((prod) => (
-                  <div
-                    key={prod.product_id}
-                    className="bg-[#0d1322] border border-slate-800 rounded-xl p-5 flex flex-col justify-between hover:border-slate-700 transition shadow-md"
-                  >
-                    <div>
-                      {prod.img_url && (
-                        <div className="w-full h-32 bg-slate-900 rounded-lg overflow-hidden mb-3 border border-slate-800">
-                          <img
-                            src={prod.img_url}
-                            alt={prod.title}
-                            className="w-full h-full object-cover"
-                            onError={(e: any) => {
-                              e.target.style.display = "none";
-                            }}
-                          />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {products.map((prod) => {
+                  const inCart = !!cart.find((c) => c.product_id === prod.product_id);
+                  return (
+                    <div
+                      key={prod.product_id}
+                      className={`bg-[#080d18] border rounded-2xl p-4 flex flex-col justify-between transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
+                        inCart ? "border-blue-500/40 shadow-blue-500/5" : "border-[#1e2d40] hover:border-[#2d4060]"
+                      }`}
+                    >
+                      <div>
+                        {prod.img_url && (
+                          <div className="w-full h-28 bg-[#0a0f1e] rounded-xl overflow-hidden mb-3 border border-[#1a2535]">
+                            <img src={prod.img_url} alt={prod.title} className="w-full h-full object-cover" onError={(e: any) => { e.target.style.display = "none"; }} />
+                          </div>
+                        )}
+                        <h3 className="font-bold text-sm text-white mb-1 leading-snug line-clamp-2">{prod.title}</h3>
+                        {prod.description && <p className="text-[11px] text-slate-500 line-clamp-2 mb-2">{prod.description}</p>}
+                        <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                          <span className="text-[10px] font-mono bg-[#0c1120] text-slate-500 border border-[#1e2d40] px-1.5 py-0.5 rounded">{prod.category}</span>
+                          <span className="text-[10px] text-slate-600">🏬 {prod.merchant_name || prod.merchant_domain}</span>
                         </div>
-                      )}
-                      <h3 className="font-bold text-sm text-white mb-1 leading-snug">{prod.title}</h3>
-                      {prod.description && <p className="text-xs text-slate-400 line-clamp-2 mb-2">{prod.description}</p>}
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-[11px] bg-slate-800 text-slate-400 border border-slate-700 px-2 py-0.5 rounded font-mono">{prod.category}</span>
-                        <span className="text-[11px] text-slate-500 font-mono">🏬 {prod.merchant_name || prod.merchant_domain}</span>
+                        {prod.evidence_hash && (
+                          <p className="text-[9px] font-mono text-slate-700 truncate">SHA-256: {prod.evidence_hash}</p>
+                        )}
                       </div>
-                      {prod.evidence_hash && (
-                        <p className="text-[10px] font-mono text-slate-600 truncate">SHA-256: {prod.evidence_hash}</p>
-                      )}
+                      <div className="border-t border-[#1e2d40] pt-3 flex justify-between items-center mt-3">
+                        <span className="text-base font-black text-blue-400">₹{prod.price_inr.toLocaleString()}</span>
+                        <button
+                          onClick={() => addToCart(prod)}
+                          disabled={inCart}
+                          className={`text-xs font-bold px-4 py-2 rounded-xl transition-all duration-200 ${
+                            inCart
+                              ? "bg-blue-500/10 text-blue-400 border border-blue-500/20 cursor-default"
+                              : "bg-blue-600 hover:bg-blue-500 text-white shadow hover:shadow-blue-500/20 hover:scale-105"
+                          }`}
+                        >
+                          {inCart ? "✓ In Cart" : "+ Add to Cart"}
+                        </button>
+                      </div>
                     </div>
-
-                    <div className="border-t border-slate-800 pt-3 flex justify-between items-center mt-3">
-                      <span className="text-base font-extrabold text-blue-400">₹{prod.price_inr.toLocaleString()}</span>
-                      <button
-                        onClick={() => addToCart(prod)}
-                        disabled={!!cart.find((c) => c.product_id === prod.product_id)}
-                        className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition shadow disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        {cart.find((c) => c.product_id === prod.product_id) ? "✓ In Cart" : "+ Add to Cart"}
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </section>
 
           {/* Cart & Purchase */}
-          <section className="bg-[#111827] border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4">
+          <section className="bg-[#0c1120] border border-[#1e2d40] p-6 rounded-2xl shadow-xl space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-base font-bold text-white flex items-center gap-2">
                 <span className="w-2 h-2 bg-purple-500 rounded-full" />
@@ -493,7 +505,7 @@ export default function BuyerPage() {
         {/* Right Column: 10-Stage Pipeline Telemetry */}
         <div className="xl:col-span-1">
           <div className="sticky top-6">
-            <section className="bg-[#111827] border border-slate-800 p-5 rounded-2xl shadow-xl">
+            <section className="bg-[#0c1120] border border-[#1e2d40] p-5 rounded-2xl shadow-xl">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-sm font-bold text-white flex items-center gap-2">
                   <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
