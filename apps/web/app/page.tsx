@@ -197,7 +197,6 @@ export default function HomePage() {
   ];
 
   return (
-  return (
     <div className="min-h-screen bg-[#040711] text-slate-100 font-sans overflow-x-hidden">
       <Navbar />
 
