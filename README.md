@@ -3,7 +3,7 @@
 
 [![Buildathon Track](https://img.shields.io/badge/Razorpay_Raze_Buildathon_2026-Autonomous_AI_Commerce_&_Agent_Payment_Protocols-0052CC?style=for-the-badge&logo=razorpay)](https://github.com/SanthaKumar-K-2004/mandate-gateway)
 [![Current Release](https://img.shields.io/badge/Current_Release-v1.5.0-blue?style=for-the-badge)](docs/RELEASE_READINESS.md)
-[![Commit SHA](https://img.shields.io/badge/Commit-ecedd7b-informational?style=for-the-badge)](https://github.com/SanthaKumar-K-2004/mandate-gateway/commit/ecedd7b)
+[![Commit SHA](https://img.shields.io/badge/Commit-6f80dc0-informational?style=for-the-badge)](https://github.com/SanthaKumar-K-2004/mandate-gateway/commit/6f80dc0)
 [![Test Suite](https://img.shields.io/badge/Test_Suite-275_PASSED_/_100%25-brightgreen?style=for-the-badge)](docs/FINAL_SUBMISSION_ACCEPTANCE_TEST.md)
 [![Security Gate](https://img.shields.io/badge/Security_Guard-869_Files_Scanned_/_0_Leaks-success?style=for-the-badge)](SECURITY.md)
 
@@ -78,12 +78,7 @@ Mandate Gateway solves this by acting as an **intermediary trust proxy**. The ag
 
 ```mermaid
 flowchart TD
-    classDef primary fill:#0052CC,stroke:#003399,color:#fff,font-weight:bold;
-    classDef success fill:#059669,stroke:#047857,color:#fff,font-weight:bold;
-    classDef warning fill:#D97706,stroke:#B45309,color:#fff,font-weight:bold;
-    classDef danger fill:#DC2626,stroke:#B91C1C,color:#fff,font-weight:bold;
-
-    subgraph Intelligence ["🧠 AI & Commerce Research Zone (LIVE)"]
+    subgraph Intelligence ["AI & Commerce Research Zone (LIVE)"]
         A["Natural Language Shopping Request"] --> B["Intent Extractor & Category Parser"]
         B --> C["OpenFoodFacts REST API"]
         C --> D["SHA-256 Evidence Hashing & Provenance"]
@@ -93,27 +88,23 @@ flowchart TD
         F --> H["Explainable Recommendation Engine"]
     end
 
-    subgraph SecurityGate ["🛡️ Cryptographic Safety Gate (ENFORCED)"]
+    subgraph SecurityGate ["Cryptographic Safety Gate (ENFORCED)"]
         H --> I["Purchase Plan & Unknown Fee Check"]
         I --> J{"Human Authorization Signed?"}
         J -->|No| K["Execution Denied"]
-        J -->|Yes (HMAC-SHA256)| L["Single-Use Execution Nonce"]
+        J -->|"Approved (HMAC-SHA256)"| L["Single-Use Execution Nonce"]
         L --> M["Request Replay Fingerprint Barrier"]
         M --> N["1:1 Transaction-Order Binding"]
     end
 
-    subgraph Execution ["💳 Controlled Execution & Audit"]
+    subgraph Execution ["Controlled Execution & Audit"]
         N --> O{"Execution Boundary"}
         O -->|Sandbox| P["cafeacme.local Mock Merchant"]
         O -->|Handoff| Q["SSRF-Validated Checkout URL"]
-        P & Q --> R["Idempotent Reconciliation Engine"]
+        P --> R["Idempotent Reconciliation Engine"]
+        Q --> R
         R --> S["Immutable Audit Ledger & Metrics"]
     end
-
-    class A,B,C,D,F,H primary;
-    class G,K danger;
-    class J,L,M,N success;
-    class I,O,P,Q,R,S warning;
 ```
 
 ---
@@ -126,7 +117,7 @@ To prevent duplicate execution, race conditions, and unauthorized payments, Mand
 graph TD
     L1["Layer 1: HMAC-SHA256 Confirmation Token"] --> L2["Layer 2: Atomic DB Execution Nonce"]
     L2 --> L3["Layer 3: Request Replay Fingerprint Check"]
-    L3 --> L4["Layer 4: 1:1 Transaction ↔ Order Binding"]
+    L3 --> L4["Layer 4: 1:1 Transaction-Order Binding"]
     L4 --> L5["Layer 5: Idempotent State Reconciliation"]
 ```
 
