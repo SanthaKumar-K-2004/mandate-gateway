@@ -49,14 +49,33 @@ export default function MandatesPage() {
     setLoading(true);
     setError(null);
     try {
-      const results = await Promise.allSettled(
-        KNOWN_IDS.map((id) => fetch(`${API}/api/mandates/${id}`).then((r) => r.json()))
-      );
-      const items: Mandate[] = results
-        .filter((r) => r.status === "fulfilled" && !(r as PromiseFulfilledResult<any>).value?.error)
-        .map((r) => (r as PromiseFulfilledResult<any>).value);
-      setMandates(items);
-      if (items.length === 0) setError("No mandates found. Create one below.");
+      const res = await fetch(`${API}/api/mandates`);
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        const normalized: Mandate[] = data.map((m: any) => ({
+          mandate_id: m.mandate_id,
+          buyer_id: m.buyer_id,
+          merchant_id: m.merchant_scope && m.merchant_scope.length > 0 ? Array.from(m.merchant_scope)[0] as string : "ALL_MERCHANTS",
+          max_amount_paise: m.maximum_amount_paise || m.max_amount_paise || 500000,
+          daily_budget_paise: m.daily_budget_paise || 1000000,
+          allowed_merchants: m.merchant_scope ? Array.from(m.merchant_scope) : ["ALL"],
+          allowed_categories: m.category_scope ? Array.from(m.category_scope) : ["all"],
+          expires_at: m.expires_at || "2026-12-31T23:59:59Z",
+          status: m.status || "ACTIVE",
+          used_today_paise: m.used_today_paise || 0,
+          created_at: m.issued_at || m.created_at || new Date().toISOString(),
+        }));
+        setMandates(normalized);
+      } else {
+        const results = await Promise.allSettled(
+          KNOWN_IDS.map((id) => fetch(`${API}/api/mandates/${id}`).then((r) => r.json()))
+        );
+        const items: Mandate[] = results
+          .filter((r) => r.status === "fulfilled" && !(r as PromiseFulfilledResult<any>).value?.error)
+          .map((r) => (r as PromiseFulfilledResult<any>).value);
+        setMandates(items);
+        if (items.length === 0) setError("No mandates found. Create one below.");
+      }
     } catch {
       setError("Could not reach backend API.");
     } finally {

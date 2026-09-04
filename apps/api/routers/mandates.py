@@ -39,8 +39,41 @@ except ImportError:  # pragma: no cover
 
 from db.unit_of_work import AsyncUnitOfWork
 
-# In-memory fallback store for mandates
-_MANDATES: dict[str, MandateResponse] = {}
+from apps.api.domain.types import Currency, Region
+
+# In-memory store for mandates seeded with active demo mandates
+_MANDATES: dict[str, MandateResponse] = {
+    "man_buyer_01": MandateResponse(
+        mandate_id="man_buyer_01",
+        buyer_id="buy_user_99",
+        version=1,
+        merchant_scope=frozenset(["mer_tech_store", "mer_office_world", "world.openfoodfacts.org"]),
+        category_scope=frozenset(["electronics", "supplies", "groceries", "office", "general", "beverages"]),
+        allowed_regions=frozenset([Region.IN]),
+        maximum_amount_paise=500000,
+        daily_budget_paise=1000000,
+        currency=Currency.INR,
+        autonomous_execution=True,
+        status=MandateStatus.ACTIVE,
+        issued_at=datetime.now(timezone.utc),
+        expires_at=datetime(2026, 12, 31, tzinfo=timezone.utc),
+    ),
+    "man_buyer_02": MandateResponse(
+        mandate_id="man_buyer_02",
+        buyer_id="buy_corp_02",
+        version=1,
+        merchant_scope=frozenset(["mer_office_world", "mer_tech_store"]),
+        category_scope=frozenset(["office", "furniture", "electronics"]),
+        allowed_regions=frozenset([Region.IN]),
+        maximum_amount_paise=1500000,
+        daily_budget_paise=5000000,
+        currency=Currency.INR,
+        autonomous_execution=True,
+        status=MandateStatus.ACTIVE,
+        issued_at=datetime.now(timezone.utc),
+        expires_at=datetime(2026, 12, 31, tzinfo=timezone.utc),
+    ),
+}
 
 
 def _get_uow_or_none() -> AsyncUnitOfWork | None:
@@ -70,6 +103,15 @@ else:
             return decorator
 
     mandates_router: Any = DummyRouter()  # type: ignore[no-redef]
+
+
+@mandates_router.get(
+    "/mandates",
+    response_model=list[MandateResponse],
+)
+def list_mandates() -> list[MandateResponse]:
+    """List all buyer mandates."""
+    return list(_MANDATES.values())
 
 
 @mandates_router.post(

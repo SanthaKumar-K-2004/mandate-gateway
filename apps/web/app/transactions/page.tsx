@@ -50,8 +50,8 @@ export default function TransactionsPage() {
     setLoading(true);
     setError(null);
     try {
-      // Fetch all known tx IDs + look for recent ones via internal ops
-      const [opsRes, ...txResults] = await Promise.allSettled([
+      const [listRes, opsRes, ...txResults] = await Promise.allSettled([
+        fetch(`${API}/api/transactions`).then((r) => r.json()),
         fetch(`${API}/internal/operations/transactions`).then((r) => r.json()),
         ...SAMPLE_TX_IDS.map((id) =>
           fetch(`${API}/api/transactions/${id}`).then((r) => r.json())
@@ -60,11 +60,31 @@ export default function TransactionsPage() {
 
       const items: Transaction[] = [];
 
+      // From list endpoint
+      if (listRes.status === "fulfilled" && Array.isArray(listRes.value)) {
+        items.push(...listRes.value.map((t: any) => ({
+          transaction_id: t.transaction_id,
+          buyer_id: t.buyer_id,
+          merchant_id: t.merchant_id,
+          amount_paise: t.amount_paise,
+          state: t.state,
+          decision: t.decision_trace?.decision || t.state,
+          checks_passed: t.decision_trace?.checks_passed || [],
+          checks_failed: t.decision_trace?.checks_failed || [],
+          created_at: t.created_at || new Date().toISOString(),
+          mandate_id: t.mandate_id,
+        })));
+      }
+
       // From operations endpoint
       if (opsRes.status === "fulfilled") {
         const opsData = (opsRes as PromiseFulfilledResult<any>).value;
         const opsTxs = opsData.transactions || opsData.items || [];
-        items.push(...opsTxs);
+        for (const t of opsTxs) {
+          if (!items.find((x) => x.transaction_id === t.transaction_id)) {
+            items.push(t);
+          }
+        }
       }
 
       // From individual tx endpoints
@@ -72,7 +92,6 @@ export default function TransactionsPage() {
         if (r.status === "fulfilled") {
           const d = (r as PromiseFulfilledResult<any>).value;
           if (!d.error && d.transaction_id) {
-            // Avoid duplicates
             if (!items.find((t) => t.transaction_id === d.transaction_id)) {
               items.push(d);
             }

@@ -226,32 +226,43 @@ export default function BuyerPage() {
     const totalPaise = cart.reduce((s, c) => s + c.price_paise, 0);
 
     try {
+      const payload = {
+        buyer_id: "buy_user_99",
+        merchant_id: cart[0]?.merchant_domain || "mer_tech_store",
+        mandate_id: selectedMandate || "man_buyer_01",
+        operation: "create_order",
+        items: cart.map((c) => ({
+          product_id: c.product_id,
+          merchant_id: c.merchant_domain || "mer_tech_store",
+          name: c.title,
+          category: c.category || "electronics",
+          quantity: 1,
+          unit_price_paise: c.price_paise,
+          currency: "INR",
+        })),
+        tax_paise: 0,
+        shipping_paise: 0,
+        total_paise: totalPaise,
+        currency: "INR",
+        idempotency_key: `idem_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      };
+
       const res = await fetch(`${API}/api/purchase-proposals`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          buyer_id: "buy_user_99",
-          mandate_id: selectedMandate,
-          amount_paise: totalPaise,
-          merchant_domain: cart[0]?.merchant_domain || "openfoodfacts.org",
-          items: cart.map((c) => ({
-            product_id: c.product_id,
-            title: c.title,
-            price_paise: c.price_paise,
-          })),
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
 
-      if (data.decision === "ALLOW" || data.status === "AUTHORIZED" || data.state === "COMMITTED") {
-        setPurchaseStatus(`AUTHORIZED & COMMITTED — Transaction: ${data.transaction_id || "tx_" + Date.now()}`);
-      } else if (data.decision === "STEP_UP_REQUIRED" || data.state === "STEP_UP_REQUIRED") {
+      const stateStr = data.state || data.decision_trace?.decision || "";
+      if (stateStr === "COMMITTED" || stateStr === "AUTHORIZED" || stateStr === "ALLOW") {
+        setPurchaseStatus(`AUTHORIZED & COMMITTED — Transaction: ${data.transaction_id || "tx_auto_" + Date.now()}`);
+      } else if (stateStr === "STEP_UP_REQUIRED") {
         setPurchaseStatus(`STEP_UP_REQUIRED — Autonomous cap exceeded. Goto Transactions to approve.`);
-      } else if (data.decision === "REJECT" || data.state === "FAILED") {
-        setPurchaseError(`REJECTED — ${data.reason || "Policy check failed"}`);
+      } else if (data.rejection_reason || stateStr === "REJECTED" || stateStr === "FAILED") {
+        setPurchaseError(`REJECTED — ${data.rejection_detail || data.safe_message || "Policy check failed"}`);
       } else {
-        // Use mandate cap logic as fallback
         if (totalPaise > mandateCapPaise) {
           setPurchaseStatus(`STEP_UP_REQUIRED — ₹${(totalPaise / 100).toLocaleString()} > Cap ₹${(mandateCapPaise / 100).toLocaleString()}`);
         } else {
@@ -387,11 +398,26 @@ export default function BuyerPage() {
                       }`}
                     >
                       <div>
-                        {prod.img_url && (
-                          <div className="w-full h-28 bg-[#0a0f1e] rounded-xl overflow-hidden mb-3 border border-[#1a2535]">
-                            <img src={prod.img_url} alt={prod.title} className="w-full h-full object-cover" onError={(e: any) => { e.target.style.display = "none"; }} />
-                          </div>
-                        )}
+                        <div className="w-full h-32 bg-[#0a0f1e] rounded-xl overflow-hidden mb-3 border border-[#1a2535] relative">
+                          <img
+                            src={
+                              prod.img_url ||
+                              (prod.category === "electronics"
+                                ? "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=400&q=80"
+                                : prod.category === "beverages"
+                                ? "https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=400&q=80"
+                                : prod.category === "groceries"
+                                ? "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=400&q=80"
+                                : "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=400&q=80")
+                            }
+                            alt={prod.title}
+                            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                            onError={(e: any) => {
+                              e.target.src =
+                                "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=400&q=80";
+                            }}
+                          />
+                        </div>
                         <h3 className="font-bold text-sm text-white mb-1 leading-snug line-clamp-2">{prod.title}</h3>
                         {prod.description && <p className="text-[11px] text-slate-500 line-clamp-2 mb-2">{prod.description}</p>}
                         <div className="flex flex-wrap items-center gap-1.5 mb-2">

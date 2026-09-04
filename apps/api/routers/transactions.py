@@ -20,6 +20,7 @@ from apps.api.contracts.transaction import (
     TransactionResponse,
 )
 from apps.api.domain.types import (
+    Currency,
     PolicyDecision,
     RejectionReason,
     TransactionState,
@@ -45,8 +46,64 @@ except ImportError:  # pragma: no cover
             self.detail = detail
 
 
-# In-memory store for transactions
-_TRANSACTIONS: dict[str, TransactionResponse] = {}
+# In-memory store for transactions initialized with realistic seed transactions
+_TRANSACTIONS: dict[str, TransactionResponse] = {
+    "tx_auto_98234": TransactionResponse(
+        transaction_id="tx_auto_98234",
+        buyer_id="buy_user_99",
+        merchant_id="mer_tech_store",
+        mandate_id="man_buyer_01",
+        mandate_version=1,
+        policy_version=1,
+        cart_id="cart_98234",
+        cart_hash="sha256:ecc1cb7f46267d5de34be7b2ffced03e9bdea6f1ce3bc00c8d83c28b3b6d4153",
+        amount_paise=65000,
+        currency=Currency.INR,
+        state=TransactionState.COMMITTED,
+        decision_trace=DecisionTraceResponse(
+            decision=PolicyDecision.ALLOW,
+            checks_passed=["merchant_policy", "mandate_active", "daily_budget", "autonomous_limit", "nonce_unique"],
+            checks_failed=[],
+        ),
+        rejection_reason=None,
+        rejection_detail=None,
+        idempotency_key="idem_98234",
+        nonce="nonce_98234",
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
+    ),
+    "tx_stepup_12345": TransactionResponse(
+        transaction_id="tx_stepup_12345",
+        buyer_id="buy_user_99",
+        merchant_id="mer_tech_store",
+        mandate_id="man_buyer_01",
+        mandate_version=1,
+        policy_version=1,
+        cart_id="cart_12345",
+        cart_hash="sha256:7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069",
+        amount_paise=1250000,
+        currency=Currency.INR,
+        state=TransactionState.STEP_UP_REQUIRED,
+        decision_trace=DecisionTraceResponse(
+            decision=PolicyDecision.STEP_UP_REQUIRED,
+            checks_passed=["merchant_policy", "mandate_active", "daily_budget"],
+            checks_failed=[],
+            step_up_diff=StepUpDiff(
+                approved_paise=500000,
+                proposed_paise=1250000,
+                delta_paise=750000,
+                delta_percent=150.0,
+                reason="Purchase amount ₹12,500 exceeds single-transaction cap ₹5,000. Step-up approval token required.",
+            ),
+        ),
+        rejection_reason=None,
+        rejection_detail=None,
+        idempotency_key="idem_12345",
+        nonce="nonce_12345",
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
+    ),
+}
 
 
 if HAS_FASTAPI:
@@ -67,6 +124,15 @@ else:
             return decorator
 
     transactions_router: Any = DummyRouter()  # type: ignore[no-redef]
+
+
+@transactions_router.get(
+    "/transactions",
+    response_model=list[TransactionResponse],
+)
+def list_transactions() -> list[TransactionResponse]:
+    """List all recorded transactions in the gateway ledger."""
+    return list(_TRANSACTIONS.values())
 
 
 @transactions_router.post(
