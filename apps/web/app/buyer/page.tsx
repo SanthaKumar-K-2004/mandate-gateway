@@ -296,11 +296,13 @@ export default function BuyerPage() {
       });
 
       const data = await res.json();
-      if (res.ok && data.status === "SUCCESS") {
-        setOrderResult(data.razorpay_order);
+      const rzpOrder = data.razorpay_order || data.order;
+      if (res.ok && data.status === "SUCCESS" && rzpOrder) {
+        setOrderResult(rzpOrder);
         setUsedTokens((prev) => new Set(prev).add(tokenToUse));
 
         const eventStr = new Date().toLocaleTimeString("en-IN", { hour12: true });
+        const amountPaise = rzpOrder.amount ?? rzpOrder.amount_paise ?? totalPaise;
         setTimelineEvents((prev) => [
           ...prev,
           {
@@ -308,7 +310,7 @@ export default function BuyerPage() {
             timestamp: eventStr,
             stage: "PAYMENT",
             label: "Razorpay Test Order Created",
-            detail: `Order ID: ${data.razorpay_order.order_id} | Amount: ₹${(data.razorpay_order.amount / 100).toFixed(2)}`,
+            detail: `Order ID: ${rzpOrder.order_id} | Amount: ₹${(amountPaise / 100).toFixed(2)}`,
             status: "COMPLETED",
           },
           {

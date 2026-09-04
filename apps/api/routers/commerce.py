@@ -769,17 +769,20 @@ async def create_razorpay_order(req: RazorpayOrderRequestModel) -> Dict[str, Any
             label="Razorpay Order Created",
             detail=f"Order {order.order_id} created for {req.amount_paise} paise in {order.mode.value} mode",
         )
+        rzp_order_dict = {
+            "order_id": order.order_id,
+            "amount": order.amount_paise,
+            "amount_paise": order.amount_paise,
+            "currency": order.currency,
+            "receipt": order.receipt,
+            "status": order.status,
+            "mode": order.mode.value,
+            "created_at": order.created_at,
+        }
         return {
             "status": "SUCCESS",
-            "order": {
-                "order_id": order.order_id,
-                "amount_paise": order.amount_paise,
-                "currency": order.currency,
-                "receipt": order.receipt,
-                "status": order.status,
-                "mode": order.mode.value,
-                "created_at": order.created_at,
-            },
+            "order": rzp_order_dict,
+            "razorpay_order": rzp_order_dict,
             "risk_level": eval_res.risk_level.value,
         }
     except Exception as err:
