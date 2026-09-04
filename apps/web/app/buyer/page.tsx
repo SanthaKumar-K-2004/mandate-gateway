@@ -141,9 +141,10 @@ export default function BuyerPage() {
         },
       ];
     } else {
-      const cleanTerm = q.replace(/under.*$/i, "").replace(/^(find|buy|get|search for)\s+/i, "").trim() || "Item";
+      let cleanTerm = q.replace(/^(find|buy|get|search for)\s+/i, "");
+      cleanTerm = cleanTerm.replace(/(?:under|below|for|within|@)?\s*(?:₹|Rs\.?|INR)?\s*\d+\s*(?:INR|rupees)?$/i, "").trim() || "Item";
       const titleClean = cleanTerm.charAt(0).toUpperCase() + cleanTerm.slice(1);
-      const bMatch = q.match(/under\s+(?:₹|Rs\.?|INR)?\s*(\d+)/i);
+      const bMatch = q.match(/(?:under|below|for|within|@)?\s*(?:₹|Rs\.?|INR)?\s*(\d+)/i);
       const budgetInr = bMatch ? parseInt(bMatch[1], 10) : 300;
       const price1 = Math.max(15, Math.round(budgetInr * 0.45));
 

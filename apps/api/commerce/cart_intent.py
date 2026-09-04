@@ -87,24 +87,38 @@ class MultiItemIntentExtractor:
         req_id = f"shop_req_{uuid.uuid4().hex[:10]}"
         clean_prompt = prompt.strip()
 
-        # Extract budget limit (e.g., "under ₹500", "under Rs 1000", "under 5000")
+        # Extract budget limit (e.g., "under ₹500", "under 1000", "milk ₹300", "coffee 150", "tea for 200")
         budget_paise = default_budget_paise
-        budget_match = re.search(
-            r"under\s+(?:₹|Rs\.?|INR)?\s*(\d+(?:,\d+)*)", clean_prompt, re.IGNORECASE
-        )
-        if budget_match:
-            raw_val = budget_match.group(1).replace(",", "")
-            budget_paise = int(raw_val) * 100
 
-        # Extract items by splitting phrases like "coffee, biscuits and milk"
+        m1 = re.search(
+            r"(?:under|below|within|for|@)\s*(?:₹|Rs\.?|INR)?\s*(\d+(?:,\d+)*)",
+            clean_prompt,
+            re.IGNORECASE,
+        )
+        m2 = re.search(r"(?:₹|Rs\.?|INR)\s*(\d+(?:,\d+)*)", clean_prompt, re.IGNORECASE)
+        m3 = re.search(r"\b(\d+(?:,\d+)*)\s*(?:INR|rupees)?$", clean_prompt, re.IGNORECASE)
+
+        match = m1 or m2 or m3
+        if match:
+            raw_val = match.group(1).replace(",", "")
+            val = int(raw_val)
+            if val > 0:
+                budget_paise = val * 100
+
+        # Extract items by stripping budget text cleanly
         items_part = clean_prompt
-        if budget_match:
-            items_part = clean_prompt[: budget_match.start()].strip()
+        if match:
+            items_part = clean_prompt[: match.start()] + " " + clean_prompt[match.end() :]
 
         items_part = re.sub(
-            r"^(?:find|buy|get|build|search for)\s+", "", items_part, flags=re.IGNORECASE
+            r"^(?:find|buy|get|build|search for)\s+", "", items_part.strip(), flags=re.IGNORECASE
         )
-        items_part = re.sub(r"\s+under.*$", "", items_part, flags=re.IGNORECASE)
+        items_part = re.sub(
+            r"\b(?:under|below|within|for|@|₹|Rs\.?|INR|rupees)\b",
+            "",
+            items_part,
+            flags=re.IGNORECASE,
+        ).strip()
 
         # Split on commas or " and "
         raw_items = re.split(r",|\s+and\s+", items_part, flags=re.IGNORECASE)
@@ -112,7 +126,7 @@ class MultiItemIntentExtractor:
 
         for raw_item in raw_items:
             item_clean = raw_item.strip()
-            if not item_clean:
+            if not item_clean or item_clean.isdigit():
                 continue
 
             # Check quantity prefix (e.g. "2 notebooks", "3 pens")
@@ -131,10 +145,11 @@ class MultiItemIntentExtractor:
             )
 
         if not intents:
+            fallback_query = "coffee"
             intents.append(
                 ShoppingItemIntent(
-                    item_name="Coffee",
-                    normalized_query="coffee",
+                    item_name=fallback_query.capitalize(),
+                    normalized_query=fallback_query,
                     quantity=1,
                 )
             )
