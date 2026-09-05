@@ -370,57 +370,66 @@ export default function BuyerPage() {
   const totalInr = (totalPaise / 100).toFixed(2);
 
   return (
-    <div className="min-h-screen bg-[#040711] text-slate-100 font-sans selection:bg-orange-500/30 selection:text-orange-200">
+    <div className="min-h-screen bg-[#060a14] text-slate-100 font-sans selection:bg-blue-500/30 selection:text-blue-200">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
-        {/* Header Hero Section (Apple-style gradient accent & sleek typography) */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#090d1a] via-[#0f172a] to-[#090d1a] border border-white/10 p-6 sm:p-8 shadow-2xl shadow-orange-950/20">
-          <div className="absolute -top-24 -right-24 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        {/* Header Hero Section (White-Blue-Green-Orange Color Palette Mix) */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0c1222] via-[#08101e] to-[#0d162a] border border-blue-500/20 p-6 sm:p-8 shadow-2xl shadow-blue-950/40 backdrop-blur-2xl">
+          {/* Subtle Ambient Glowing Orbs */}
+          <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
           
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-orange-500/20 text-orange-400 border border-orange-500/30">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <span className="px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-blue-600/20 text-blue-300 border border-blue-400/30 shadow-sm flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
                   Razorpay Test Mode
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                <span className="px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   UAP & x402 Compatible
                 </span>
               </div>
-              <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white font-display">
+
+              <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white font-display">
                 Razorpay AI Commerce Command Hub
               </h1>
-              <p className="mt-1.5 text-sm sm:text-base text-slate-400 max-w-2xl font-normal leading-relaxed">
+              <p className="mt-1.5 text-sm sm:text-base text-slate-300 max-w-2xl font-medium leading-relaxed">
                 Human-Controlled Financial Authority &bull; Real-Time Web Product Discovery &bull; Multi-Model Risk Engine
               </p>
             </div>
 
-            {/* Quick Stats Pill */}
-            <div className="flex items-center gap-4 bg-slate-900/80 border border-white/10 p-3 rounded-2xl backdrop-blur-xl shrink-0">
+            {/* Quick Stats Pills (White + Blue + Green + Orange) */}
+            <div className="flex items-center gap-3 bg-white/[0.06] border border-white/15 p-3 rounded-2xl backdrop-blur-xl shrink-0 shadow-lg">
               <div className="text-center px-3 border-r border-white/10">
-                <span className="block text-xs font-medium text-slate-400">Policy Gate</span>
-                <span className="text-sm font-bold text-emerald-400">PASSED</span>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Policy Gate</span>
+                <span className="text-sm font-black text-emerald-400 flex items-center justify-center gap-1">
+                  <span>✓</span> PASSED
+                </span>
               </div>
               <div className="text-center px-3 border-r border-white/10">
-                <span className="block text-xs font-medium text-slate-400">Max Budget</span>
-                <span className="text-sm font-bold text-orange-400">₹1,500.00</span>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Max Budget</span>
+                <span className="text-sm font-black text-orange-400">₹1,500.00</span>
               </div>
               <div className="text-center px-3">
-                <span className="block text-xs font-medium text-slate-400">Gateway</span>
-                <span className="text-sm font-bold text-blue-400">Razorpay</span>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Gateway</span>
+                <span className="text-sm font-black text-blue-400">Razorpay</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Input Bar & Preset Queries Section */}
-        <div className="rounded-3xl bg-[#0b1021]/90 border border-white/10 p-6 shadow-xl backdrop-blur-xl space-y-4">
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">
-            Natural Language Shopping Prompt
+        <div className="rounded-3xl bg-[#0b1222]/90 border border-white/15 p-6 shadow-2xl backdrop-blur-2xl space-y-4">
+          <label className="block text-xs font-bold uppercase tracking-wider text-blue-400 flex items-center justify-between">
+            <span>Natural Language Shopping Prompt</span>
+            <span className="text-[10px] text-emerald-400 font-mono font-bold">REAL-TIME WEB SEARCH ACTIVE</span>
           </label>
+          
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <input
@@ -428,20 +437,21 @@ export default function BuyerPage() {
                 value={queryInput}
                 onChange={(e) => setQueryInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch(queryInput)}
-                placeholder="e.g. Ergonomic office mouse under ₹1500"
-                className="w-full bg-[#040711] border border-white/15 rounded-2xl px-4 py-3.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all font-medium"
+                placeholder="e.g. Find coffee and biscuits under ₹300"
+                className="w-full bg-[#050914] border border-white/20 rounded-2xl px-4 py-3.5 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all font-semibold shadow-inner"
               />
               {loadingSearch && (
-                <div className="absolute right-4 top-3.5 flex items-center gap-2 text-xs text-orange-400 font-semibold">
+                <div className="absolute right-4 top-3.5 flex items-center gap-2 text-xs text-orange-400 font-bold">
                   <span className="w-2 h-2 rounded-full bg-orange-400 animate-ping" />
-                  Searching...
+                  Searching Web...
                 </div>
               )}
             </div>
+            
             <button
               onClick={() => handleSearch(queryInput)}
               disabled={loadingSearch}
-              className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 via-orange-600 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold text-sm shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shrink-0 disabled:opacity-50"
+              className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-sm shadow-xl shadow-orange-500/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shrink-0 disabled:opacity-50"
             >
               <span>⚡</span>
               <span>Research Cart</span>
@@ -450,7 +460,7 @@ export default function BuyerPage() {
 
           {/* Preset Buttons */}
           <div>
-            <span className="text-xs text-slate-400 font-medium mr-2">Demo Preset Queries:</span>
+            <span className="text-xs text-slate-400 font-semibold mr-2">Demo Preset Queries:</span>
             <div className="flex flex-wrap gap-2 mt-2">
               {PRESETS.map((preset) => (
                 <button
@@ -459,10 +469,10 @@ export default function BuyerPage() {
                     setQueryInput(preset);
                     handleSearch(preset);
                   }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
                     activeQuery === preset
-                      ? "bg-orange-500/20 text-orange-300 border-orange-500/40 shadow-sm"
-                      : "bg-white/[0.03] text-slate-300 border-white/10 hover:border-orange-500/30 hover:text-white"
+                      ? "bg-blue-600/30 text-blue-200 border-blue-400/50 shadow-md shadow-blue-500/10"
+                      : "bg-white/[0.04] text-slate-300 border-white/10 hover:border-blue-400/30 hover:text-white hover:bg-white/[0.08]"
                   }`}
                 >
                   {preset}
@@ -478,71 +488,71 @@ export default function BuyerPage() {
           {/* Left Column: Discovered Products & AI Risk Gauges (7 cols) */}
           <div className="lg:col-span-7 space-y-6">
             
-            {/* Multi-Model Risk Intelligence Card */}
-            <div className="rounded-3xl bg-[#0b1021]/90 border border-white/10 p-6 shadow-xl backdrop-blur-xl">
+            {/* Multi-Model Risk Intelligence Card (Blue & Green Accents) */}
+            <div className="rounded-3xl bg-[#0b1222]/90 border border-white/15 p-6 shadow-2xl backdrop-blur-2xl">
               <div className="flex items-center justify-between pb-4 border-b border-white/10">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <h3 className="text-base font-bold text-white">Multi-Model AI Intelligence</h3>
+                  <h3 className="text-base font-extrabold text-white">Multi-Model AI Intelligence</h3>
                 </div>
-                <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                  {aiRisk?.risk_level || "LOW RISK"} ({aiRisk?.combined_risk_score || "0.1842"})
+                <span className="px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  {aiRisk?.risk_level || "LOW"} ({aiRisk?.combined_risk_score || "0.1842"})
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
                 
                 {/* Gauge 1: LLM Reasoning */}
-                <div className="bg-[#040711] border border-white/10 p-4 rounded-2xl flex flex-col justify-between space-y-2">
-                  <span className="text-xs font-bold text-slate-400">1. LLM Reasoning</span>
+                <div className="bg-[#050914] border border-white/15 p-4 rounded-2xl flex flex-col justify-between space-y-2">
+                  <span className="text-xs font-extrabold text-slate-300">1. LLM Reasoning</span>
                   <div className="space-y-1">
                     <div className="flex justify-between text-xs">
-                      <span className="text-slate-400">Injection:</span>
-                      <span className="text-emerald-400 font-bold">NONE</span>
+                      <span className="text-slate-400 font-medium">Injection:</span>
+                      <span className="text-emerald-400 font-extrabold">NONE</span>
                     </div>
                     <div className="flex justify-between text-xs">
-                      <span className="text-slate-400">Confidence:</span>
-                      <span className="text-white font-bold">98%</span>
+                      <span className="text-slate-400 font-medium">Confidence:</span>
+                      <span className="text-white font-extrabold">98%</span>
                     </div>
                   </div>
-                  <div className="w-full bg-slate-800 rounded-full h-1.5">
-                    <div className="bg-emerald-400 h-1.5 rounded-full w-[98%]" />
+                  <div className="w-full bg-slate-800 rounded-full h-2">
+                    <div className="bg-emerald-400 h-2 rounded-full w-[98%]" />
                   </div>
                 </div>
 
                 {/* Gauge 2: ML Risk Model */}
-                <div className="bg-[#040711] border border-white/10 p-4 rounded-2xl flex flex-col justify-between space-y-2">
-                  <span className="text-xs font-bold text-slate-400">2. ML Risk (Logistic)</span>
+                <div className="bg-[#050914] border border-white/15 p-4 rounded-2xl flex flex-col justify-between space-y-2">
+                  <span className="text-xs font-extrabold text-slate-300">2. ML Risk (Logistic)</span>
                   <div className="space-y-1">
                     <div className="flex justify-between text-xs">
-                      <span className="text-slate-400">Model:</span>
-                      <span className="text-slate-300 font-mono text-[10px]">v1.2.0-ml</span>
+                      <span className="text-slate-400 font-medium">Model:</span>
+                      <span className="text-blue-300 font-mono text-[10px]">v1.2.0-ml</span>
                     </div>
                     <div className="flex justify-between text-xs">
-                      <span className="text-slate-400">Risk Score:</span>
-                      <span className="text-emerald-400 font-bold">{aiRisk?.ml_risk.risk_score || "0.1420"}</span>
+                      <span className="text-slate-400 font-medium">Risk Score:</span>
+                      <span className="text-emerald-400 font-extrabold">{aiRisk?.ml_risk.risk_score || "0.142"}</span>
                     </div>
                   </div>
-                  <div className="w-full bg-slate-800 rounded-full h-1.5">
-                    <div className="bg-blue-400 h-1.5 rounded-full w-[15%]" />
+                  <div className="w-full bg-slate-800 rounded-full h-2">
+                    <div className="bg-blue-500 h-2 rounded-full w-[15%]" />
                   </div>
                 </div>
 
                 {/* Gauge 3: Neural Autoencoder Anomaly */}
-                <div className="bg-[#040711] border border-white/10 p-4 rounded-2xl flex flex-col justify-between space-y-2">
-                  <span className="text-xs font-bold text-slate-400">3. Neural Autoencoder</span>
+                <div className="bg-[#050914] border border-white/15 p-4 rounded-2xl flex flex-col justify-between space-y-2">
+                  <span className="text-xs font-extrabold text-slate-300">3. Neural Autoencoder</span>
                   <div className="space-y-1">
                     <div className="flex justify-between text-xs">
-                      <span className="text-slate-400">MSE Error:</span>
-                      <span className="text-slate-300 font-mono text-[10px]">{aiRisk?.neural_anomaly.reconstruction_mse || "0.0841"}</span>
+                      <span className="text-slate-400 font-medium">MSE Error:</span>
+                      <span className="text-blue-300 font-mono text-[10px]">{aiRisk?.neural_anomaly.reconstruction_mse || "0.0841"}</span>
                     </div>
                     <div className="flex justify-between text-xs">
-                      <span className="text-slate-400">Anomaly:</span>
-                      <span className="text-emerald-400 font-bold">NORMAL</span>
+                      <span className="text-slate-400 font-medium">Anomaly:</span>
+                      <span className="text-emerald-400 font-extrabold">NORMAL</span>
                     </div>
                   </div>
-                  <div className="w-full bg-slate-800 rounded-full h-1.5">
-                    <div className="bg-emerald-400 h-1.5 rounded-full w-[22%]" />
+                  <div className="w-full bg-slate-800 rounded-full h-2">
+                    <div className="bg-emerald-400 h-2 rounded-full w-[22%]" />
                   </div>
                 </div>
 
@@ -552,22 +562,22 @@ export default function BuyerPage() {
             {/* Product Candidates Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <h3 className="text-base font-extrabold text-white flex items-center gap-2">
                   <span>🛍️</span>
                   <span>Verified Candidate Products</span>
                 </h3>
-                <span className="text-xs font-semibold text-slate-400">
-                  Total Cart: <strong className="text-white">₹{totalInr}</strong> ({totalPaise} paise)
+                <span className="text-xs font-bold text-slate-300">
+                  Total Cart: <strong className="text-orange-400 text-sm font-black">₹{totalInr}</strong> ({totalPaise} paise)
                 </span>
               </div>
 
               {loadingSearch ? (
-                <div className="rounded-3xl bg-[#0b1021]/60 border border-white/10 p-12 text-center space-y-3">
-                  <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto" />
-                  <p className="text-sm font-medium text-slate-400">Searching live web sources for candidate evidence...</p>
+                <div className="rounded-3xl bg-[#0b1222]/80 border border-white/15 p-12 text-center space-y-3">
+                  <div className="w-8 h-8 border-3 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                  <p className="text-sm font-bold text-slate-300">Searching live web sources for candidate evidence...</p>
                 </div>
               ) : products.length === 0 ? (
-                <div className="rounded-3xl bg-[#0b1021]/60 border border-white/10 p-8 text-center text-slate-400 text-sm">
+                <div className="rounded-3xl bg-[#0b1222]/80 border border-white/15 p-8 text-center text-slate-400 text-sm font-medium">
                   No verified products found. Click &quot;Research Cart&quot; to search.
                 </div>
               ) : (
@@ -575,36 +585,36 @@ export default function BuyerPage() {
                   {products.map((p) => (
                     <div
                       key={p.product_id}
-                      className="rounded-2xl bg-[#0b1021]/90 border border-white/10 p-4 hover:border-orange-500/40 transition-all space-y-3 flex flex-col justify-between"
+                      className="rounded-2xl bg-[#0b1222]/90 border border-white/15 p-4 hover:border-blue-400/50 transition-all space-y-3 flex flex-col justify-between shadow-xl"
                     >
                       <div className="space-y-2">
                         {p.img_url && (
-                          <div className="w-full h-32 rounded-xl overflow-hidden bg-slate-900 border border-white/5 relative">
+                          <div className="w-full h-32 rounded-xl overflow-hidden bg-[#050914] border border-white/10 relative">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={p.img_url}
                               alt={p.title}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
-                            <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-black/70 text-emerald-400 border border-emerald-500/30 backdrop-blur-md">
+                            <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-black bg-black/80 text-emerald-400 border border-emerald-500/40 backdrop-blur-md">
                               VERIFIED
                             </span>
                           </div>
                         )}
-                        <h4 className="text-sm font-bold text-white line-clamp-2 leading-snug">{p.title}</h4>
-                        <p className="text-xs text-slate-400 line-clamp-2">{p.description}</p>
+                        <h4 className="text-sm font-extrabold text-white line-clamp-2 leading-snug">{p.title}</h4>
+                        <p className="text-xs text-slate-300 line-clamp-2 font-medium">{p.description}</p>
                       </div>
 
                       <div className="pt-2 border-t border-white/10 flex items-center justify-between">
                         <div>
-                          <span className="text-lg font-extrabold text-white">₹{p.price_inr}</span>
-                          <span className="block text-[10px] text-slate-500">Merchant: {p.merchant_name}</span>
+                          <span className="text-lg font-black text-white">₹{p.price_inr}</span>
+                          <span className="block text-[10px] text-slate-400 font-semibold">Merchant: {p.merchant_name}</span>
                         </div>
                         <a
                           href={p.product_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-slate-300 hover:text-white transition-colors"
+                          className="px-3 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-400/30 text-xs font-bold text-blue-300 hover:text-white transition-colors"
                         >
                           View Source &rarr;
                         </a>
@@ -620,44 +630,44 @@ export default function BuyerPage() {
           {/* Right Column: Financial Authority Policy Gate & Razorpay Execution (5 cols) */}
           <div className="lg:col-span-5 space-y-6">
 
-            {/* Financial Safety Boundary Card */}
-            <div className="rounded-3xl bg-[#0b1021]/90 border border-white/10 p-6 shadow-xl backdrop-blur-xl space-y-6">
+            {/* Financial Safety Boundary Card (Green & White Accents) */}
+            <div className="rounded-3xl bg-[#0b1222]/90 border border-white/15 p-6 shadow-2xl backdrop-blur-2xl space-y-6">
               
               <div className="flex items-center justify-between pb-4 border-b border-white/10">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">🔐</span>
-                  <h3 className="text-base font-bold text-white">Financial Policy Gate</h3>
+                  <h3 className="text-base font-extrabold text-white">Financial Policy Gate</h3>
                 </div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-orange-500/20 text-orange-400 border border-orange-500/30">
                   HUMAN AUTHORIZATION REQUIRED
                 </span>
               </div>
 
               {/* Cart Item Cost Breakdown */}
-              <div className="space-y-3 bg-[#040711] border border-white/10 p-4 rounded-2xl">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">Item Breakdown</span>
+              <div className="space-y-3 bg-[#050914] border border-white/15 p-4 rounded-2xl">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400 block mb-2">Item Breakdown</span>
                 {products.map((p) => (
                   <div key={p.product_id} className="flex justify-between items-center text-xs">
-                    <span className="text-slate-300 truncate max-w-[200px]">{p.title}</span>
+                    <span className="text-slate-300 font-medium truncate max-w-[200px]">{p.title}</span>
                     <span className="font-bold text-white">₹{p.price_inr}</span>
                   </div>
                 ))}
-                <div className="pt-3 border-t border-white/10 flex justify-between items-center text-sm font-extrabold">
+                <div className="pt-3 border-t border-white/10 flex justify-between items-center text-sm font-black">
                   <span className="text-slate-300">Total Purchase Amount</span>
-                  <span className="text-orange-400 text-base">₹{totalInr}</span>
+                  <span className="text-orange-400 text-base font-black">₹{totalInr}</span>
                 </div>
               </div>
 
               {/* Security Attacks Simulation Controls */}
               <div className="space-y-2 pt-2 border-t border-white/10">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block">Security Verification Tests</span>
+                <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400 block">Security Verification Tests</span>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => {
                       setAttackScenario("replay");
                       handleExecutePayment(confirmationToken); // Re-use token intentionally
                     }}
-                    className="px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold text-xs transition-colors flex items-center justify-center gap-1"
+                    className="px-3 py-2.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-500/40 text-red-300 font-extrabold text-xs transition-colors flex items-center justify-center gap-1 shadow-sm"
                   >
                     <span>⚠️</span>
                     <span>Test Replay Attack</span>
@@ -667,7 +677,7 @@ export default function BuyerPage() {
                       setAttackScenario("tamper");
                       setConfirmationToken("invalid_fake_token_123");
                     }}
-                    className="px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 font-bold text-xs transition-colors flex items-center justify-center gap-1"
+                    className="px-3 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 font-extrabold text-xs transition-colors flex items-center justify-center gap-1 shadow-sm"
                   >
                     <span>⚡</span>
                     <span>Tamper Token</span>
@@ -677,27 +687,27 @@ export default function BuyerPage() {
 
               {/* Payment Error Alert */}
               {paymentError && (
-                <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs font-semibold space-y-1">
-                  <div className="flex items-center gap-2 font-bold text-red-400">
+                <div className="p-4 rounded-2xl bg-red-500/15 border border-red-500/40 text-red-200 text-xs font-semibold space-y-1 shadow-lg">
+                  <div className="flex items-center gap-2 font-black text-red-400">
                     <span>🚨</span>
                     <span>SECURITY BARRIER ACTIVATED</span>
                   </div>
-                  <p>{paymentError}</p>
+                  <p className="leading-snug">{paymentError}</p>
                 </div>
               )}
 
               {/* Purchase Action Button */}
               {orderResult ? (
-                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-2">
-                  <div className="flex items-center gap-2 font-bold text-emerald-400 text-sm">
+                <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 space-y-2 shadow-lg">
+                  <div className="flex items-center gap-2 font-black text-emerald-400 text-sm">
                     <span>✓</span>
                     <span>RAZORPAY TEST ORDER CREATED</span>
                   </div>
-                  <div className="text-xs text-slate-300 space-y-1 font-mono">
-                    <p>Order ID: <strong className="text-white">{orderResult.order_id}</strong></p>
-                    <p>Amount: <strong className="text-white">₹{(orderResult.amount / 100).toFixed(2)}</strong></p>
+                  <div className="text-xs text-slate-200 space-y-1 font-mono">
+                    <p>Order ID: <strong className="text-white font-bold">{orderResult.order_id}</strong></p>
+                    <p>Amount: <strong className="text-white font-bold">₹{(orderResult.amount / 100).toFixed(2)}</strong></p>
                     <p>Receipt: {orderResult.receipt}</p>
-                    <p className="text-emerald-400">Webhook HMAC Verified: TRUE</p>
+                    <p className="text-emerald-400 font-bold">Webhook HMAC Verified: TRUE</p>
                   </div>
                 </div>
               ) : (
@@ -705,11 +715,11 @@ export default function BuyerPage() {
                   <button
                     onClick={() => handleExecutePayment()}
                     disabled={paymentLoading || products.length === 0}
-                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-600 to-emerald-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold text-sm shadow-lg shadow-emerald-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-sm shadow-xl shadow-emerald-500/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     {paymentLoading ? (
                       <span className="flex items-center gap-2">
-                        <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                         Verifying Policy & Creating Order...
                       </span>
                     ) : (
@@ -725,29 +735,29 @@ export default function BuyerPage() {
             </div>
 
             {/* Real-Time Cryptographic Activity Stream */}
-            <div className="rounded-3xl bg-[#0b1021]/90 border border-white/10 p-6 shadow-xl backdrop-blur-xl space-y-4">
+            <div className="rounded-3xl bg-[#0b1222]/90 border border-white/15 p-6 shadow-2xl backdrop-blur-2xl space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping" />
                   <span>Real-Time AI Activity Stream</span>
                 </h3>
-                <span className="text-[10px] font-mono text-slate-400">AUDITED</span>
+                <span className="text-[10px] font-mono font-bold text-emerald-400 border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 rounded-full">AUDITED</span>
               </div>
 
               <div className="space-y-3">
                 {timelineEvents.map((ev) => (
                   <div key={ev.event_id} className="flex gap-3 text-xs items-start">
-                    <span className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5 ${
+                    <span className={`w-5 h-5 rounded-full flex items-center justify-center font-black text-[10px] shrink-0 mt-0.5 ${
                       ev.status === "COMPLETED" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-orange-500/20 text-orange-400 border border-orange-500/30"
                     }`}>
                       {ev.status === "COMPLETED" ? "✓" : "⏳"}
                     </span>
                     <div className="space-y-0.5 flex-1">
                       <div className="flex justify-between items-center">
-                        <span className="font-bold text-white">{ev.label}</span>
-                        <span className="text-[10px] text-slate-500 font-mono">{ev.timestamp}</span>
+                        <span className="font-extrabold text-white">{ev.label}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">{ev.timestamp}</span>
                       </div>
-                      <p className="text-slate-400 leading-normal">{ev.detail}</p>
+                      <p className="text-slate-300 font-medium leading-normal">{ev.detail}</p>
                     </div>
                   </div>
                 ))}
