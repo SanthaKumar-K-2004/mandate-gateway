@@ -62,9 +62,17 @@ class RazorpayClient:
         env_mode_str = os.environ.get("RAZORPAY_MODE", "test").lower()
         self.mode = mode or (RazorpayMode.LIVE if env_mode_str == "live" else RazorpayMode.TEST)
 
-        k_id = key_id or SecretString(os.environ.get("RAZORPAY_KEY_ID", ""))
-        k_sec = key_secret or SecretString(os.environ.get("RAZORPAY_KEY_SECRET", ""))
-        wh_sec = webhook_secret or SecretString(os.environ.get("RAZORPAY_WEBHOOK_SECRET", ""))
+        k_id = key_id if key_id is not None else SecretString(os.environ.get("RAZORPAY_KEY_ID", ""))
+        k_sec = (
+            key_secret
+            if key_secret is not None
+            else SecretString(os.environ.get("RAZORPAY_KEY_SECRET", ""))
+        )
+        wh_sec = (
+            webhook_secret
+            if webhook_secret is not None
+            else SecretString(os.environ.get("RAZORPAY_WEBHOOK_SECRET", ""))
+        )
 
         self._key_id = k_id
         self._key_secret = k_sec

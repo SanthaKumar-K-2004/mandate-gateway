@@ -85,7 +85,7 @@ make check
 - `mypy`: 0 type errors across 481 source files
 - `secret_scan`: 768 files scanned, 0 secrets detected
 - `architecture_check`: 504 files checked, 0 violations
-- `unit_test`: 844 tests executed (842 passed, 2 skipped, 0 failed, 0 errors)
+- `unit_test`: 895 tests executed (893 passed, 2 skipped, 0 failed, 0 errors)
 - `PROJECT_CONTEXT.md` SHA-256 Checksum: `2b62d52aa707bc9bb5df60d93b04f60933562e69af8068c46cc3b6cdc2eb670a` (Unchanged)
 
 ---
@@ -93,6 +93,6 @@ make check
 ## 7. Release Recommendation
 
 ```text
-RECOMMEND PATCH RELEASE v1.0.1
+RECOMMEND PRODUCTION FREEZE RELEASE v1.5.0
 ```
-*(Patch release v1.0.1 captures the critical MCP direct invocation security fix, SSRF URL hardening, GitHub Actions CI pipeline, open-source health files, and audit wording corrections).*
+*(Production freeze release v1.5.0 captures the complete removal of prebuilt products, hardcoded merchant mappings, synthetic prices, Unsplash placeholders, full Tavily live web product discovery integration, hardened price parser, and Razorpay Test Mode integration).*

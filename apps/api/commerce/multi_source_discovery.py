@@ -22,34 +22,87 @@ from apps.api.commerce.product_truth_engine import ProductTruthEngine
 
 logger = logging.getLogger("mandate_gateway.multi_source_discovery")
 
-# High-resolution category image constants
-IMG_MOUSE = (
-    "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=400&q=80"
-)
-IMG_KEYBOARD = (
-    "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=400&q=80"
-)
-IMG_MONITOR = (
-    "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=400&q=80"
-)
-IMG_HEADPHONES = (
-    "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=400&q=80"
-)
-IMG_CHAIR = (
-    "https://images.unsplash.com/photo-1580481072645-022f9a6d1209?auto=format&fit=crop&w=400&q=80"
-)
-IMG_TEA = (
-    "https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=400&q=80"
-)
-IMG_BISCUIT = (
-    "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=400&q=80"
-)
-IMG_COFFEE = (
-    "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=400&q=80"
-)
-IMG_GENERAL = (
-    "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=400&q=80"
-)
+
+def _extract_verified_price(snippet: str, raw_title: str, query: str) -> int:
+    """
+    Extracts a verified product selling price in paise from web search text.
+    Filters out query budget echoes (e.g. 'under 100 rs'), model numbers, DPIs, and discounts.
+    Returns price_paise (int > 0) or 0 if no verified selling price is found.
+    """
+    combined_text = f"{raw_title} | {snippet}"
+
+    # Extract all numbers from search query so we don't treat budget phrases (e.g. '100' in 'under 100') as item price
+    query_nums = set(re.findall(r"\b\d+\b", query))
+
+    # Priority 1: Explicit selling price labels (e.g. 'Sale price Rs. 279', 'Price: ₹450', 'MRP ₹1500')
+    explicit_pattern = (
+        r"(?:sale price|offer price|deal price|our price|mrp|price)\s*"
+        r"(?:is|of|:|=|–|-)?\s*(?:Rs\.?|₹|INR)?\s*(\d+(?:,\d+)*(?:\.\d+)?)"
+    )
+    explicit_matches = re.finditer(explicit_pattern, combined_text, re.IGNORECASE)
+    for m in explicit_matches:
+        val_str = m.group(1).replace(",", "")
+        try:
+            val = float(val_str)
+            val_int_str = str(int(val))
+            if val_int_str in query_nums and ("under" in query.lower() or "below" in query.lower()):
+                continue
+            if val > 0:
+                return int(val * 100)
+        except ValueError:
+            pass
+
+    # Priority 2: Standard currency prefix (e.g. 'Rs. 279', '₹450', 'INR 1500')
+    currency_pattern = (
+        r"(?:Rs\.?|₹|INR)\s*(\d+(?:,\d+)*(?:\.\d+)?)"
+        r"(?!\s*(?:%|percent|off|dpi|g|kg|mm|cm|pack|days|months))"
+    )
+    currency_matches = re.finditer(currency_pattern, combined_text, re.IGNORECASE)
+    for m in currency_matches:
+        val_str = m.group(1).replace(",", "")
+        try:
+            val = float(val_str)
+            val_int_str = str(int(val))
+            if val_int_str in query_nums and ("under" in query.lower() or "below" in query.lower()):
+                continue
+            if val > 0:
+                return int(val * 100)
+        except ValueError:
+            pass
+
+    return 0
+
+
+def _derive_merchant_display_name(domain: str) -> str:
+    """Derive clean human-readable merchant display name from domain hostname."""
+    if not domain:
+        return "Web Store"
+
+    host = domain.lower()
+    if host.startswith("www."):
+        host = host[4:]
+
+    parts = host.split(".")
+    base = parts[0].capitalize()
+
+    if "amazon" in host:
+        return "Amazon India"
+    elif "flipkart" in host:
+        return "Flipkart"
+    elif "blinkit" in host:
+        return "Blinkit"
+    elif "zepto" in host:
+        return "Zepto"
+    elif "bigbasket" in host:
+        return "BigBasket"
+    elif "croma" in host:
+        return "Croma"
+    elif "reliance" in host:
+        return "Reliance Digital"
+    elif "tatacliq" in host:
+        return "Tata CLIQ"
+
+    return base if len(base) >= 3 else domain
 
 
 class MultiSourceDiscoveryEngine:
@@ -98,29 +151,29 @@ class MultiSourceDiscoveryEngine:
         if tavily_candidates:
             return (tavily_candidates, "SUCCESS")
 
-        candidates: List[CanonicalProduct] = []
-
-        # 1. Query Public Open Food Facts & Open Commerce Catalog
+        # 1. Query Public Open Food Facts Live API
         public_candidates = self._discover_public_catalog(query, max_price_paise)
-        candidates.extend(public_candidates)
+        if public_candidates:
+            return (public_candidates, "SUCCESS")
 
-        # 2. Query Merchant Connector (Cafe Acme / Direct Merchants)
+        # 2. Query Merchant Connector (Direct Merchant APIs if configured)
         merchant_candidates = self._discover_merchant_connector(query, max_price_paise)
-        candidates.extend(merchant_candidates)
+        if merchant_candidates:
+            return (merchant_candidates, "SUCCESS")
 
-        # 3. Query Web Checkout Stores (TechGear / OfficeDepot / Roasters India)
+        # 3. Query Web Checkout Stores
         web_candidates = self._discover_web_stores(query, max_price_paise)
-        candidates.extend(web_candidates)
+        if web_candidates:
+            return (web_candidates, "SUCCESS")
 
-        if not candidates:
-            return ([], "NO_MATCHING_PRODUCTS_FOUND")
+        return ([], "NO_MATCHING_PRODUCTS_FOUND")
 
-        return (candidates, "SUCCESS")
-
-    def _discover_tavily_web_search(
+    def _discover_tavily_web_search(  # noqa: C901
         self, query: str, max_price_paise: int
     ) -> List[CanonicalProduct]:
         """Fetch live real-time candidate products using Tavily Web Search API."""
+        import hashlib
+
         candidates: List[CanonicalProduct] = []
 
         # Ensure .env is populated into os.environ if missing
@@ -144,32 +197,19 @@ class MultiSourceDiscoveryEngine:
             provider = TavilyWebSearchProvider(api_key=tavily_key)
             web_results = provider.search(query=query, max_results=5)
             for idx, res in enumerate(web_results):
-                raw_title = res.get("title", f"Live Product Candidate {idx + 1}")
+                raw_title = res.get("title", "")
                 snippet = res.get("snippet", "")
-                url = res.get("url", "https://tavily.com")
+                url = res.get("url", "")
 
-                if not raw_title or len(raw_title) < 3:
+                if not raw_title or len(raw_title) < 3 or not url or not url.startswith("http"):
                     continue
 
-                # Extract domain and merchant name
-                domain = "world.openfoodfacts.org"
+                # Extract domain cleanly from URL
                 domain_match = re.search(r"https?://(?:www\.)?([^/]+)", url)
-                if domain_match:
-                    domain = domain_match.group(1)
-
-                m_name = domain.split(".")[0].capitalize()
-                if "flipkart" in domain:
-                    m_name = "Flipkart Direct Store"
-                elif "blinkit" in domain:
-                    m_name = "Blinkit Quick Store"
-                elif "zepto" in domain:
-                    m_name = "Zepto Dairy & Goods"
-                elif "bigbasket" in domain:
-                    m_name = "BigBasket Store"
-                elif "amazon" in domain:
-                    m_name = "Amazon India Store"
-                elif "countrydelight" in domain:
-                    m_name = "Country Delight Dairy"
+                if not domain_match:
+                    continue
+                domain = domain_match.group(1)
+                m_name = _derive_merchant_display_name(domain)
 
                 # Build clean item title from web result
                 clean_t = re.sub(
@@ -179,65 +219,59 @@ class MultiSourceDiscoveryEngine:
                     r"\s+-(?:buy|best price|online).*$", "", clean_t, flags=re.IGNORECASE
                 )
                 clean_t = clean_t.strip()
-                if len(clean_t) < 5:
-                    clean_t = f"{m_name} {query.title()}"
+                if len(clean_t) < 3:
+                    clean_t = raw_title.strip()
 
-                # Extract price digits from snippet if present
-                price_paise = 0
-                price_match = re.search(
-                    r"(?:Rs\.?|₹|INR)\s*(\d+(?:,\d+)*(?:\.\d+)?)", snippet, re.IGNORECASE
-                )
-                if price_match:
-                    p_val = float(price_match.group(1).replace(",", ""))
-                    price_paise = int(p_val * 100)
+                # Extract real price from snippet or title if present
+                price_paise = _extract_verified_price(snippet, raw_title, query)
+                if price_paise > 0:
+                    verification_status = "PRODUCT_VERIFIED"
+                    price_source = "SEARCH_SNIPPET"
+                else:
+                    verification_status = "PRICE_UNVERIFIED"
+                    price_source = "UNKNOWN"
 
-                if not price_paise or price_paise > max_price_paise:
-                    base_fraction = 0.35 + (idx * 0.15)
-                    calc_val = int(max_price_paise * base_fraction)
-                    price_paise = max(500, min(max_price_paise, calc_val))
+                # Enforce budget limit & price verification if budget is specified
+                if max_price_paise > 0:
+                    if price_paise == 0 or price_paise > max_price_paise:
+                        continue
 
-                # Select high-res thumbnail matching product domain
-                img = IMG_GENERAL
+                # Category minimum price sanity check
                 q_lower = (query + " " + clean_t).lower()
-                if any(k in q_lower for k in ["milk", "dairy"]):
-                    img = "https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=400&q=80"
-                elif any(k in q_lower for k in ["mouse", "mice"]):
-                    img = IMG_MOUSE
-                elif any(k in q_lower for k in ["keyboard", "keypad"]):
-                    img = IMG_KEYBOARD
-                elif any(k in q_lower for k in ["monitor", "screen", "display"]):
-                    img = IMG_MONITOR
-                elif any(k in q_lower for k in ["headphone", "headset", "earphone"]):
-                    img = IMG_HEADPHONES
-                elif any(k in q_lower for k in ["chair", "desk", "furniture"]):
-                    img = IMG_CHAIR
-                elif "tea" in q_lower:
-                    img = IMG_TEA
-                elif any(k in q_lower for k in ["biscuit", "cookie"]):
-                    img = IMG_BISCUIT
-                elif "coffee" in q_lower:
-                    img = IMG_COFFEE
-                elif any(k in q_lower for k in ["pen", "stationery"]):
-                    img = "https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?auto=format&fit=crop&w=400&q=80"
+                is_electronics = any(
+                    k in q_lower for k in ["mouse", "mice", "keyboard", "monitor", "headphone"]
+                )
+                if is_electronics and price_paise > 0 and price_paise < 15000:
+                    # Erroneous price parsing (e.g. ₹35 for a mouse) or accessory/shipping fee noise
+                    continue
+
+                # Extract image URL if present in source evidence; do NOT manufacture generic placeholders
+                img_url = res.get("image_url") or res.get("image") or res.get("img") or None
+
+                # Generate deterministic product ID from SHA-256
+                sha_id = hashlib.sha256(f"Tavily:{domain}:{url}".encode("utf-8")).hexdigest()[:16]
 
                 p = CanonicalProduct.create(
-                    product_id=f"prod_tavily_{idx + 1}_{abs(hash(url)) % 10000}",
-                    title=clean_t[:80],
+                    product_id=f"prod_{sha_id}",
+                    title=clean_t[:100],
                     price_paise=price_paise,
                     merchant_name=m_name,
                     merchant_domain=domain,
                     product_url=url,
-                    image_url=img,
+                    image_url=img_url,
                     source_provider="Tavily Live Web Search",
-                    checkout_capability=CheckoutCapability.VERIFIED_API,
+                    checkout_capability=CheckoutCapability.DISCOVERY_ONLY,
                     brand=m_name.split()[0],
-                    description=snippet[:160] if snippet else clean_t,
+                    description=snippet[:200] if snippet else clean_t,
                     category=(
                         "electronics"
                         if any(k in q_lower for k in ["mouse", "keyboard", "monitor", "headphone"])
                         else "groceries"
                     ),
-                    availability="AVAILABLE",
+                    verification_status=verification_status,
+                    availability="UNKNOWN",
+                    price_source=price_source,
+                    is_live=True,
                 )
                 candidates.append(p)
         except Exception as err:
@@ -246,383 +280,77 @@ class MultiSourceDiscoveryEngine:
         return candidates
 
     def _discover_public_catalog(self, query: str, max_price_paise: int) -> List[CanonicalProduct]:
-        """Fetch candidates matching query from Open Food Facts & Open Catalog."""
+        """Fetch live candidates from Open Food Facts Public API."""
+        return self._discover_open_food_facts(query, max_price_paise)
+
+    def _discover_open_food_facts(self, query: str, max_price_paise: int) -> List[CanonicalProduct]:
+        """Query world.openfoodfacts.org public API for live product facts."""
+        import hashlib
+        import json
+        import urllib.parse
+        import urllib.request
+
+        candidates: List[CanonicalProduct] = []
+        encoded_q = urllib.parse.quote(query)
+        url = (
+            f"https://world.openfoodfacts.org/cgi/search.pl?search_terms={encoded_q}"
+            f"&search_simple=1&action=process&json=1&page_size=5"
+        )
+        headers = {"User-Agent": "RazorpayMandateGateway/1.0"}
+
         try:
-            q_lower = query.lower().strip()
+            req = urllib.request.Request(url, headers=headers, method="GET")
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                products = data.get("products", [])
+                for idx, p in enumerate(products):
+                    p_name = p.get("product_name") or p.get("generic_name") or ""
+                    if len(p_name) < 3:
+                        continue
+                    p_code = p.get("code") or f"off_{idx}"
+                    p_url = p.get("url") or f"https://world.openfoodfacts.org/product/{p_code}"
+                    brand = p.get("brands") or "Open Commerce"
+                    img = p.get("image_url") or p.get("image_front_url") or None
 
-            if any(k in q_lower for k in ["mouse", "mice"]):
-                prod_url = (
-                    "https://world.openfoodfacts.org/product/8901234567890/hp-silent-wireless-mouse"
-                )
-                item = CanonicalProduct.create(
-                    product_id="prod_off_mouse_01",
-                    title="HP Silent Optical Wireless Desk Mouse",
-                    price_paise=65000,  # ₹650.00
-                    merchant_name="OpenFoodFacts Tech & General",
-                    merchant_domain="world.openfoodfacts.org",
-                    product_url=prod_url,
-                    image_url=IMG_MOUSE,
-                    source_provider="OpenFoodFacts API",
-                    checkout_capability=CheckoutCapability.VERIFIED_API,
-                    brand="HP",
-                    description="Ergonomic silent optical wireless desk mouse 1600 DPI",
-                    category="electronics",
-                    availability="AVAILABLE",
-                )
-            elif any(k in q_lower for k in ["keyboard", "keypad"]):
-                prod_url = (
-                    "https://world.openfoodfacts.org/product/8901234567891/logitech-k380-keyboard"
-                )
-                item = CanonicalProduct.create(
-                    product_id="prod_off_kbd_01",
-                    title="Logitech K380 Multi-Device Bluetooth Keyboard",
-                    price_paise=245000,  # ₹2,450.00
-                    merchant_name="OpenFoodFacts Tech & General",
-                    merchant_domain="world.openfoodfacts.org",
-                    product_url=prod_url,
-                    image_url=IMG_KEYBOARD,
-                    source_provider="OpenFoodFacts API",
-                    checkout_capability=CheckoutCapability.VERIFIED_API,
-                    brand="Logitech",
-                    description="Compact multi-device bluetooth wireless keyboard",
-                    category="electronics",
-                    availability="AVAILABLE",
-                )
-            elif any(k in q_lower for k in ["biscuit", "cookie"]):
-                prod_url = "https://world.openfoodfacts.org/product/8901063013224"
-                item = CanonicalProduct.create(
-                    product_id="prod_off_biscuit_01",
-                    title="OpenFoodFacts Organic Digestive Biscuits 200g",
-                    price_paise=12000,  # ₹120.00
-                    merchant_name="OpenFoodFacts Public Catalog",
-                    merchant_domain="world.openfoodfacts.org",
-                    product_url=prod_url,
-                    image_url=IMG_BISCUIT,
-                    source_provider="OpenFoodFacts API",
-                    checkout_capability=CheckoutCapability.VERIFIED_API,
-                    brand="NutriChoice Organic",
-                    description="High fiber whole wheat digestive biscuits",
-                    category="groceries",
-                    availability="AVAILABLE",
-                )
-            elif "milk" in q_lower:
-                prod_url = (
-                    "https://world.openfoodfacts.org/product/8901234567895/organic-whole-milk-1l"
-                )
-                price_val = (
-                    min(max_price_paise, max(1500, int(max_price_paise * 0.65)))
-                    if max_price_paise > 0
-                    else 6800
-                )
-                item = CanonicalProduct.create(
-                    product_id="prod_off_milk_01",
-                    title="Amul Organic Pasteurised Toned Milk 1L",
-                    price_paise=price_val,
-                    merchant_name="OpenFoodFacts Dairy Catalog",
-                    merchant_domain="world.openfoodfacts.org",
-                    product_url=prod_url,
-                    image_url="https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=400&q=80",
-                    source_provider="OpenFoodFacts API",
-                    checkout_capability=CheckoutCapability.VERIFIED_API,
-                    brand="Amul Dairy",
-                    description="Fresh homogenized whole milk 1L carton",
-                    category="dairy",
-                    availability="AVAILABLE",
-                )
-            elif any(k in q_lower for k in ["pen", "pencil", "stationery"]):
-                prod_url = "https://world.openfoodfacts.org/product/8901234567896/gel-pen-pack"
-                price_val = (
-                    min(max_price_paise, max(1000, int(max_price_paise * 0.65)))
-                    if max_price_paise > 0
-                    else 4500
-                )
-                item = CanonicalProduct.create(
-                    product_id="prod_off_pen_01",
-                    title="Cello Fine Grip Ball & Gel Pen (Pack of 5)",
-                    price_paise=price_val,
-                    merchant_name="Open Commerce Stationery Catalog",
-                    merchant_domain="world.openfoodfacts.org",
-                    product_url=prod_url,
-                    image_url="https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?auto=format&fit=crop&w=400&q=80",
-                    source_provider="Open Commerce API",
-                    checkout_capability=CheckoutCapability.VERIFIED_API,
-                    brand="Cello",
-                    description="Smooth writing blue gel ball pens 0.7mm tip",
-                    category="stationery",
-                    availability="AVAILABLE",
-                )
-            elif "tea" in q_lower:
-                prod_url = "https://world.openfoodfacts.org/product/8901030732890"
-                item = CanonicalProduct.create(
-                    product_id="prod_off_tea_01",
-                    title="Himalayan Organic Green Tea Bags 100s",
-                    price_paise=min(max_price_paise, 24000),  # ₹240.00
-                    merchant_name="OpenFoodFacts Public Catalog",
-                    merchant_domain="world.openfoodfacts.org",
-                    product_url=prod_url,
-                    image_url=IMG_TEA,
-                    source_provider="OpenFoodFacts API",
-                    checkout_capability=CheckoutCapability.VERIFIED_API,
-                    brand="Himalayan Herbs",
-                    description="100% pure organic green tea leaves",
-                    category="beverages",
-                    availability="AVAILABLE",
-                )
-            elif any(k in q_lower for k in ["chair", "desk", "furniture"]):
-                prod_url = (
-                    "https://world.openfoodfacts.org/product/8901234567892/ergonomic-desk-chair"
-                )
-                item = CanonicalProduct.create(
-                    product_id="prod_off_chair_01",
-                    title="Green Soul Ergonomic Mesh Desk Chair",
-                    price_paise=min(max_price_paise, 450000),  # ₹4,500.00
-                    merchant_name="Office Furniture Direct",
-                    merchant_domain="world.openfoodfacts.org",
-                    product_url=prod_url,
-                    image_url=IMG_CHAIR,
-                    source_provider="OpenFoodFacts API",
-                    checkout_capability=CheckoutCapability.VERIFIED_API,
-                    brand="Green Soul",
-                    description="Breathable mesh ergonomic chair with lumbar support",
-                    category="office",
-                    availability="AVAILABLE",
-                )
-            elif "coffee" in q_lower:
-                prod_url = "https://world.openfoodfacts.org/product/2000000000018/espresso-roast-coffee-250g"
-                item = CanonicalProduct.create(
-                    product_id="prod_off_coffee_250",
-                    title="Espresso Roast Coffee Beans 250g",
-                    price_paise=min(max_price_paise, 18000),  # ₹180.00
-                    merchant_name="OpenFoodFacts Public Catalog",
-                    merchant_domain="world.openfoodfacts.org",
-                    product_url=prod_url,
-                    image_url=IMG_COFFEE,
-                    source_provider="OpenFoodFacts API",
-                    checkout_capability=CheckoutCapability.VERIFIED_API,
-                    brand="Organic Roast Co.",
-                    description="100% Arabica dark roast coffee beans",
-                    category="coffee",
-                    availability="AVAILABLE",
-                )
-            else:
-                clean_title = re.sub(
-                    r"^(?:find|buy|get|search for)\s+", "", query, flags=re.IGNORECASE
-                )
-                clean_title = (
-                    re.sub(
-                        r"(?:under|below|for|within|@)?\s*(?:₹|Rs\.?|INR)?\s*\d+\s*(?:INR|rupees)?$",
-                        "",
-                        clean_title,
-                        flags=re.IGNORECASE,
+                    sha_id = hashlib.sha256(
+                        f"OpenFoodFacts:world.openfoodfacts.org:{p_code}".encode("utf-8")
+                    ).hexdigest()[:16]
+
+                    canonical = CanonicalProduct.create(
+                        product_id=f"prod_{sha_id}",
+                        title=f"{p_name} ({brand})"[:100],
+                        price_paise=0,
+                        merchant_name="OpenFoodFacts Public Catalog",
+                        merchant_domain="world.openfoodfacts.org",
+                        product_url=p_url,
+                        image_url=img,
+                        source_provider="OpenFoodFacts API",
+                        checkout_capability=CheckoutCapability.DISCOVERY_ONLY,
+                        brand=brand.split(",")[0].strip(),
+                        description=f"Public food facts record for {p_name}",
+                        category="groceries",
+                        verification_status="PRICE_UNVERIFIED",
+                        availability="UNKNOWN",
+                        price_source="UNKNOWN",
+                        is_live=True,
                     )
-                    .strip()
-                    .title()
-                )
-                if not clean_title:
-                    clean_title = "Product"
-
-                calc_price = (
-                    min(max_price_paise, max(500, int(max_price_paise * 0.75)))
-                    if max_price_paise > 0
-                    else 9900
-                )
-                prod_url = f"https://world.openfoodfacts.org/product/{abs(hash(clean_title))}"
-                item = CanonicalProduct.create(
-                    product_id=f"prod_custom_{abs(hash(clean_title)) % 10000}",
-                    title=f"Verified {clean_title} Store Item",
-                    price_paise=calc_price,
-                    merchant_name="Open Commerce Catalog",
-                    merchant_domain="world.openfoodfacts.org",
-                    product_url=prod_url,
-                    image_url=IMG_GENERAL,
-                    source_provider="Open Commerce API",
-                    checkout_capability=CheckoutCapability.VERIFIED_API,
-                    brand="Verified Merchant",
-                    description=f"Verified authentic {clean_title} matching intent specification",
-                    category="general",
-                    availability="AVAILABLE",
-                )
-
-            if item.price_paise <= max_price_paise:
-                return [item]
+                    # Enforce budget limit if budget specified
+                    if max_price_paise > 0 and (
+                        canonical.price_paise == 0 or canonical.price_paise > max_price_paise
+                    ):
+                        continue
+                    candidates.append(canonical)
         except Exception as err:
-            logger.warning(f"Public catalog discovery failed: {err}")
-        return []
+            logger.warning(f"OpenFoodFacts live API call failed: {err}")
+
+        return candidates
 
     def _discover_merchant_connector(
         self, query: str, max_price_paise: int
     ) -> List[CanonicalProduct]:
         """Fetch candidates matching query from Merchant direct API."""
-        try:
-            q_lower = query.lower().strip()
-
-            if any(k in q_lower for k in ["mouse", "mice"]):
-                prod_url = "http://cafeacme.local/menu/pro-mouse"
-                item = CanonicalProduct.create(
-                    product_id="prod_acme_mouse_01",
-                    title="Logitech MX Master 3S Wireless Ergonomic Mouse",
-                    price_paise=145000,  # ₹1,450.00
-                    merchant_name="TechGear Direct Merchant API",
-                    merchant_domain="cafeacme.local",
-                    product_url=prod_url,
-                    image_url=IMG_MOUSE,
-                    source_provider="TechGear Direct Merchant API",
-                    checkout_capability=CheckoutCapability.VERIFIED_API,
-                    brand="Logitech",
-                    description="Performance wireless ergonomic mouse with Quiet Clicks",
-                    category="electronics",
-                    availability="AVAILABLE",
-                )
-            elif any(k in q_lower for k in ["biscuit", "cookie"]):
-                prod_url = "http://cafeacme.local/menu/almond-biscuit"
-                item = CanonicalProduct.create(
-                    product_id="prod_cafe_acme_biscuit",
-                    title="Cafe Acme Handmade Almond Biscotti 150g",
-                    price_paise=14000,  # ₹140.00
-                    merchant_name="Cafe Acme Direct",
-                    merchant_domain="cafeacme.local",
-                    product_url=prod_url,
-                    image_url=IMG_BISCUIT,
-                    source_provider="Cafe Acme Merchant API",
-                    checkout_capability=CheckoutCapability.VERIFIED_API,
-                    brand="Acme Bakery",
-                    description="Handmade Italian almond biscotti",
-                    category="groceries",
-                    availability="AVAILABLE",
-                )
-            elif "coffee" in q_lower or not q_lower:
-                prod_url = "http://cafeacme.local/menu/espresso"
-                item = CanonicalProduct.create(
-                    product_id="prod_cafe_acme_01",
-                    title="Acme Artisan Espresso Coffee 250g",
-                    price_paise=19000,  # ₹190.00
-                    merchant_name="Cafe Acme Direct",
-                    merchant_domain="cafeacme.local",
-                    product_url=prod_url,
-                    image_url=IMG_COFFEE,
-                    source_provider="Cafe Acme Merchant API",
-                    checkout_capability=CheckoutCapability.VERIFIED_API,
-                    brand="Acme Coffee",
-                    description="Freshly roasted whole bean coffee",
-                    category="coffee",
-                    availability="AVAILABLE",
-                )
-            else:
-                clean_title = re.sub(
-                    r"^(?:find|buy|get|search for)\s+", "", query, flags=re.IGNORECASE
-                ).title()
-                calc_price = (
-                    min(max_price_paise, max(45000, int(max_price_paise * 0.85)))
-                    if max_price_paise > 0
-                    else 85000
-                )
-                prod_url = f"http://cafeacme.local/products/{abs(hash(clean_title))}"
-                item = CanonicalProduct.create(
-                    product_id=f"prod_merchant_{abs(hash(clean_title)) % 10000}",
-                    title=f"Acme Premium {clean_title}",
-                    price_paise=calc_price,
-                    merchant_name="Cafe Acme Direct",
-                    merchant_domain="cafeacme.local",
-                    product_url=prod_url,
-                    image_url=IMG_GENERAL,
-                    source_provider="Cafe Acme Merchant API",
-                    checkout_capability=CheckoutCapability.VERIFIED_API,
-                    brand="Acme Premium",
-                    description=f"Verified merchant inventory {clean_title}",
-                    category="general",
-                    availability="AVAILABLE",
-                )
-
-            if item.price_paise <= max_price_paise:
-                return [item]
-        except Exception as err:
-            logger.warning(f"Merchant connector discovery failed: {err}")
         return []
 
     def _discover_web_stores(self, query: str, max_price_paise: int) -> List[CanonicalProduct]:
         """Fetch candidates matching query from Web Checkout stores."""
-        try:
-            q_lower = query.lower().strip()
-
-            if any(k in q_lower for k in ["mouse", "mice"]):
-                prod_url = "https://www.officedepot.in/products/proergo-vertical-mouse"
-                item = CanonicalProduct.create(
-                    product_id="prod_web_mouse_02",
-                    title="ProErgo Vertical Ergonomic Optical Mouse",
-                    price_paise=120000,  # ₹1,200.00
-                    merchant_name="OfficeDepot India",
-                    merchant_domain="officedepot.in",
-                    product_url=prod_url,
-                    image_url=IMG_MOUSE,
-                    source_provider="Web Discovery Engine",
-                    checkout_capability=CheckoutCapability.CHECKOUT_HANDOFF,
-                    brand="ProErgo",
-                    description="Vertical ergonomic wireless mouse reduces wrist strain",
-                    category="electronics",
-                    availability="AVAILABLE",
-                )
-            elif any(k in q_lower for k in ["biscuit", "cookie"]):
-                prod_url = "https://www.coffeeroasters.in/products/butter-cookies"
-                item = CanonicalProduct.create(
-                    product_id="prod_web_biscuit_99",
-                    title="Roasters Choice Artisan Butter Cookies 200g",
-                    price_paise=11000,  # ₹110.00
-                    merchant_name="Coffee Roasters India",
-                    merchant_domain="coffeeroasters.in",
-                    product_url=prod_url,
-                    image_url=IMG_BISCUIT,
-                    source_provider="Web Discovery Engine",
-                    checkout_capability=CheckoutCapability.CHECKOUT_HANDOFF,
-                    brand="Roasters Bakery",
-                    description="Rich Danish butter cookies",
-                    category="groceries",
-                    availability="AVAILABLE",
-                )
-            elif "coffee" in q_lower or not q_lower:
-                prod_url = "https://www.coffeeroasters.in/products/dark-roast-250g"
-                item = CanonicalProduct.create(
-                    product_id="prod_web_coffee_99",
-                    title="Roasters Choice Filter Coffee Powder 250g",
-                    price_paise=15000,  # ₹150.00
-                    merchant_name="Coffee Roasters India",
-                    merchant_domain="coffeeroasters.in",
-                    product_url=prod_url,
-                    image_url=IMG_COFFEE,
-                    source_provider="Web Discovery Engine",
-                    checkout_capability=CheckoutCapability.CHECKOUT_HANDOFF,
-                    brand="Roasters Choice",
-                    description="Traditional South Indian filter coffee blend",
-                    category="coffee",
-                    availability="AVAILABLE",
-                )
-            else:
-                clean_title = re.sub(
-                    r"^(?:find|buy|get|search for)\s+", "", query, flags=re.IGNORECASE
-                ).title()
-                calc_price = (
-                    min(max_price_paise, max(39000, int(max_price_paise * 0.65)))
-                    if max_price_paise > 0
-                    else 65000
-                )
-                prod_url = f"https://www.officedepot.in/products/{abs(hash(clean_title))}"
-                item = CanonicalProduct.create(
-                    product_id=f"prod_web_{abs(hash(clean_title)) % 10000}",
-                    title=f"OfficeDepot Choice {clean_title}",
-                    price_paise=calc_price,
-                    merchant_name="OfficeDepot India",
-                    merchant_domain="officedepot.in",
-                    product_url=prod_url,
-                    image_url=IMG_GENERAL,
-                    source_provider="Web Discovery Engine",
-                    checkout_capability=CheckoutCapability.CHECKOUT_HANDOFF,
-                    brand="OfficeDepot Choice",
-                    description=f"Verified store listing for {clean_title}",
-                    category="office",
-                    availability="AVAILABLE",
-                )
-
-            if item.price_paise <= max_price_paise:
-                return [item]
-        except Exception as err:
-            logger.warning(f"Web store discovery failed: {err}")
         return []

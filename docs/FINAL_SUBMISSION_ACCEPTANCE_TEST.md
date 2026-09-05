@@ -3,8 +3,8 @@
 **System**: Mandate Gateway — RAZORPAY AI Commerce Agent  
 **Repository**: `/home/santhakumar/Desktop/Razorpay`  
 **Starting Commit**: `1e2aa5c6012658bd74ec10f0fbfcf4aeb9d5bc58`  
-**Final Commit**: `c8306db760ffb6df42cb09867b3bc1c6c06df9a5`  
-**Release Tag**: `v2.0.0`
+**Final Commit**: `eb933d3` (main release freeze)  
+**Release Tag**: `v1.5.0`
 **Branch**: `main`  
 **PROJECT_CONTEXT SHA-256**: `2b62d52aa707bc9bb5df60d93b04f60933562e69af8068c46cc3b6cdc2eb670a`  
 
@@ -12,8 +12,8 @@
 
 ## 1. Automated Test Results
 
-- **Total Unit Test Cases Executed**: 870
-- **Passed**: 868
+- **Total Unit Test Cases Executed**: 895
+- **Passed**: 893
 - **Skipped**: 2 (Intentional environment-isolated integration tests requiring active live Razorpay gateway credentials)
 - **Failed**: 0
 - **Errors**: 0

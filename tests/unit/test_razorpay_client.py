@@ -21,7 +21,9 @@ class TestRazorpayClient(unittest.TestCase):
             webhook_secret=SecretString("whsec_test_secret_123456"),
             mode=RazorpayMode.TEST,
         )
-        self.mock_client = RazorpayClient()  # Unconfigured fallback mock mode
+        self.mock_client = RazorpayClient(
+            key_id=SecretString(""), key_secret=SecretString("")
+        )  # Unconfigured fallback mock mode
 
     def test_mode_and_configuration(self) -> None:
         self.assertEqual(self.client.mode, RazorpayMode.TEST)

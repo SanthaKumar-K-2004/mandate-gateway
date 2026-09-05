@@ -826,36 +826,8 @@ def get_dashboard_html() -> str:
         window.sandboxWalletBalance = 10000.00;
         window.activeMandateId = 'man_f55f00f0afd9';
         window.selectedPaymentRail = 'Razorpay UPI';
-        window.selectedCartTotalINR = 270.00;
-
-        window.currentProducts = [
-            {
-                product_id: "prod_web_coffee_99",
-                title: "Roasters Choice Filter Coffee Powder 250g",
-                price_inr: 150.00,
-                price_paise: 15000,
-                merchant_name: "Coffee Roasters India",
-                merchant_domain: "coffeeroasters.in",
-                product_url: "https://www.coffeeroasters.in/products/dark-roast-250g",
-                img_url: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=400&q=80",
-                category: "coffee",
-                selected: true,
-                sha256_hash: "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-            },
-            {
-                product_id: "prod_off_biscuit_01",
-                title: "OpenFoodFacts Organic Digestive Biscuits 200g",
-                price_inr: 120.00,
-                price_paise: 12000,
-                merchant_name: "OpenFoodFacts Public Catalog",
-                merchant_domain: "world.openfoodfacts.org",
-                product_url: "https://world.openfoodfacts.org/product/8901063013224",
-                img_url: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=400&q=80",
-                category: "groceries",
-                selected: true,
-                sha256_hash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
-            }
-        ];
+        window.selectedCartTotalINR = 0.00;
+        window.currentProducts = [];
 
         window.appendLog = function(tag, msg) {
             const stream = document.getElementById('log-stream');
@@ -971,7 +943,7 @@ def get_dashboard_html() -> str:
                 const step1 = document.getElementById('step-1');
                 if (step1) step1.className = 'step-row active';
 
-                window.appendLog('MULTI_SOURCE', 'Querying OpenFoodFacts API, Cafe Acme Direct API, Coffee Roasters India...');
+                window.appendLog('MULTI_SOURCE', 'Querying live web search APIs & OpenFoodFacts catalog...');
 
                 const res = await fetch('/api/v1/commerce/shopping/optimize', {
                     method: 'POST',
@@ -1009,36 +981,16 @@ def get_dashboard_html() -> str:
 
             if (rawItems.length > 0) {
                 window.currentProducts = rawItems.map(function(it, i) {
-                    const price = it.price_inr || (it.price_paise ? it.price_paise / 100 : 150.0);
-                    const tLower = (it.title || "").toLowerCase();
-                    let categoryImg = "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=400&q=80";
-                    if (tLower.includes("mouse") || tLower.includes("mice")) {
-                        categoryImg = "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=400&q=80";
-                    } else if (tLower.includes("keyboard") || tLower.includes("keypad")) {
-                        categoryImg = "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=400&q=80";
-                    } else if (tLower.includes("monitor") || tLower.includes("display")) {
-                        categoryImg = "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=400&q=80";
-                    } else if (tLower.includes("headphone") || tLower.includes("audio") || tLower.includes("sound")) {
-                        categoryImg = "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=400&q=80";
-                    } else if (tLower.includes("chair") || tLower.includes("desk") || tLower.includes("office")) {
-                        categoryImg = "https://images.unsplash.com/photo-1580481072645-022f9a6d1209?auto=format&fit=crop&w=400&q=80";
-                    } else if (tLower.includes("tea")) {
-                        categoryImg = "https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=400&q=80";
-                    } else if (tLower.includes("biscuit") || tLower.includes("cookie")) {
-                        categoryImg = "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=400&q=80";
-                    } else if (tLower.includes("coffee")) {
-                        categoryImg = "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=400&q=80";
-                    }
-
+                    const price = it.price_inr || (it.price_paise ? it.price_paise / 100 : 0.0);
                     return {
                         product_id: it.product_id || ("prod_candidate_" + i),
                         title: it.title || it.name || "Real Merchant Candidate",
                         price_inr: price,
                         price_paise: Math.round(price * 100),
-                        merchant_name: it.merchant_name || it.merchant_domain || "Open Commerce Catalog",
+                        merchant_name: it.merchant_name || it.merchant_domain || "Web Store",
                         merchant_domain: it.merchant_domain || "world.openfoodfacts.org",
-                        product_url: it.product_url || "https://world.openfoodfacts.org",
-                        img_url: (it.image_url && it.image_url.length > 5) ? it.image_url : categoryImg,
+                        product_url: it.product_url || "#",
+                        img_url: (it.image_url && it.image_url.length > 5) ? it.image_url : null,
                         category: it.category || "general",
                         selected: true,
                         sha256_hash: it.evidence_hash || "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -1053,32 +1005,39 @@ def get_dashboard_html() -> str:
                         catInput.value = discoveredCategories + ', coffee, groceries, electronics, office, supplies';
                     }
                 }
+            } else {
+                window.currentProducts = [];
             }
 
             window.recalculateCartTotal();
 
-            // Render Products with Real Photos & Interactive Toggle
+            // Render Products with Real Photos or Neutral Image Unavailable State
             const grid = document.getElementById('products-grid');
-            if (grid && window.currentProducts.length > 0) {
-                grid.innerHTML = window.currentProducts.map(function(it, idx) {
-                    const selClass = it.selected ? 'selected' : '';
-                    return '<div class="product-card ' + selClass + '" id="prod-card-' + idx + '" onclick="window.toggleProductSelection(' + idx + ')">' +
-                        '<div class="product-card-top">' +
-                            '<div class="product-img-wrapper">' +
-                                '<img src="' + it.img_url + '" alt="' + it.title + '" class="product-img" onerror="this.src=\'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=400&q=80\'">' +
+            if (grid) {
+                if (window.currentProducts.length > 0) {
+                    grid.innerHTML = window.currentProducts.map(function(it, idx) {
+                        const selClass = it.selected ? 'selected' : '';
+                        const imgHtml = it.img_url ?
+                            '<img src="' + it.img_url + '" alt="' + it.title + '" class="product-img">' :
+                            '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f1f5f9;color:#64748b;font-size:0.75rem;font-weight:600;">📷 Image Unavailable</div>';
+                        return '<div class="product-card ' + selClass + '" id="prod-card-' + idx + '" onclick="window.toggleProductSelection(' + idx + ')">' +
+                            '<div class="product-card-top">' +
+                                '<div class="product-img-wrapper">' + imgHtml + '</div>' +
+                                '<div class="product-info">' +
+                                    '<div class="product-title-text">' + it.title + '</div>' +
+                                    '<div class="product-merchant-tag">🏬 ' + it.merchant_name + '</div>' +
+                                    '<a href="' + it.product_url + '" target="_blank" class="product-link" onclick="event.stopPropagation()">View Source ↗</a>' +
+                                '</div>' +
                             '</div>' +
-                            '<div class="product-info">' +
-                                '<div class="product-title-text">' + it.title + '</div>' +
-                                '<div class="product-merchant-tag">🏬 ' + it.merchant_name + '</div>' +
-                                '<a href="' + it.product_url + '" target="_blank" class="product-link" onclick="event.stopPropagation()">View Real Merchant Page ↗</a>' +
+                            '<div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed #e2e8f0; padding-top: 0.75rem; margin-top: 0.35rem;">' +
+                                '<div class="product-price-tag">₹' + it.price_inr.toFixed(2) + '</div>' +
+                                '<button class="btn-outline" style="padding: 0.35rem 0.65rem; font-size: 0.72rem; font-weight: 700;" onclick="event.stopPropagation(); window.openEvidenceModal(' + idx + ')">SHA-256 Proof</button>' +
                             '</div>' +
-                        '</div>' +
-                        '<div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed #e2e8f0; padding-top: 0.75rem; margin-top: 0.35rem;">' +
-                            '<div class="product-price-tag">₹' + it.price_inr.toFixed(2) + '</div>' +
-                            '<button class="btn-outline" style="padding: 0.35rem 0.65rem; font-size: 0.72rem; font-weight: 700;" onclick="event.stopPropagation(); window.openEvidenceModal(' + idx + ')">SHA-256 Proof</button>' +
-                        '</div>' +
-                    '</div>';
-                }).join('');
+                        '</div>';
+                    }).join('');
+                } else {
+                    grid.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.85rem; font-weight: 500;">No verified live products discovered. Enter a prompt above and click <strong>RUN REAL-TIME PRODUCT RESEARCH</strong> to search online commerce sources.</div>';
+                }
             }
         };
 
@@ -1507,38 +1466,10 @@ def get_dashboard_html() -> str:
                 </div>
 
                 <div class="products-grid" id="products-grid">
-                    <div class="product-card selected" id="prod-card-0" onclick="window.toggleProductSelection(0)">
-                        <div class="product-card-top">
-                            <div class="product-img-wrapper">
-                                <img src="https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=400&q=80" alt="Filter Coffee" class="product-img">
-                            </div>
-                            <div class="product-info">
-                                <div class="product-title-text">Roasters Choice Filter Coffee Powder 250g</div>
-                                <div class="product-merchant-tag">🏬 Coffee Roasters India (coffeeroasters.in)</div>
-                                <a href="https://www.coffeeroasters.in/products/dark-roast-250g" target="_blank" class="product-link" onclick="event.stopPropagation()">View Real Merchant Page ↗</a>
-                            </div>
-                        </div>
-                        <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed #e2e8f0; padding-top: 0.75rem; margin-top: 0.35rem;">
-                            <div class="product-price-tag">₹150.00</div>
-                            <button class="btn-outline" style="padding: 0.35rem 0.65rem; font-size: 0.72rem; font-weight: 700;" onclick="event.stopPropagation(); window.openEvidenceModal(0)">SHA-256 Proof</button>
-                        </div>
-                    </div>
-
-                    <div class="product-card selected" id="prod-card-1" onclick="window.toggleProductSelection(1)">
-                        <div class="product-card-top">
-                            <div class="product-img-wrapper">
-                                <img src="https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=400&q=80" alt="Digestive Biscuits" class="product-img">
-                            </div>
-                            <div class="product-info">
-                                <div class="product-title-text">OpenFoodFacts Organic Digestive Biscuits 200g</div>
-                                <div class="product-merchant-tag">🏬 OpenFoodFacts (world.openfoodfacts.org)</div>
-                                <a href="https://world.openfoodfacts.org/product/8901063013224" target="_blank" class="product-link" onclick="event.stopPropagation()">View Real OpenFoodFacts Record ↗</a>
-                            </div>
-                        </div>
-                        <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed #e2e8f0; padding-top: 0.75rem; margin-top: 0.35rem;">
-                            <div class="product-price-tag">₹120.00</div>
-                            <button class="btn-outline" style="padding: 0.35rem 0.65rem; font-size: 0.72rem; font-weight: 700;" onclick="event.stopPropagation(); window.openEvidenceModal(1)">SHA-256 Proof</button>
-                        </div>
+                    <div style="grid-column: 1 / -1; padding: 2.5rem; text-align: center; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px;">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🔍</div>
+                        <div style="font-weight: 700; color: var(--text-heading); font-size: 0.95rem; margin-bottom: 0.25rem;">No Live Products Discovered Yet</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Enter a natural language search query above (or click a sample prompt) to trigger real-time web discovery.</div>
                     </div>
                 </div>
             </section>
@@ -1555,7 +1486,7 @@ def get_dashboard_html() -> str:
                 <div class="cost-grid">
                     <div class="cost-cell">
                         <span class="cost-cell-label">Exact Cart Subtotal:</span>
-                        <span class="cost-cell-val" style="color: var(--emerald-600);" id="val-known-subtotal">₹270.00</span>
+                        <span class="cost-cell-val" style="color: var(--emerald-600);" id="val-known-subtotal">₹0.00</span>
                     </div>
                     <div class="cost-cell">
                         <span class="cost-cell-label">User Budget Limit:</span>
