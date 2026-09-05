@@ -1,9 +1,9 @@
 # RAZORPAY — Mandate Gateway
 ### Autonomous AI Commerce Trust & Payment Safety Protocol[![Buildathon Track](https://img.shields.io/badge/Razorpay_Raze_Buildathon_2026-Autonomous_AI_Commerce_&_Agent_Payment_Protocols-0052CC?style=for-the-badge&logo=razorpay)](https://github.com/SanthaKumar-K-2004/mandate-gateway)
-[![Current Release](https://img.shields.io/badge/Current_Release-v2.0.0-blue?style=for-the-badge)](docs/RELEASE_READINESS.md)
-[![Commit SHA](https://img.shields.io/badge/Commit-6f80dc0-informational?style=for-the-badge)](https://github.com/SanthaKumar-K-2004/mandate-gateway/commit/6f80dc0)
-[![Test Suite](https://img.shields.io/badge/Test_Suite-870_PASSED_/_100%25-brightgreen?style=for-the-badge)](docs/FINAL_SUBMISSION_ACCEPTANCE_TEST.md)
-[![Security Gate](https://img.shields.io/badge/Security_Guard-886_Files_Scanned_/_0_Leaks-success?style=for-the-badge)](SECURITY.md)
+[![Current Release](https://img.shields.io/badge/Current_Release-v1.5.0-blue?style=for-the-badge)](docs/RELEASE_READINESS.md)
+[![Commit SHA](https://img.shields.io/badge/Commit-4650154-informational?style=for-the-badge)](https://github.com/SanthaKumar-K-2004/mandate-gateway/commit/4650154)
+[![Test Suite](https://img.shields.io/badge/Test_Suite-895_PASSED_/_100%25-brightgreen?style=for-the-badge)](docs/FINAL_SUBMISSION_ACCEPTANCE_TEST.md)
+[![Security Gate](https://img.shields.io/badge/Security_Guard-919_Files_Scanned_/_0_Leaks-success?style=for-the-badge)](SECURITY.md)
 
 ---
 
@@ -61,6 +61,8 @@
 | **Real-Money Razorpay Settlement** | 🔴 NOT AVAILABLE | `RAZORPAY_MODE=test` default; production live credentials require explicit setup |D | No production PSP API keys configured; architectural adapter boundary ready |
 | **Real Merchant Order / Inventory APIs** | 🔴 NOT ENABLED | Relies on OpenFoodFacts public catalog data and local sandbox merchant |
 
+![Features & Capability Matrix](./features.png)
+
 ---
 
 ## 💡 Why This Matters (The Problem Statement)
@@ -110,6 +112,8 @@ flowchart TD
     end
 ```
 
+![System Architecture & Wire Diagram](./wirediagram.png)
+
 ---
 
 ## 🛡️ The 5-Layer Payment Safety Model
@@ -123,6 +127,8 @@ graph TD
     L3 --> L4["Layer 4: 1:1 Transaction-Order Binding"]
     L4 --> L5["Layer 5: Idempotent State Reconciliation"]
 ```
+
+![End-to-End Workflow Diagram](./workflow.png)
 
 1. **Layer 1 — HMAC-SHA256 Confirmation Token:** Every financial authorization generates a cryptographically signed token containing exact details (`transaction_id`, `amount`, `merchant`, `buyer`). Re-signing or payload tampering immediately invalidates authorization.
 2. **Layer 2 — Atomic Execution Nonce:** Nonces are stored in database state. Once consumed by an execution attempt, any subsequent attempt with the same nonce fails instantly.
