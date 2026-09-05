@@ -113,6 +113,7 @@ flowchart TD
 ```
 
 ![System Architecture & Wire Diagram](./wirediagram.png)
+![Technical Architecture Wireframe](./technical_architecture_wireframe.png)
 
 ---
 
